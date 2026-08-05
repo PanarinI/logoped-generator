@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лист автоматизации [Р]</title>
+<!-- занято по модели: 254.5 мм из 273 мм -->
+<style>
+@page { size: A4; margin: 12.0mm 12.0mm 12.0mm 18.0mm; }
+
+:root {
+  --fs-speech: 18.0pt;
+  --fs-body:   16.0pt;
+  --fs-title:  12.0pt;
+  --fs-doc:    11.0pt;
+  --fs-adult:  10.0pt;
+  --hair: 0.4pt solid #000;
+  --gap: 1.8mm;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: #fff; color: #000;
+  font-family: 'PT Sans','Helvetica Neue',Arial,'Liberation Sans',sans-serif;
+  font-size: var(--fs-body);
+  line-height: 1.18;
+  /* канон печати: переносов нет ни при каких обстоятельствах */
+  hyphens: none; -webkit-hyphens: none; -moz-hyphens: none;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  text-rendering: geometricPrecision;
+}
+
+.sheet { width: 180.0mm; }
+
+@media screen {
+  body { background: #f2f2f2; padding: 10px; }
+  .sheet {
+    width: 210.0mm; min-height: 297.0mm;
+    padding: 12.0mm 12.0mm 12.0mm 18.0mm;
+    margin: 0 auto; background: #fff; border: 1px solid #bbb;
+  }
+}
+@media print {
+  .screen-only { display: none !important; }
+  .sheet { width: auto; padding: 0; border: 0; margin: 0; }
+}
+
+/* операторские предупреждения: экран да, бумага нет */
+.warnbox {
+  max-width: 210.0mm; margin: 0 auto 10px; padding: 8px 12px;
+  border: 1px solid #999; background: #fff;
+  font-size: 10pt; line-height: 1.4; color: #333;
+}
+.warnbox ul { margin: 4px 0 0; padding-left: 18px; }
+
+/* ── [0] шапка-документ ────────────────────────────────────────────── */
+.doc { font-size: var(--fs-doc); line-height: 1.35; }
+.doc-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 4mm; }
+.f { white-space: nowrap; }
+.fill { display: inline-block; border-bottom: var(--hair); }
+.fill-name { width: 50mm; }
+.fill-no   { width: 11mm; }
+.fill-date { width: 16mm; }
+.fill-sign { width: 34mm; }
+.sound-badge { border: var(--hair); padding: 0.2mm 1.8mm; font-weight: 700; white-space: nowrap; }
+
+.ticks { display: flex; gap: 1.5mm; }
+.tick { text-align: center; }
+.tick i { display: block; width: 6.2mm; height: 6.2mm; border: var(--hair); border-radius: 0.6mm; }
+.tick s { display: block; font-size: 6.5pt; text-decoration: none; color: #444; line-height: 1.15; }
+.doc-line { border-bottom: var(--hair); margin-top: 0.8mm; }
+
+/* ── общий блок: номер + название + инструкция ребёнку в одной строке ─ */
+.block { margin-top: var(--gap); break-inside: avoid; page-break-inside: avoid; }
+.bhead {
+  display: flex; align-items: baseline; gap: 2mm;
+  margin-bottom: 0.6mm;
+}
+.bnum {
+  flex: 0 0 auto; width: 5mm; height: 5mm; line-height: 4.7mm;
+  border: var(--hair); border-radius: 50%; text-align: center;
+  font-size: 8.5pt; font-weight: 700;
+}
+.btitle {
+  font-size: var(--fs-title); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.4pt; white-space: nowrap;
+}
+.bhint { font-size: var(--fs-adult); font-style: italic; color: #555; white-space: nowrap; }
+.task { font-size: var(--fs-body); }
+.adult { font-size: var(--fs-adult); font-style: italic; color: #555; margin: 0; }
+
+/* ── [1] гимнастика: имена упражнений разной длины («Почистим верхние
+      зубы» вдвое шире «Маляра»), поэтому не сетка равных колонок, а поток
+      с переносом — при длинных именах строка честно становится второй ─── */
+.artic { display: flex; flex-wrap: wrap; column-gap: 7mm; row-gap: 0; }
+.artic div { white-space: nowrap; }
+.box {
+  display: inline-block; width: 4.2mm; height: 4.2mm;
+  border: var(--hair); margin-right: 1.6mm; vertical-align: -0.4mm;
+}
+
+/* ── [2] изолированный звук ───────────────────────────────────────── */
+.iso { font-size: var(--fs-speech); white-space: nowrap; }
+.iso b { letter-spacing: 1pt; }
+
+/* ── [3] слоги: 2 печатные колонки, поток сверху вниз (порядок строк
+      канона сохранён: сначала вся левая колонка, потом правая) ───────── */
+/* зазор между печатными колонками ШИРЕ, чем между рядом и его связкой, —
+   иначе «ра ро ру ры  ра — рак | ру ры ра ро  ру — рука» читается как одна
+   длинная строка и связка теряет хозяина */
+.syl {
+  column-count: 2; column-gap: 9mm;
+  font-size: var(--fs-speech); line-height: 1.12;
+}
+.syl-row { white-space: nowrap; break-inside: avoid; }
+.syl-units { letter-spacing: 0.6pt; }
+.syl-bond { margin-left: 4mm; }
+.syl-bond::before { content: ""; }
+
+/* ── [4] слова колонками по гласному ──────────────────────────────── */
+.tier-label { font-size: var(--fs-adult); font-style: italic; color: #555; }
+.tmark { font-size: var(--fs-adult); color: #555; }
+.wcols { display: grid; gap: 0 4mm; }
+.wcol-h {
+  font-size: var(--fs-speech); line-height: 1.12;
+  font-weight: 700; border-bottom: var(--hair); white-space: nowrap;
+}
+/* колонка-продолжение того же слога: заголовок повторён, но не жирный —
+   глаз читает жирный как начало группы, светлый как её хвост */
+.wcol-h.cont { font-weight: 400; color: #444; }
+.wcol-h.cont::before { content: "…"; margin-right: 0.6mm; }
+.w {
+  font-size: var(--fs-speech); line-height: 1.12;
+  white-space: nowrap; font-family: inherit;
+}
+
+/* ── [5] игра: слова образца и заданий ребёнок ПРОИЗНОСИТ, значит это
+      речевой материал — кегль тот же, что у слов и предложений (18 pt),
+      а не «текст ребёнку» (16 pt) ─────────────────────────────────────── */
+.sample { font-size: var(--fs-speech); line-height: 1.12; }
+.game { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 4mm;
+        font-size: var(--fs-speech); line-height: 1.12; }
+.game div { white-space: nowrap; }
+.blank { display: inline-block; width: 18mm; border-bottom: var(--hair); }
+
+/* ── [6] предложения со шкалой длины ──────────────────────────────── */
+.sent { display: grid; grid-template-columns: 25mm 1fr; gap: 0 4mm; align-items: baseline; }
+.sent .lab { font-size: var(--fs-adult); font-style: italic; color: #555; white-space: nowrap; }
+.sent .txt { font-size: var(--fs-speech); line-height: 1.12; }
+
+/* ── [7] чистоговорка ─────────────────────────────────────────────── */
+.chant {
+  font-size: var(--fs-speech); line-height: 1.12;
+  border: var(--hair); padding: 0.8mm 2.4mm; display: inline-block;
+}
+
+/* ── [9] подвал взрослому ─────────────────────────────────────────── */
+.foot {
+  margin-top: var(--gap); border-top: var(--hair); padding-top: 1.0mm;
+  font-size: var(--fs-adult); font-style: italic; color: #444;
+  line-height: 1.25;
+}
+</style>
+</head>
+<body>
+<div class="warnbox screen-only"><b>Предупреждения (на печать не идут)</b><ul><li>нашлось 11 слов из 16; расширить: взять другой тип слога — в этой позиции слов мало (отсеяно 143) / чистоту снимать НЕЛЬЗЯ (отсеяно 8) — нужен более широкий словарь</li><li>слов 11 — меньше канонического минимума 12 (блок [4])</li><li>колонки «Ур:» нет: чистых слов с этим сочетанием в словаре не нашлось (слог в блоке [3] остаётся, слова к нему нет)</li><li>колонки «Ыр:» нет: чистых слов с этим сочетанием в словаре не нашлось (слог в блоке [3] остаётся, слова к нему нет)</li><li>слоговой блок 4 рядов при 11 словах: скелет требует минимум 16 слогов (4 ряда), правило 11 (≤ ¼ словесного) при таком словаре не выполняется — доберите слова до 16</li><li>названия упражнений блока [1] содержат звуки из запрета: «Лошадка» (л, ш) · «Маляр» (л') · «Почистим верхние зубы» (з, й, с). Это канонные имена комплекса, фильтр к ним не применяется (purity_scope); ребёнок их не произносит — читает взрослый. Чистых замен среди alternates нет — «безымянного» комплекса канон не даёт, решение за логопедом.</li><li>канон [4]: слов 11, норма 12-24</li></ul></div>
+<div class="sheet" data-est-mm="254.5">
+<div class="doc">
+  <div class="doc-row">
+    <span class="f">Ребёнок <span class="fill fill-name">Тимур</span></span>
+    <span class="f sound-badge">Звук [Р]</span>
+    <span class="f">Лист № <span class="fill fill-no">4</span></span>
+    <span class="f">Неделя с <span class="fill fill-date">12.05</span> по <span class="fill fill-date">18.05</span></span>
+  </div>
+  <div class="doc-row">
+    <span class="f">Отметки:</span>
+    <div class="ticks"><div class="tick"><i></i><s>пн</s></div><div class="tick"><i></i><s>вт</s></div><div class="tick"><i></i><s>ср</s></div><div class="tick"><i></i><s>чт</s></div><div class="tick"><i></i><s>пт</s></div><div class="tick"><i></i><s>сб</s></div><div class="tick"><i></i><s>вс</s></div></div>
+    <span class="f">Подпись взрослого <span class="fill fill-sign"></span></span>
+  </div>
+  <div class="doc-line"></div>
+</div>
+<section class="block"><div class="bhead"><span class="bnum">1</span><span class="btitle">Разминка</span><span class="bhint">не больше 3 минут</span><span class="task">Повтори упражнения перед зеркалом.</span></div><div class="artic"><div><span class="box"></span>Лошадка</div><div><span class="box"></span>Грибок</div><div><span class="box"></span>Маляр</div><div><span class="box"></span>Почистим верхние зубы</div></div><div class="adult">полный комплекс — на вкладыше · за один приём — 2-3 упражнения · Фомичёва М.Ф., 1989</div></section>
+<section class="block"><div class="bhead"><span class="bnum">2</span><span class="btitle">Звук</span><span class="iso">Спой «песенку мотора»: <b>р-р-р</b></span></div><div class="adult">тянуть длительно, на одном выдохе</div></section>
+<section class="block"><div class="bhead"><span class="bnum">3</span><span class="btitle">Слоги</span><span class="bhint">обратные слоги</span><span class="task">Повтори, прочитай слоги.</span></div><div class="syl" style="column-count:2"><div class="syl-row"><span class="syl-units">ар ор ур ыр</span><span class="syl-bond">ар — пар</span></div><div class="syl-row"><span class="syl-units">ор ур ыр ар</span><span class="syl-bond">ор — хор</span></div><div class="syl-row"><span class="syl-units">ур ыр ар ор</span><span class="syl-bond">ар — кома́р</span></div><div class="syl-row"><span class="syl-units">ыр ар ор ур</span><span class="syl-bond">ор — двор</span></div></div><div class="adult">Один тип слога на лист; каждая строка кончается словом — слог не остаётся сам по себе.</div></section>
+<section class="block"><div class="bhead"><span class="bnum">4</span><span class="btitle">Слова</span><span class="bhint">а) короткие частотные · б) длиннее или реже</span><span class="task">Повтори, прочитай слова.</span></div><div class="wcols" style="grid-template-columns:repeat(4,1fr)"><div><div class="wcol-h">Ар:</div><div class="w"><span class="tmark">а)</span> кома́р</div><div class="w"><span class="tmark">б)</span> пар</div></div><div><div class="wcol-h cont">Ар:</div><div class="w"><span class="tmark">б)</span> доктор</div><div class="w">трактор</div></div><div><div class="wcol-h">Ор:</div><div class="w"><span class="tmark">а)</span> ковёр</div><div class="w">топо́р</div><div class="w"><span class="tmark">б)</span> помидо́р</div><div class="w">двор</div></div><div><div class="wcol-h cont">Ор:</div><div class="w"><span class="tmark">б)</span> хор</div><div class="w">мото́р</div><div class="w">мухомо́р</div></div></div></section>
+<section class="block"><div class="bhead"><span class="bnum">5</span><span class="btitle">Игра</span><span class="bhint">Один — много</span><span class="task">Назови много.</span></div><div class="sample"><b>Образец:</b> кома́р — комары</div><div class="game"><div>доктор <span class="blank"></span></div><div>трактор <span class="blank"></span></div><div>ковёр <span class="blank"></span></div><div>топо́р <span class="blank"></span></div><div>помидо́р <span class="blank"></span></div></div></section>
+<section class="block"><div class="bhead"><span class="bnum">6</span><span class="btitle">Предложения</span><span class="task">Повтори, прочитай предложения.</span></div><div class="sent"><div class="lab">Три слова</div><div class="txt">Вот тут мото́р.</div><div class="lab"></div><div class="txt">У папы помидо́р.</div><div class="lab"></div><div class="txt">У мамы ковёр.</div><div class="lab">Четыре слова</div><div class="txt">У папы дома топо́р.</div><div class="lab"></div><div class="txt">Вот доктор, вот двор.</div><div class="lab"></div><div class="txt">У мамы дома хор.</div><div class="lab">Пять слов</div><div class="txt">У мамы трактор и мото́р.</div><div class="lab"></div><div class="txt">Тут кома́р, мухомо́р и доктор.</div></div></section>
+<section class="block"><div class="bhead"><span class="bnum">7</span><span class="btitle">Чистоговорка</span><span class="task">Повтори, прочитай чистоговорку.</span></div><div class="chant">Ар-ар-ар — тут кома́р.</div></section>
+<div class="foot"><div>Занимайтесь 10-15 минут в день, сидя рядом с ребёнком.</div><div>Не обязательно всё за раз — поделите лист на 2-3 приёма.</div><div>Если звук «сорвался» — вернитесь на строку выше и повторите её медленно.</div></div>
+</div>
+</body>
+</html>

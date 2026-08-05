@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 980" width="1320" height="980" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5b6470"/>
+    </marker>
+  </defs>
+  <rect width="1320" height="980" fill="#fbfaf7"/>
+
+  <text x="40" y="48" font-size="25" font-weight="600" fill="#20262e">Флоу глазами логопеда — предложение</text>
+  <text x="40" y="74" font-size="13.5" fill="#6b7480">Логопедический генератор · 2026-08-04 · три поворота против того, что построено сейчас</text>
+
+  <!-- КОНТЕКСТ -->
+  <rect x="40" y="98" width="1240" height="62" rx="10" fill="#eef2f7" stroke="#7d95b0" stroke-width="1.5"/>
+  <text x="62" y="124" font-size="14.5" font-weight="600" fill="#2b3a4a">Момент, в который он к нам приходит</text>
+  <text x="62" y="146" font-size="13" fill="#3a4859">25 детей на ставку · 8–12 занятий в день · «Изготовление пособий» — час каждый день по циклограмме. Он готовит материал ПОД РЕБЁНКА, между занятиями, и ему надо быстро.</text>
+
+  <!-- ПОВОРОТ 1 -->
+  <rect x="40" y="182" width="400" height="196" rx="10" fill="#fff6e6" stroke="#d9a441" stroke-width="1.6"/>
+  <text x="62" y="210" font-size="15" font-weight="600" fill="#6b4c0c">Поворот 1 · Центр — не звук, а ребёнок</text>
+  <text x="62" y="236" font-size="12.5" fill="#5f4a17">Сейчас первый вопрос: «какой звук автоматизируем».</text>
+  <text x="62" y="254" font-size="12.5" fill="#5f4a17">Это вход ИНСТРУМЕНТА. Логопед думает иначе:</text>
+  <text x="62" y="276" font-size="13" font-style="italic" fill="#6b4c0c">«сейчас Миша, ставим Р, а Л и Ш ещё нет».</text>
+  <text x="62" y="302" font-size="12.5" fill="#5f4a17">Профиль остаётся необязательным на входе (решение</text>
+  <text x="62" y="320" font-size="12.5" fill="#5f4a17">в силе), но однажды отмеченный — ДЕРЖИТСЯ и</text>
+  <text x="62" y="338" font-size="12.5" fill="#5f4a17">применяется ко всему, что он сегодня напечатает.</text>
+  <text x="62" y="362" font-size="12.5" font-weight="600" fill="#6b4c0c">Ребёнок — не форма, а накопленный контекст.</text>
+
+  <!-- ПОВОРОТ 2 -->
+  <rect x="460" y="182" width="400" height="196" rx="10" fill="#fff6e6" stroke="#d9a441" stroke-width="1.6"/>
+  <text x="482" y="210" font-size="15" font-weight="600" fill="#6b4c0c">Поворот 2 · Не выбор формата, а ступень</text>
+  <text x="482" y="236" font-size="12.5" fill="#5f4a17">Шесть инструментов — НЕ шесть вкладок.</text>
+  <text x="482" y="254" font-size="12.5" fill="#5f4a17">Логопед не выбирает «лабиринт» — он знает, на какой</text>
+  <text x="482" y="272" font-size="12.5" fill="#5f4a17">ступени ребёнок, и берёт, что на ней лежит.</text>
+  <text x="482" y="296" font-size="12.5" fill="#5f4a17">Лестница из канона (Комарова): звук отдельно →</text>
+  <text x="482" y="314" font-size="12.5" fill="#5f4a17">слоги → слова → фразы → текст.</text>
+  <text x="482" y="340" font-size="12.5" font-weight="600" fill="#6b4c0c">Навигация по ступени — это канон,</text>
+  <text x="482" y="358" font-size="12.5" font-weight="600" fill="#6b4c0c">а навигация по формату — наша выдумка.</text>
+
+  <!-- ПОВОРОТ 3 -->
+  <rect x="880" y="182" width="400" height="196" rx="10" fill="#fff6e6" stroke="#d9a441" stroke-width="1.6"/>
+  <text x="902" y="210" font-size="15" font-weight="600" fill="#6b4c0c">Поворот 3 · Он печатает пачку, а не лист</text>
+  <text x="902" y="236" font-size="12.5" fill="#5f4a17">На ребёнка в неделю выходит ≈4–10 материалов.</text>
+  <text x="902" y="254" font-size="12.5" fill="#5f4a17">Ходить к принтеру шесть раз никто не станет.</text>
+  <text x="902" y="278" font-size="12.5" fill="#5f4a17">Значит нужна КОРЗИНА: набрал материалы —</text>
+  <text x="902" y="296" font-size="12.5" fill="#5f4a17">распечатал одним нажатием, одним файлом.</text>
+  <text x="902" y="322" font-size="12.5" fill="#5f4a17">Это же решает и «несколько задач разом»:</text>
+  <text x="902" y="340" font-size="12.5" fill="#5f4a17">один набор картинок — четыре листа в корзине.</text>
+  <text x="902" y="364" font-size="12.5" font-weight="600" fill="#6b4c0c">Единица выдачи — пачка на ребёнка.</text>
+
+  <!-- ФЛОУ -->
+  <text x="40" y="424" font-size="17" font-weight="600" fill="#20262e">Как это выглядит: три экрана</text>
+
+  <rect x="40" y="442" width="290" height="210" rx="10" fill="#ffffff" stroke="#c9cdd3" stroke-width="1.5"/>
+  <text x="62" y="470" font-size="14.5" font-weight="600" fill="#2b333c">1 · Какой звук ставим</text>
+  <text x="62" y="496" font-size="13" fill="#3c444d">Р · С · Ш — крупно, как сейчас.</text>
+  <text x="62" y="518" font-size="12.5" fill="#69727e">Ничего больше не спрашиваем: чем меньше</text>
+  <text x="62" y="536" font-size="12.5" fill="#69727e">на входе, тем выше шанс, что дойдёт до</text>
+  <text x="62" y="554" font-size="12.5" fill="#69727e">результата.</text>
+  <text x="62" y="586" font-size="12.5" font-style="italic" fill="#8a929c">Экран не меняется — он и сейчас верный.</text>
+
+  <line x1="330" y1="546" x2="366" y2="546" stroke="#5b6470" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="370" y="442" width="330" height="210" rx="10" fill="#f6f0fa" stroke="#9b7cb8" stroke-width="1.8"/>
+  <text x="392" y="470" font-size="14.5" font-weight="600" fill="#4a2f63">2 · Что сегодня отрабатываем</text>
+  <text x="392" y="494" font-size="12.5" fill="#553a6e">Вместо выбора формата — ступень:</text>
+  <text x="392" y="518" font-size="13" fill="#4a2f63">▸ Слоги</text>
+  <text x="392" y="538" font-size="13" fill="#4a2f63">▸ Слова</text>
+  <text x="392" y="558" font-size="13" fill="#4a2f63">▸ Фразы и текст</text>
+  <text x="392" y="578" font-size="13" fill="#4a2f63">▸ Дыхание и рука</text>
+  <text x="392" y="606" font-size="12.5" font-style="italic" fill="#6b5185">Логопед выбирает то, что и так держит</text>
+  <text x="392" y="624" font-size="12.5" font-style="italic" fill="#6b5185">в голове. Формат подставляем мы.</text>
+
+  <line x1="700" y1="546" x2="736" y2="546" stroke="#5b6470" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="740" y="442" width="540" height="210" rx="10" fill="#ffffff" stroke="#c9cdd3" stroke-width="1.5"/>
+  <text x="762" y="470" font-size="14.5" font-weight="600" fill="#2b333c">3 · Материал · и всё вокруг него</text>
+  <text x="762" y="494" font-size="12.5" fill="#3c444d">Слева бумага. Справа — четыре вещи, и только они:</text>
+  <text x="762" y="518" font-size="13" fill="#3c444d">• <tspan font-weight="600">Печать</tspan> · Другой вариант · В корзину</text>
+  <text x="762" y="540" font-size="13" fill="#3c444d">• <tspan font-weight="600">Чего у ребёнка ещё нет</tspan> — чипы звуков (держатся дальше)</text>
+  <text x="762" y="562" font-size="13" fill="#3c444d">• <tspan font-weight="600">Из чего собрано</tspan> — пересчёт на глазах</text>
+  <text x="762" y="584" font-size="13" fill="#3c444d">• <tspan font-weight="600">Как это устроено</tspan> — методика с источниками, по кнопке</text>
+  <text x="762" y="614" font-size="12.5" font-style="italic" fill="#8a929c">Переключение материалов той же ступени — здесь же, вкладками.</text>
+
+  <!-- ЛЕСТНИЦА -->
+  <rect x="40" y="676" width="700" height="240" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="62" y="704" font-size="15" font-weight="600" fill="#2f4433">Что лежит на каждой ступени</text>
+
+  <g font-size="13">
+    <text x="62" y="736" font-weight="600" fill="#2f4433">Слоги</text>
+    <text x="200" y="736" fill="#3c4b40">Звуковая дорожка ⬜ · Лист со слоговым блоком ✅</text>
+
+    <text x="62" y="766" font-weight="600" fill="#2f4433">Слова</text>
+    <text x="200" y="766" fill="#3c4b40">Лабиринт ✅ · 4-й лишний ⬜ · Зашумлённые ⬜</text>
+
+    <text x="62" y="796" font-weight="600" fill="#2f4433">Фразы и текст</text>
+    <text x="200" y="796" fill="#3c4b40">Лист целиком ✅ · Рассказ ⬜</text>
+
+    <text x="62" y="826" font-weight="600" fill="#2f4433">Дыхание и рука</text>
+    <text x="200" y="826" fill="#3c4b40">Прописи-дорожки ⬜</text>
+  </g>
+  <text x="62" y="860" font-size="12.5" fill="#5d6b60">✅ работает сегодня  ·  ⬜ движок готов, ждёт банк картинок (кроме дорожки — ей картинки не нужны)</text>
+  <text x="62" y="884" font-size="12.5" font-weight="600" fill="#2f4433">Лабиринт · 4-й лишний · зашумлённые · прописи = ОДИН набор из 9 картинок, четыре задания.</text>
+  <text x="62" y="904" font-size="12.5" fill="#5d6b60">Это не четыре проекта. Это один банк, посчитанный один раз.</text>
+
+  <!-- ЯЗЫК -->
+  <rect x="760" y="676" width="520" height="240" rx="10" fill="#fdeeee" stroke="#c9767a" stroke-width="1.5"/>
+  <text x="782" y="704" font-size="15" font-weight="600" fill="#7a2f34">Наш язык, который логопед видеть не должен</text>
+  <g font-size="12.5">
+    <text x="782" y="732" fill="#7a3b40">«[картинка]»</text>
+    <text x="1010" y="732" fill="#3c4b40">→ «картинки пока нет»</text>
+    <text x="782" y="758" fill="#7a3b40">«Не прошли чистоту»</text>
+    <text x="1010" y="758" fill="#3c4b40">→ «путаются с [Р]»</text>
+    <text x="782" y="784" fill="#7a3b40">«Генератор предупреждает»</text>
+    <text x="1010" y="784" fill="#3c4b40">→ «Обратите внимание»</text>
+    <text x="782" y="810" fill="#7a3b40">«purity_scope», «канон [4]»</text>
+    <text x="1010" y="810" fill="#3c4b40">→ убрать совсем</text>
+    <text x="782" y="836" fill="#7a3b40">«Рабочий запас звука»</text>
+    <text x="1010" y="836" fill="#3c4b40">→ «слов подходит»</text>
+  </g>
+  <text x="782" y="872" font-size="12.5" fill="#7a3b40">Правило: на экране нет ни одного слова, которое</text>
+  <text x="782" y="890" font-size="12.5" fill="#7a3b40">существует только у нас в коде и в переписке.</text>
+  <text x="782" y="908" font-size="12.5" font-style="italic" fill="#9c5f63">Методика с источниками остаётся — она для логопеда и по кнопке.</text>
+
+  <rect x="40" y="936" width="1240" height="30" rx="8" fill="#20262e"/>
+  <text x="62" y="956" font-size="13" fill="#ffffff">Ничего из этого ещё не сделано — это предложение. Скажи, что берём, что выбрасываем, что не так.</text>
+</svg>

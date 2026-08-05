@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лист на автоматизацию звука</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ во всю ширину: слева переключатель инструментов,
+       справа — контекст (какой звук и слог сейчас). Раньше табы жили внутри
+       левой колонки над листом и не читались как переключатель. -->
+  <header class="top">
+    <div class="tools" id="tools" hidden>
+      <div class="tabs">
+        <button class="tab is-on" data-tab="sheet">Лист</button>
+        <button class="tab" data-tab="track">Дорожка</button>
+        <button class="tab" data-tab="maze">Лабиринт</button>
+      </div>
+      <div class="tab-extra" id="tab-extra" hidden>
+        <span class="positions" id="positions"></span>
+      </div>
+    </div>
+    <div class="crumbs" id="crumbs"></div>
+  </header>
+
+  <!-- ШАГ 1 — звук -->
+  <section class="step" id="step-sound">
+    <h1>Какой звук автоматизируем?</h1>
+    <div class="sounds" id="sounds"></div>
+    <p class="note" id="sounds-note"></p>
+  </section>
+
+  <!-- ШАГ 2 — слог -->
+  <section class="step" id="step-syl" hidden>
+    <h1>Что берём на лист?</h1>
+    <p class="sub">На кнопке — тот самый слог, который окажется на бумаге.</p>
+    <div class="syls" id="syls"></div>
+    <p class="note">Порядок кнопок — общий канон: прямые → обратные → между
+       гласными → стечения. Для [Р] источники расходятся: часть картотек
+       начинает со стечения и даёт обратные раньше прямых. Поэтому ступень
+       выбираете вы — генератор её не назначает и не подсказывает.</p>
+  </section>
+
+  <!-- ШАГ 3 — лист -->
+  <section class="step wide" id="step-result" hidden>
+    <div class="result">
+
+      <div class="paper">
+        <p class="note maze-note" id="maze-note" hidden>
+          Картинки есть не ко всем словам — там, где её пока нет, стоит рамка
+          со словом. Так честнее: ребёнок должен <em>назвать</em> картинку, а
+          не прочитать, и подставлять непроверенный рисунок хуже, чем оставить
+          пустое место.
+        </p>
+        <div class="stage" id="stage">
+          <div class="scaler" id="scaler">
+            <iframe id="frame" title="материал для печати"></iframe>
+          </div>
+          <div class="stage-msg" id="stage-msg" hidden></div>
+        </div>
+      </div>
+
+      <!-- Порядок панели: всё важное — в первый экран. Кнопка методики стояла
+           последней и оказывалась на 1145-м пикселе: её просто не видели. -->
+      <aside class="panel">
+
+        <!-- «Другой слог» отсюда убран: он дублировал крошку «слог РА» сверху,
+             которая делает ровно то же. Осиротевшая третья кнопка мешала. -->
+        <div class="actions">
+          <button class="btn primary" id="print">Печать</button>
+          <button class="btn" id="reroll">Другие слова</button>
+        </div>
+
+        <div class="card moat" id="moat"></div>
+
+        <!-- Звуки идут СРАЗУ после рва: это то, чем логопед пользуется,
+             а не то, что читает. Методика уходит ниже — она по требованию. -->
+        <div class="card ask" id="ask" hidden>
+          <h2>Какие ещё звуки у ребёнка не получаются?</h2>
+          <p class="hint">Слова с ними уберём. Не обязательно — лист уже готов.</p>
+          <div class="chips" id="chips"></div>
+        </div>
+
+        <div class="card warn" id="warn" hidden></div>
+
+        <button class="btn method-open" id="method-open">
+          Показать методику
+          <span class="method-sub">откуда взялся каждый блок — с источниками</span>
+        </button>
+
+      </aside>
+    </div>
+  </section>
+
+  <!-- МЕТОДИКА — по кнопке -->
+  <div class="method-back" id="method-back" hidden></div>
+  <aside class="method-drawer" id="method-drawer" hidden aria-label="методика листа">
+    <div class="method-head">
+      <div>
+        <h2>Как собран этот лист</h2>
+        <p class="hint">Каждое решение — с источником. Там, где решение наше, а не
+           канонное, так и написано: это не реклама, это чтобы вы могли проверить.</p>
+      </div>
+      <button class="btn ghost method-close" id="method-close">Закрыть</button>
+    </div>
+    <div class="method-legend" id="method-legend"></div>
+    <div class="method-body" id="method-body"></div>
+  </aside>
+
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

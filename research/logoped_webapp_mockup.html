@@ -1,0 +1,939 @@
+<meta charset="utf-8">
+<title>LogoKonspekt · Генератор дорожек</title>
+<style>
+  :root{
+    --accent:#2f6fb2;
+    --accent-soft:#e7f0fa;
+    --ink:#233;
+    --muted:#6a7683;
+    --line:#dde3ea;
+    --bg:#eef1f5;
+    --panel:#ffffff;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  header.app{
+    padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  }
+  header.app h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.2px}
+  header.app .tag{color:var(--muted);font-size:13px}
+  .layout{display:flex;gap:24px;align-items:flex-start;padding:24px;max-width:1240px;margin:0 auto}
+  /* ---------- FORM ---------- */
+  .form{
+    flex:0 0 340px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px 18px 22px;
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .field{margin-bottom:18px}
+  .field:last-child{margin-bottom:0}
+  .field.hidden{display:none}
+  .field > label.lbl{
+    display:block;font-size:12px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;
+  }
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{
+    flex:1;min-width:0;padding:8px 6px;border:1px solid var(--line);background:#fff;
+    border-radius:9px;cursor:pointer;font-size:14px;color:var(--ink);
+    transition:all .12s ease;white-space:nowrap;
+  }
+  .seg button:hover{border-color:var(--accent)}
+  .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .seg.big button{font-size:16px;font-weight:700;padding:10px 6px}
+  /* тип слоговой единицы — 5 значений, ломаем в 2 колонки */
+  .seg.wrap button{flex:0 1 calc(50% - 3px);text-align:left;padding:8px 9px;white-space:normal}
+  .seg.wrap button b{font-weight:700}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chips button{
+    min-width:40px;padding:8px 6px;border:1px solid var(--line);background:#fff;
+    border-radius:9px;cursor:pointer;font-size:15px;font-weight:600;color:var(--ink);
+    transition:all .12s ease;
+  }
+  .chips button:hover{border-color:var(--accent)}
+  .chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chips button.hide{display:none}
+  select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;
+    font-size:14px;background:#fff;color:var(--ink);cursor:pointer;
+  }
+  .stepper{display:flex;align-items:center;gap:12px}
+  .stepper button{
+    width:38px;height:38px;border:1px solid var(--line);background:#fff;border-radius:9px;
+    cursor:pointer;font-size:20px;line-height:1;color:var(--ink);
+  }
+  .stepper button:hover{border-color:var(--accent)}
+  .stepper .val{font-size:18px;font-weight:700;min-width:26px;text-align:center}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+  /* ---------- PREVIEW ---------- */
+  .preview-col{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:center;gap:14px}
+  #preview{
+    width:100%;max-width:600px;background:#fff;border:1px solid var(--line);border-radius:6px;
+    box-shadow:0 4px 20px rgba(0,0,0,.12);overflow:hidden;
+  }
+  #preview svg{display:block;width:100%;height:auto}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .actions button{
+    padding:10px 16px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    cursor:pointer;font-size:14px;color:var(--ink);font-weight:600;transition:all .12s ease;
+  }
+  .actions button:hover{border-color:var(--accent);color:var(--accent)}
+  .actions button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .actions button.primary:hover{background:#265d97;color:#fff}
+  .foot{color:var(--muted);font-size:12px;text-align:center;padding:4px 24px 30px;line-height:1.5}
+  @media(max-width:820px){
+    .layout{flex-direction:column}
+    .form{flex-basis:auto;width:100%}
+  }
+  /* ---------- PRINT: только лист ---------- */
+  @media print{
+    @page{size:A4;margin:0}
+    body{background:#fff}
+    header.app,.form,.actions,.foot,.print-hint{display:none !important}
+    .layout{padding:0;margin:0;max-width:none;display:block}
+    .preview-col{gap:0}
+    #preview{max-width:none;width:210mm;height:297mm;border:0;border-radius:0;box-shadow:none;margin:0}
+    #preview svg{width:210mm;height:297mm}
+  }
+</style>
+
+<header class="app">
+  <h1>LogoKonspekt · Генератор дорожек</h1>
+  <span class="tag">рабочие листы на автоматизацию звука · для логопедов</span>
+</header>
+
+<div class="layout">
+  <!-- ================= ФОРМА ================= -->
+  <form class="form" id="form" onsubmit="return false">
+
+    <div class="field">
+      <label class="lbl">Целевой звук</label>
+      <!-- порядок канона обучения: свистящие → шипящие → сонорные -->
+      <div class="seg big" id="ctl-sound">
+        <button data-v="С">С</button>
+        <button data-v="Ш">Ш</button>
+        <button data-v="Л">Л</button>
+        <button data-v="Р">Р</button>
+      </div>
+      <div class="hint" id="hint-sound"></div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Тип слоговой единицы</label>
+      <div class="seg wrap" id="ctl-type"><!-- кнопки строятся скриптом --></div>
+      <div class="hint">порядок кнопок = порядок обучения. Усложнение идёт здесь, а не по форме линии.</div>
+    </div>
+
+    <div class="field hidden" id="fld-cluster">
+      <label class="lbl" id="lbl-cluster">Стечение</label>
+      <div class="chips" id="ctl-cluster"></div>
+      <div class="hint" id="hint-cluster"></div>
+    </div>
+
+    <div class="field">
+      <label class="lbl" id="lbl-vowels">Гласные</label>
+      <div class="chips" id="ctl-vowels">
+        <button data-v="А">А</button>
+        <button data-v="О">О</button>
+        <button data-v="У">У</button>
+        <button data-v="Ы">Ы</button>
+        <button data-v="Э">Э</button>
+        <button data-v="И">И</button>
+      </div>
+      <div class="hint" id="hint-vowels"></div>
+    </div>
+
+    <div class="field hidden" id="fld-lead">
+      <label class="lbl">Первая гласная (перед звуком)</label>
+      <div class="chips" id="ctl-lead">
+        <button data-v="А">А</button>
+        <button data-v="О">О</button>
+        <button data-v="У">У</button>
+        <button data-v="Ы">Ы</button>
+        <button data-v="Э">Э</button>
+        <button data-v="И">И</button>
+      </div>
+      <div class="hint">она фиксируется, а вторая меняется по ряду: АРА – АРО – АРУ – АРЫ</div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Количество дорожек</label>
+      <div class="stepper" id="ctl-tracks">
+        <button data-step="-1">−</button>
+        <span class="val" id="tracks-val">4</span>
+        <button data-step="1">+</button>
+      </div>
+      <div class="hint">все дорожки на листе одинаковые по форме — меняется только гласная</div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Характер линии</label>
+      <div class="seg" id="ctl-linestyle">
+        <button data-v="smooth">плавная</button>
+        <button data-v="wavy">волнистая</button>
+        <button data-v="spiral">спираль</button>
+      </div>
+      <div class="hint">
+        форма кодирует <b>дыхание</b>, а не сложность: длина линии = длительность выдоха,
+        непрерывная = тянуть слитно. Спираль — не «трудный уровень», а тот же один длинный выдох.
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Картинки на дорожках</label>
+      <select id="ctl-icons">
+        <option value="sound">на целевой звук</option>
+        <option value="neutral">нейтральные (мак, дом, кот, вата)</option>
+        <option value="none">без картинок</option>
+      </select>
+      <div class="hint" id="hint-icons"></div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Тип листа</label>
+      <div class="seg" id="ctl-sheet">
+        <button data-v="tracks">Дорожки</button>
+        <button data-v="field">Слоговое поле</button>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- ================= ПРЕВЬЮ ================= -->
+  <div class="preview-col">
+    <div id="preview"><!-- SVG сюда --></div>
+    <div class="actions">
+      <button id="btn-variant">↻ Другой вариант</button>
+      <button id="btn-png" class="primary">Скачать PNG</button>
+      <button id="btn-print">Печать / PDF</button>
+    </div>
+    <div class="print-hint hint">лист чёрно-белый — готов к печати на A4</div>
+  </div>
+</div>
+<div class="foot">
+  Прототип продуктовой линии LogoKonspekt. Движок детерминированный — LLM не вызывается,
+  превью пересобирается мгновенно. Векторные иконки — заготовки; в продукте заменяются базой клипартов
+  с проверенной лицензией и разметкой чистоты материала.
+</div>
+
+<script>
+/* =====================================================================
+   ДВИЖОК · ревизия 2026-08-01 по логопедическому канону
+   (сверка: research/logoped_canon_verify_2026-08-01.md,
+            research/logoped_markova_2026-08-01.md)
+
+   ГРАНИЦА ПРОДУКТА (жёсткое ограничение, не «пока не сделали»):
+   в генератор НИКОГДА не добавляются Ц, Ч и смычные П Б Т Д К Г —
+   их физически нельзя тянуть (приём «веди пальцем и тяни» на них не работает),
+   и порядок слогов у них перевёрнут (обратные раньше прямых).
+   Набор ограничен щелевыми и сонорными: С · Ш · Л · Р (+ потенциально З Ж Щ).
+   ===================================================================== */
+const W=794,H=1123;
+const FONT="'Marker Felt','Comic Sans MS','Chalkboard SE','Arial Rounded MT Bold','Trebuchet MS',sans-serif";
+const R=v=>Math.round(v);
+
+/* ---------------------------------------------------------------------
+   ЛИНИЯ. Форма НЕ кодирует сложность (это была методическая ошибка).
+   Форма кодирует дыхание/просодию: длина = длительность выдоха,
+   непрерывность = тянуть слитно. Все дорожки листа одинаковы;
+   выбор формы — явный тумблер «характер линии».
+   --------------------------------------------------------------------- */
+function sineD(x0,x1,yMid,amp,periods,steps){
+  let d='';
+  for(let i=0;i<=steps;i++){
+    const t=i/steps, x=x0+(x1-x0)*t, y=yMid+amp*Math.sin(t*periods*2*Math.PI);
+    d+=(i?'L':'M')+R(x)+' '+R(y)+' ';
+  }
+  return d.trim();
+}
+// петли-завитки (пролатная циклоида) — непрерывная линия, один длинный выдох
+function loopsD(x0,x1,yMid,amp,loops,steps){
+  const thetaMax=loops*2*Math.PI, r=1, d0=2.2;
+  const rx=t=>r*t-d0*Math.sin(t), ry=t=>-d0*Math.cos(t);
+  const xMax=rx(thetaMax), sx=(x1-x0)/xMax, sy=amp/d0;
+  let d='';
+  for(let i=0;i<=steps;i++){
+    const t=thetaMax*i/steps, x=x0+rx(t)*sx, y=yMid+ry(t)*sy;
+    d+=(i?'L':'M')+R(x)+' '+R(y)+' ';
+  }
+  return d.trim();
+}
+const LINE_STYLES={
+  smooth:{label:'плавная',  build:(x0,x1,y,j)=>sineD(x0,x1,y, 9+(j.amp||0), 1.6+(j.per||0), 60)},
+  wavy:  {label:'волнистая',build:(x0,x1,y,j)=>sineD(x0,x1,y,22+(j.amp||0), 3.2+(j.per||0), 90)},
+  spiral:{label:'спираль',  build:(x0,x1,y,j)=>loopsD(x0,x1,y,26+(j.amp||0), 4, 160)},
+};
+
+/* =====================================================================
+   ИКОНКИ. Правило чистоты материала: на листе только объекты,
+   которые СОДЕРЖАТ целевой звук, либо полностью нейтральны.
+   Чужой корригируемый звук (и особенно оппозиционный: с–ш, с–з, р–л)
+   на листе запрещён.
+   ПОМЕТКА: рисунки — заготовки; в продукте заменяются базой клипартов.
+   ===================================================================== */
+const IK={
+  /* --- звук Р --- */
+  rak:`<g fill="none" stroke="#000" stroke-width="4" stroke-linecap="round">
+    <path d="M34 48 L26 38 M62 48 L70 38"/>
+    <path d="M32 58 L15 62 M32 68 L17 77 M64 58 L81 62 M64 68 L79 77"/></g>
+    <g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M20 30 L26 19 A13 13 0 1 1 14 19 Z"/>
+    <path d="M76 30 L82 19 A13 13 0 1 1 70 19 Z"/>
+    <ellipse cx="48" cy="58" rx="16" ry="22"/>
+    <path d="M40 76 L30 92 L48 84 L66 92 L56 76 Z"/></g>
+    <circle cx="42" cy="46" r="2.6" fill="#000"/><circle cx="54" cy="46" r="2.6" fill="#000"/>`,
+  ryba:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M14 50 Q42 26 70 50 Q42 74 14 50 Z"/>
+    <path d="M70 50 L90 36 L86 50 L90 66 Z"/></g>
+    <circle cx="30" cy="46" r="3" fill="#000"/>`,
+  raketa:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M50 8 Q67 30 64 56 L36 56 Q33 30 50 8 Z"/>
+    <path d="M36 46 L21 66 L36 60 Z"/>
+    <path d="M64 46 L79 66 L64 60 Z"/>
+    <circle cx="50" cy="34" r="8" fill="#fff"/>
+    <path d="M41 56 L50 82 L59 56" fill="none"/></g>`,
+  gora:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M4 86 L32 26 L54 66 L66 46 L92 86 Z"/>
+    <path d="M20 60 L32 26 L45 50 L38 46 L31 52 L25 47 Z"/></g>`,
+  baraban:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 42 L16 74 Q16 85 48 85 Q80 85 80 74 L80 42 Z"/>
+    <ellipse cx="48" cy="42" rx="32" ry="11"/></g>
+    <g fill="none" stroke="#000" stroke-width="3" stroke-linecap="round">
+    <path d="M20 52 L34 77 L48 52 L62 77 L76 52"/></g>
+    <g stroke="#000" stroke-width="4" stroke-linecap="round">
+    <line x1="30" y1="30" x2="13" y2="11"/><line x1="66" y1="30" x2="83" y2="11"/></g>
+    <circle cx="12" cy="10" r="4" fill="#000"/><circle cx="84" cy="10" r="4" fill="#000"/>`,
+  vorona:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 46 Q30 26 48 26 Q62 26 64 40 Q84 46 86 62 Q88 78 64 80 L36 80 Q18 78 20 62 Q22 50 30 46 Z"/>
+    <path d="M62 34 L84 40 L62 46 Z"/>
+    <path d="M22 66 L4 74 L24 78 Z"/></g>
+    <g fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round">
+    <path d="M42 80 L40 92 M58 80 L60 92"/></g>
+    <circle cx="52" cy="37" r="2.8" fill="#000"/>`,
+  korova:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M22 30 Q10 22 8 34 Q6 46 20 46 Z"/>
+    <path d="M74 30 Q86 22 88 34 Q90 46 76 46 Z"/>
+    <path d="M22 28 Q22 10 36 10 Q30 20 34 30 Z"/>
+    <path d="M74 28 Q74 10 60 10 Q66 20 62 30 Z"/>
+    <path d="M20 40 Q20 20 48 20 Q76 20 76 40 Q76 56 66 62 Q66 86 48 86 Q30 86 30 62 Q20 56 20 40 Z"/>
+    <ellipse cx="48" cy="70" rx="18" ry="13"/></g>
+    <circle cx="36" cy="44" r="3.2" fill="#000"/><circle cx="60" cy="44" r="3.2" fill="#000"/>
+    <circle cx="42" cy="69" r="2.6" fill="#000"/><circle cx="54" cy="69" r="2.6" fill="#000"/>`,
+  /* --- звук Л --- */
+  lampa:`<g fill="none" stroke="#000" stroke-width="3" stroke-linecap="round">
+    <line x1="18" y1="52" x2="6" y2="58"/><line x1="78" y1="52" x2="90" y2="58"/>
+    <line x1="24" y1="62" x2="14" y2="72"/><line x1="72" y1="62" x2="82" y2="72"/></g>
+    <g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M26 46 L38 12 L58 12 L70 46 Z"/>
+    <line x1="48" y1="46" x2="48" y2="76"/>
+    <path d="M28 90 L68 90 L62 76 L34 76 Z"/></g>`,
+  lodka:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10 46 L86 46 L72 74 L24 74 Z"/>
+    <line x1="30" y1="46" x2="30" y2="60"/><line x1="66" y1="46" x2="66" y2="60"/>
+    <line x1="26" y1="60" x2="70" y2="60"/></g>
+    <path d="M6 86 Q18 80 30 86 T54 86 T78 86 T92 86" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/>`,
+  luna:`<path d="M60 10 A40 40 0 1 0 60 86 A32 32 0 1 1 60 10 Z" fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+    <g fill="none" stroke="#000" stroke-width="3"><circle cx="41" cy="32" r="5"/><circle cx="33" cy="55" r="7"/><circle cx="50" cy="68" r="4"/></g>`,
+  lapa:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round">
+    <ellipse cx="48" cy="68" rx="26" ry="20"/>
+    <ellipse cx="21" cy="42" rx="9" ry="12"/>
+    <ellipse cx="39" cy="28" rx="9" ry="13"/>
+    <ellipse cx="57" cy="28" rx="9" ry="13"/>
+    <ellipse cx="75" cy="42" rx="9" ry="12"/></g>`,
+  pila:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M70 18 L88 18 Q94 18 94 26 L94 44 Q94 52 86 52 L72 52 Q66 52 66 44 L66 26 Q66 18 70 18 Z"/>
+    <path d="M75 27 L84 27 Q88 27 88 33 L88 39 Q88 43 84 43 L77 43 Q75 43 75 39 Z"/>
+    <path d="M8 34 L70 20 L70 56 L64 50 L58 56 L52 50 L46 56 L40 50 L34 56 L28 50 L22 56 L16 50 L8 54 Z"/></g>`,
+  kukla:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 86 L48 40 L66 86 Z"/>
+    <line x1="36" y1="58" x2="16" y2="72"/><line x1="60" y1="58" x2="80" y2="72"/>
+    <line x1="42" y1="86" x2="42" y2="94"/><line x1="54" y1="86" x2="54" y2="94"/>
+    <circle cx="48" cy="26" r="16"/>
+    <path d="M31 24 Q32 6 48 6 Q64 6 65 24 Q59 14 48 14 Q37 14 31 24 Z"/></g>
+    <circle cx="42" cy="28" r="2.4" fill="#000"/><circle cx="54" cy="28" r="2.4" fill="#000"/>`,
+  /* --- звук С --- */
+  sumka:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M32 42 L32 28 Q32 14 48 14 Q64 14 64 28 L64 42" fill="none"/>
+    <path d="M16 40 L80 40 L74 86 L22 86 Z"/></g>`,
+  sova:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 46 Q16 16 48 16 Q80 16 80 46 Q80 82 48 82 Q16 82 16 46 Z"/>
+    <path d="M22 28 L14 8 L36 18 Z"/><path d="M74 28 L82 8 L60 18 Z"/>
+    <circle cx="35" cy="44" r="12"/><circle cx="61" cy="44" r="12"/>
+    <path d="M48 52 L42 60 L54 60 Z"/>
+    <path d="M38 82 L34 92 M58 82 L62 92" fill="none"/></g>
+    <circle cx="35" cy="44" r="4" fill="#000"/><circle cx="61" cy="44" r="4" fill="#000"/>`,
+  samokat:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M14 76 L60 76" fill="none"/>
+    <path d="M60 76 L70 24" fill="none"/>
+    <path d="M56 24 L86 24" fill="none"/>
+    <circle cx="16" cy="84" r="10"/><circle cx="66" cy="84" r="10"/></g>`,
+  sanki:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="26" y="32" width="56" height="10" rx="3"/>
+    <line x1="36" y1="42" x2="36" y2="64"/><line x1="70" y1="42" x2="70" y2="64"/>
+    <path d="M88 64 L30 64 Q10 64 10 46 Q10 33 24 33" fill="none"/>
+    <path d="M88 76 L40 76 Q20 76 20 56" fill="none"/></g>`,
+  sok:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M56 30 L66 8 L82 12" fill="none"/>
+    <path d="M28 28 L68 28 L62 88 L34 88 Z"/>
+    <line x1="30" y1="46" x2="66" y2="46"/></g>`,
+  busy:`<path d="M20 16 Q20 80 48 80 Q76 80 76 16" fill="none" stroke="#000" stroke-width="3"/>
+    <g fill="#fff" stroke="#000" stroke-width="3.5">
+    <circle cx="21" cy="30" r="7"/><circle cx="26" cy="50" r="7"/><circle cx="37" cy="66" r="7"/>
+    <circle cx="54" cy="72" r="7"/><circle cx="69" cy="61" r="7"/><circle cx="75" cy="43" r="7"/>
+    <circle cx="76" cy="25" r="7"/></g>`,
+  /* --- звук Ш --- */
+  shkaf:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="18" y="8" width="60" height="78" rx="5"/>
+    <line x1="48" y1="12" x2="48" y2="82"/>
+    <line x1="20" y1="26" x2="76" y2="26"/></g>
+    <circle cx="42" cy="50" r="3.4" fill="#000"/><circle cx="54" cy="50" r="3.4" fill="#000"/>
+    <g stroke="#000" stroke-width="4" stroke-linecap="round">
+    <line x1="27" y1="86" x2="27" y2="95"/><line x1="69" y1="86" x2="69" y2="95"/></g>`,
+  shapka:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="48" cy="16" r="9"/>
+    <path d="M22 62 Q22 26 48 26 Q74 26 74 62 Z"/>
+    <rect x="12" y="62" width="72" height="18" rx="9"/></g>`,
+  shishka:`<g fill="#fff" stroke="#000" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M48 8 Q74 32 74 58 Q74 88 48 92 Q22 88 22 58 Q22 32 48 8 Z"/></g>
+    <g fill="none" stroke="#000" stroke-width="3" stroke-linecap="round">
+    <path d="M28 38 Q48 50 68 38 M24 56 Q48 70 72 56 M28 74 Q48 86 68 74"/>
+    <path d="M48 12 L48 34 M36 30 L36 44 M60 30 L60 44"/></g>`,
+  mishka:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round">
+    <circle cx="22" cy="26" r="12"/><circle cx="74" cy="26" r="12"/>
+    <circle cx="48" cy="52" r="30"/>
+    <ellipse cx="48" cy="63" rx="15" ry="11"/></g>
+    <circle cx="37" cy="44" r="3.2" fill="#000"/><circle cx="59" cy="44" r="3.2" fill="#000"/>
+    <ellipse cx="48" cy="57" rx="5" ry="3.6" fill="#000"/>`,
+  koshka:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 34 L26 10 L44 24 Z"/><path d="M62 34 L68 10 L50 24 Z"/>
+    <path d="M32 48 Q26 90 48 90 Q70 90 64 48 Z"/>
+    <path d="M64 78 Q88 80 86 54" fill="none"/>
+    <circle cx="46" cy="34" r="18"/></g>
+    <circle cx="40" cy="32" r="2.8" fill="#000"/><circle cx="52" cy="32" r="2.8" fill="#000"/>
+    <g stroke="#000" stroke-width="2.2" stroke-linecap="round">
+    <line x1="29" y1="38" x2="13" y2="34"/><line x1="29" y1="42" x2="13" y2="47"/>
+    <line x1="63" y1="38" x2="79" y2="34"/><line x1="63" y1="42" x2="79" y2="47"/></g>`,
+  /* --- нейтральные (без корригируемых звуков) --- */
+  mak:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <line x1="48" y1="44" x2="48" y2="92"/>
+    <path d="M48 66 Q30 58 22 70 Q36 78 48 72 Z"/>
+    <circle cx="29" cy="32" r="15"/><circle cx="67" cy="32" r="15"/>
+    <circle cx="37" cy="15" r="13"/><circle cx="59" cy="15" r="13"/>
+    <circle cx="48" cy="30" r="12"/></g>
+    <g fill="#000"><circle cx="44" cy="27" r="2"/><circle cx="52" cy="27" r="2"/><circle cx="48" cy="34" r="2"/></g>`,
+  dom:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="62" y="20" width="11" height="18"/>
+    <path d="M10 48 L48 14 L86 48 Z"/>
+    <rect x="20" y="48" width="56" height="40"/>
+    <rect x="38" y="62" width="20" height="26"/></g>`,
+  kot:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M22 44 L16 10 L40 26 Z"/><path d="M74 44 L80 10 L56 26 Z"/>
+    <circle cx="48" cy="52" r="30"/></g>
+    <circle cx="37" cy="46" r="3.4" fill="#000"/><circle cx="59" cy="46" r="3.4" fill="#000"/>
+    <path d="M48 56 L42 62 L54 62 Z" fill="#000"/>
+    <g stroke="#000" stroke-width="2.4" stroke-linecap="round">
+    <line x1="30" y1="60" x2="10" y2="56"/><line x1="30" y1="64" x2="10" y2="70"/>
+    <line x1="66" y1="60" x2="86" y2="56"/><line x1="66" y1="64" x2="86" y2="70"/></g>`,
+  banan:`<g fill="#fff" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M24 14 Q10 56 42 78 Q74 96 88 62 Q78 72 66 66 Q64 42 40 32 Q30 28 32 14 Z"/>
+    <line x1="28" y1="14" x2="28" y2="6"/></g>`,
+  placeholder:`<rect x="4" y="8" width="88" height="80" rx="10" fill="#fff" stroke="#000" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="48" y="44" text-anchor="middle" font-size="11" fill="#000">картинка</text>
+    <text x="48" y="60" text-anchor="middle" font-size="11" fill="#000">из базы</text>`,
+};
+function icon(name){ return IK[name]||IK.placeholder; }
+
+/* Наборы иконок по звуку. Каждое слово СОДЕРЖИТ целевой звук И НЕ СОДЕРЖИТ
+   ни одного чужого корригируемого (с з ц ш ж ч щ л р) — проверяется функцией
+   auditIcons() ниже, она гоняется при загрузке и орёт в консоль при нарушении.
+   Ревизия 2026-08-02: сняты три загрязнения —
+     · «роза» несла З (свистящий) → заменена на «гора»;
+     · «руль» несла Л — а Р–Л это ОППОЗИЦИОННАЯ пара, худший вариант → «барабан»;
+     · «шар» несла Р → заменён на «шкаф» (заодно показывает стечение ШК);
+     · нейтральная «вата» читалась как «облако» (Л!) → заменена на «банан».
+   Рисунки остаются заготовками: в продукте — база клипартов с полем
+   problem_phonemes + профиль ребёнка (тогда фильтр станет персональным). */
+const SOUND_ICONS={
+  'Р':[['rak','рак'],['ryba','рыба'],['raketa','ракета'],['gora','гора'],['baraban','барабан'],['vorona','ворона'],['korova','корова']],
+  'Л':[['lampa','лампа'],['lodka','лодка'],['luna','луна'],['lapa','лапа'],['pila','пила'],['kukla','кукла']],
+  'С':[['sumka','сумка'],['sova','сова'],['samokat','самокат'],['sanki','санки'],['sok','сок'],['busy','бусы']],
+  'Ш':[['shkaf','шкаф'],['shapka','шапка'],['shishka','шишка'],['mishka','мишка'],['koshka','кошка']],
+};
+const NEUTRAL_ICONS=[['mak','мак'],['dom','дом'],['kot','кот'],['banan','банан']];
+
+/* Предохранитель чистоты материала: если кто-то допишет слово с чужим
+   корригируемым звуком — узнаем сразу, а не на приёме у логопеда. */
+function auditIcons(){
+  const G={'С':'сС','З':'зЗ','Ц':'цЦ','Ш':'шШ','Ж':'жЖ','Ч':'чЧ','Щ':'щЩ','Л':'лЛ','Р':'рР'};
+  const bad=[];
+  for(const snd in SOUND_ICONS) SOUND_ICONS[snd].forEach(([k,w])=>{
+    if(!new RegExp('['+G[snd]+']').test(w)) bad.push(`«${w}» не содержит [${snd}]`);
+    for(const g in G) if(g!==snd && new RegExp('['+G[g]+']').test(w)) bad.push(`«${w}» (${snd}) несёт чужой [${g}]`);
+    if(!IK[k]) bad.push(`нет рисунка «${k}»`);
+  });
+  NEUTRAL_ICONS.forEach(([k,w])=>{
+    for(const g in G) if(new RegExp('['+G[g]+']').test(w)) bad.push(`нейтральное «${w}» несёт [${g}]`);
+    if(!IK[k]) bad.push(`нет рисунка «${k}»`);
+  });
+  if(bad.length) console.error('ЧИСТОТА МАТЕРИАЛА НАРУШЕНА:\n'+bad.join('\n'));
+  return bad;
+}
+
+/* =====================================================================
+   ДИДАКТИКА
+   ===================================================================== */
+/* Кластеры разведены на ДВА списка — это лекарство от бага «АПЛ».
+   Прежняя формула не различала, ГДЕ в стечении стоит целевой звук, и лепила
+   несуществующее «АПЛ». Теперь легальность края слога задана списком, а не выводится:
+     onset — стечения, с которыми слог бывает только НАЧАЛЬНЫМ (ТРА, ПЛА, СТА, ШКА);
+     coda  — стечения, с которыми слог бывает только КОНЕЧНЫМ  (АРТ, АЛК, АСТ, АШК).
+   Позиция цели внутри стечения у разных звуков РАЗНАЯ:
+     · Р и Л в начальном стечении вторые (ТР, ПЛ), в конечном первые (РТ, ЛК) — списки не пересекаются;
+     · С и Ш и там и там первые, поэтому СТ/СК и ШК/ШТ законно стоят в ОБОИХ списках.
+   Отсюда правило: индекс целевой буквы всегда берём из самой строки стечения, а не из типа.
+   Списки — по картотекам практиков; СХ убрано (нет в источниках), заменено на СФ. */
+const SOUNDS={
+  'С':{ verb:'свисти', rep:'с-с-с', subtitle:'песенка водички: с-с-с',
+        note:'или «накачай насос»',
+        onset:['СТ','СК','СП','СМ','СН','СВ','СЛ','СФ'],
+        coda:['СТ','СК'] },                       // в конце слога у С каноничны только эти два
+  'Ш':{ verb:'шипи',   rep:'ш-ш-ш', subtitle:'шипит змея: ш-ш-ш',
+        note:'длинно, на одном выдохе',
+        alwaysHard:true,          // у Ш нет мягкой пары: «ШИ» звучит [шы] и остаётся тем же звуком
+
+        onset:['ШК','ШТ','ШП','ШЛ','ШВ','ШН'],
+        coda:['ШК','ШТ'] },
+  'Л':{ verb:'гуди',   rep:'л-л-л', subtitle:'песенка самолёта: л-л-л',
+        note:'длительно, на одном выдохе',
+        onset:['ПЛ','КЛ','ГЛ','СЛ','БЛ','ВЛ','ФЛ','ХЛ','ШЛ','ЗЛ'],
+        coda:['ЛК','ЛТ','ЛП','ЛМ','ЛН','ЛБ','ЛГ','ЛД','ЛВ'] },
+  'Р':{ verb:'тяни',   rep:'р-р-р', subtitle:'заведи мотор: р-р-р',
+        note:'мотор не глохнет — тяни не останавливаясь',
+        onset:['ТР','ДР','КР','ГР','ПР','БР','ВР','ФР','ХР'],
+        coda:['РТ','РК','РП','РМ','РН','РБ','РГ','РД','РВ'] },
+};
+const SOUND_ORDER=['С','Ш','Л','Р'];   // канон обучения: свистящие → шипящие → сонорные
+
+/* ЕДИНСТВЕННАЯ ось усложнения — тип слоговой единицы (5 значений).
+   Прежняя ось «позиция × тип» породила две несуществующие клетки
+   (АПЛА и АПЛ) и удалена целиком. «Начало/середина/конец» — ось для СЛОВ,
+   это более поздний этап работы. */
+const SYL_TYPES=[
+  {v:'direct',   label:'прямой',            vowel:'post', cluster:null},
+  {v:'reverse',  label:'обратный',          vowel:'pre',  cluster:null},
+  {v:'intervoc', label:'интервокальный',    vowel:'post', cluster:null},
+  {v:'onset',    label:'стечение в начале', vowel:'post', cluster:'onset'},
+  {v:'coda',     label:'стечение в конце',  vowel:'pre',  cluster:'coda'},
+];
+const TYPE=Object.fromEntries(SYL_TYPES.map(t=>[t.v,t]));
+
+/* ГЛАСНЫЕ разведены на пре- и поствокальные.
+   Гласная смягчает ПРЕДШЕСТВУЮЩИЙ согласный:
+   · после целевого звука И даёт ДРУГОЙ звук (РИ = Рь, СИ = Сь, ПЛИ = Ль) → запрещена;
+   · перед целевым звуком И безопасна (ИР — Р остаётся твёрдым). */
+const POST_VOWELS=['А','О','У','Ы','Э'];
+const PRE_VOWELS =['А','О','У','Ы','Э','И'];
+
+/* Орфографический фильтр: после К, Г, Х (и всегда твёрдых Ш, Ж) пишется И, не Ы.
+   СКЫ → СКИ, ШЫ → ШИ. Звук при этом остаётся тем же [ы] —
+   именно так на листе появляется единственно допустимое «ШИ». */
+const I_AFTER='КГХШЖЧЩ';
+function orth(s){
+  let out='';
+  for(let i=0;i<s.length;i++){
+    let ch=s[i];
+    if(ch==='Ы' && i>0 && I_AFTER.indexOf(s[i-1])>=0) ch='И';
+    out+=ch;
+  }
+  return out;
+}
+
+/* Сборка слога. Возвращает части ПОЗИЦИОННО: что стоит на старте дорожки,
+   что над серединой, что на финише. tStart/tFin — индекс целевой буквы
+   внутри части (для выделения жирным), tMid — цель над серединой линии. */
+function makeSyllable(sound,type,cluster,preV,postV){
+  let start='',mid='',fin='',tStart=-1,tFin=-1,tMid=false;
+  if(type==='direct'){        start=sound;  fin=postV; tStart=0; }
+  else if(type==='reverse'){  start=preV;   fin=sound; tFin=0; }
+  else if(type==='intervoc'){ start=preV;   mid=sound; fin=postV; tMid=true; }
+  // позиция цели внутри стечения берётся из строки: у Р/Л это ТР/ПЛ (вторая),
+  // у С/Ш — СТ/ШК (первая). Хардкод индекса выделял бы не ту букву.
+  else if(type==='onset'){    start=cluster;fin=postV;    tStart=cluster.indexOf(sound); }
+  else if(type==='coda'){     start=preV;   fin=cluster;  tFin  =cluster.indexOf(sound); }
+  const text=orth(start+mid+fin);                                    // орфография длину не меняет
+  return {
+    start:text.slice(0,start.length),
+    mid:  text.slice(start.length,start.length+mid.length),
+    finish:text.slice(start.length+mid.length),
+    text, tStart, tFin, tMid
+  };
+}
+
+/* Ряд дорожек: КЛАСТЕР ФИКСИРОВАН, меняется только гласная
+   (ТРА – ТРО – ТРУ – ТРЫ, а не ТРА – ДРО – КРУ – ГРЫ). */
+function rowSyllable(st,i,voff){
+  const t=TYPE[st.type];
+  const pool=(t.vowel==='pre')?st.vowels:st.vowels.filter(v=>POST_VOWELS.indexOf(v)>=0);
+  const list=pool.length?pool:['А'];
+  const v=list[(i+voff)%list.length];
+  const preV =(t.vowel==='pre')? v : (st.type==='intervoc'? st.leadVowel : null);
+  const postV=(t.vowel==='post')? v : null;
+  return makeSyllable(st.sound,st.type,st.cluster,preV,postV);
+}
+
+/* ---- детерминированный ГПСЧ (для «Другого варианта» и поля) ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---- утилита: буквы с выделением целевой ---- */
+function letters(text,targetIdx){
+  return text.split('').map((ch,i)=>`<tspan font-weight="${i===targetIdx?700:400}">${ch}</tspan>`).join('');
+}
+function iconPool(st){
+  if(st.icons==='none') return [];
+  if(st.icons==='neutral') return NEUTRAL_ICONS;
+  return SOUND_ICONS[st.sound]||NEUTRAL_ICONS;
+}
+function typeExample(sound,type){
+  const S=SOUNDS[sound];
+  if(type==='direct')   return orth(sound+'А');
+  if(type==='reverse')  return 'А'+sound;
+  if(type==='intervoc') return orth('А'+sound+'А');
+  if(type==='onset')    return orth(S.onset[0]+'А');
+  if(type==='coda')     return 'А'+S.coda[0];
+  return '';
+}
+
+/* =====================================================================
+   ЛИСТ 1 — ДОРОЖКИ (позиционная сборка слога)
+   Слог не печатается повторами над линией (это противоречило инструкции
+   «тяни не останавливаясь»). Он СОБИРАЕТСЯ по дорожке:
+   буква на старте → линия (то, что тянешь) → буква на финише.
+   ===================================================================== */
+function buildTracks(st){
+  const snd=st.sound, S=SOUNDS[snd], n=st.tracks;
+  const rng=mulberry32(0x51EED*(st.variant+1));
+  const pool=iconPool(st);
+  // вариант 0 — канонический порядок «от А»; «другой вариант» проворачивает ряд
+  const iconOff = (pool.length && st.variant)? R(rng()*pool.length) : 0;
+  const voff    = st.variant? R(rng()*4) : 0;
+  // джиттер ОДИН на лист: все дорожки одинаковы по форме
+  const jit={amp:(rng()*2-1)*3, per:(rng()*2-1)*0.15};
+  const style=LINE_STYLES[st.lineStyle]||LINE_STYLES.smooth;
+
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="${FONT}">`;
+  s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
+  s+=`<rect x="14" y="14" width="${W-28}" height="${H-28}" rx="26" fill="none" stroke="#000" stroke-width="2.5"/>`;
+  // шапка — детская часть
+  s+=`<text x="${W/2}" y="72" text-anchor="middle" font-size="34" font-weight="bold">Автоматизация звука [${snd}]</text>`;
+  s+=`<text x="${W/2}" y="110" text-anchor="middle" font-size="24">${S.subtitle}</text>`;
+  s+=`<text x="${W/2}" y="140" text-anchor="middle" font-size="17" font-style="italic">веди пальцем и ${S.verb}: ${S.rep}</text>`;
+  // шапка — взрослому (служебная строка переписана как инструкция, не как ярлык настроек)
+  s+=`<text x="${W/2}" y="168" text-anchor="middle" font-size="12.5" fill="#777">взрослому: тип слога — ${TYPE[st.type].label} (${typeExample(snd,st.type)}) · длина линии = длительность выдоха, не уровень сложности</text>`;
+  s+=`<text x="${W/2}" y="186" text-anchor="middle" font-size="12.5" fill="#777">ребёнок ведёт пальцем от буквы на старте к букве на финише, тянет [${snd.toLowerCase()}] не отрывая голоса, на финише называет слог целиком</text>`;
+  s+=`<line x1="40" y1="198" x2="${W-40}" y2="198" stroke="#000" stroke-width="1.5"/>`;
+
+  const top=210, bottomLimit=H-58;
+  let rowH=(bottomLimit-top)/n; if(rowH>250) rowH=250;
+  const blockH=rowH*n, startTop=top+((bottomLimit-top)-blockH)/2;
+  const x0=214, x1=634;                       // линия одинакова у всех дорожек
+
+  for(let i=0;i<n;i++){
+    const bt=startTop+i*rowH, lineY=bt+rowH*0.46;
+    const syl=rowSyllable(st,i,voff);
+    const wStart=syl.start.length>1?96:64;
+    const wFin  =syl.finish.length>1?96:64;
+    const startX=202-wStart, finX=656;
+
+    // картинка-спутник (слева, со словом — слово содержит целевой звук).
+    // масштаб 0.68 и сдвиг 30: рисунок кончается на x≈95, а стартовая рамка
+    // двухбуквенного стечения начинается на 106 — иначе краб влезал в «ТР».
+    if(pool.length){
+      const [ic,word]=pool[(i+iconOff)%pool.length];
+      s+=`<g transform="translate(30,${R(lineY-40)}) scale(0.68)">${icon(ic)}</g>`;
+      s+=`<text x="${R(30+33)}" y="${R(lineY+44)}" text-anchor="middle" font-size="12" fill="#777">${word}</text>`;
+    }
+    // СТАРТ дорожки
+    s+=`<rect x="${startX}" y="${R(lineY-32)}" width="${wStart}" height="64" rx="14" fill="#fff" stroke="#000" stroke-width="2.5"/>`;
+    s+=`<text x="${R(startX+wStart/2)}" y="${R(lineY+13)}" text-anchor="middle" font-size="${syl.start.length>1?32:38}">${letters(syl.start,syl.tStart)}</text>`;
+    // линия — то, что тянешь
+    s+=`<path d="${style.build(x0,x1,lineY,jit)}" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    // интервокальный: целевой звук над серединой линии
+    if(syl.tMid){
+      const mx=(x0+x1)/2;
+      s+=`<circle cx="${R(mx)}" cy="${R(lineY)}" r="27" fill="#fff" stroke="#000" stroke-width="2.5"/>`;
+      s+=`<text x="${R(mx)}" y="${R(lineY+11)}" text-anchor="middle" font-size="32" font-weight="bold">${syl.mid}</text>`;
+    }
+    // стрелка к финишу
+    s+=`<path d="M${x1} ${R(lineY-9)} L${x1+15} ${R(lineY)} L${x1} ${R(lineY+9)} Z" fill="#000"/>`;
+    // ФИНИШ дорожки
+    s+=`<rect x="${finX}" y="${R(lineY-32)}" width="${wFin}" height="64" rx="14" fill="#fff" stroke="#000" stroke-width="3.5"/>`;
+    s+=`<text x="${R(finX+wFin/2)}" y="${R(lineY+13)}" text-anchor="middle" font-size="${syl.finish.length>1?32:38}">${letters(syl.finish,syl.tFin)}</text>`;
+    // разделитель
+    if(i<n-1) s+=`<line x1="40" y1="${R(bt+rowH)}" x2="${W-40}" y2="${R(bt+rowH)}" stroke="#c8c8c8" stroke-width="1" stroke-dasharray="3 5"/>`;
+  }
+  s+=`<text x="${W/2}" y="${H-26}" text-anchor="middle" font-size="12" fill="#888">LogoKonspekt · рабочий лист · автоматизация [${snd}] · дорожки · ${TYPE[st.type].label}</text>`;
+  s+=`</svg>`;
+  return s;
+}
+
+/* =====================================================================
+   ЛИСТ 2 — СЛОГОВОЕ ПОЛЕ (бродилка)
+   Материал набирается только из ЛЕГАЛЬНЫХ типов: выбранный тип
+   плюс более ранние ступени той же линии (как разминка).
+   ===================================================================== */
+function fieldSyllables(st){
+  const S=SOUNDS[st.sound], out=[];
+  const post=st.vowels.filter(v=>POST_VOWELS.indexOf(v)>=0);
+  const postV=post.length?post:['А'];
+  const preV =st.vowels.length?st.vowels:['А'];
+  const push=(t,cl,pv,ov)=>out.push(makeSyllable(st.sound,t,cl,pv,ov).text);
+
+  if(st.type==='onset'){
+    S.onset.forEach(cl=>postV.forEach(v=>push('onset',cl,null,v)));   // кластер-мажор: ТРА ТРО ТРУ ТРЫ, потом ДРА…
+    postV.forEach(v=>push('direct',null,null,v));                     // разминка
+  }else if(st.type==='coda'){
+    S.coda.forEach(cl=>preV.forEach(v=>push('coda',cl,v,null)));
+    preV.forEach(v=>push('reverse',null,v,null));
+  }else{
+    const order=['direct','reverse','intervoc'], upto=order.indexOf(st.type);
+    for(let k=0;k<=upto;k++){
+      if(order[k]==='direct')   postV.forEach(v=>push('direct',null,null,v));
+      if(order[k]==='reverse')  preV.forEach(v=>push('reverse',null,v,null));
+      if(order[k]==='intervoc') postV.forEach(v=>push('intervoc',null,st.leadVowel,v));
+    }
+  }
+  return out;
+}
+function buildField(st){
+  const snd=st.sound, S=SOUNDS[snd];
+  const rng=mulberry32(0x10CA0729*(st.variant+1));
+  const syls=fieldSyllables(st);
+  const count=16;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="${FONT}">`;
+  s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
+  s+=`<rect x="14" y="14" width="${W-28}" height="${H-28}" rx="26" fill="none" stroke="#000" stroke-width="2.5"/>`;
+  s+=`<text x="${W/2}" y="70" text-anchor="middle" font-size="30" font-weight="bold">Автоматизация звука [${snd}] · поле</text>`;
+  s+=`<text x="${W/2}" y="102" text-anchor="middle" font-size="18">иди по кружкам от СТАРТА и называй слоги</text>`;
+  s+=`<text x="${W/2}" y="128" text-anchor="middle" font-size="12.5" fill="#777">взрослому: тип слога — ${TYPE[st.type].label} (${typeExample(snd,st.type)}) · кружок = один повтор, между кружками звук тянется слитно</text>`;
+  // нейтральный декор (без объектов — чтобы не занести чужой звук)
+  s+=`<path d="M40 146 L754 146" stroke="#ccc" stroke-width="2" stroke-dasharray="14 10"/>`;
+  s+=`<path d="M40 1074 L754 1074" stroke="#ccc" stroke-width="2" stroke-dasharray="14 10"/>`;
+  // позиции кружков (сетка со случайным смещением, змейкой)
+  const cols=[150,330,510,668], rowsY=[262,440,618,796];
+  const pts=[];
+  for(let r=0;r<rowsY.length;r++){
+    const order=(r%2? cols.slice().reverse():cols);
+    order.forEach(cx=>pts.push({x:R(cx+(rng()*2-1)*32), y:R(rowsY[r]+(rng()*2-1)*28)}));
+  }
+  const use=pts.slice(0,count);
+  let route='M'+use[0].x+' '+use[0].y+' ';
+  for(let i=1;i<use.length;i++) route+='L'+use[i].x+' '+use[i].y+' ';
+  s+=`<path d="${route.trim()}" fill="none" stroke="#000" stroke-width="1.6" stroke-dasharray="2 8" stroke-linecap="round" opacity="0.5"/>`;
+  use.forEach((p,i)=>{
+    const syl=syls[i%syls.length];
+    s+=`<circle cx="${p.x}" cy="${p.y}" r="36" fill="#fff" stroke="#000" stroke-width="3"/>`;
+    s+=`<text x="${p.x}" y="${p.y+8}" text-anchor="middle" font-size="${syl.length>2?20:24}" font-weight="bold">${syl}</text>`;
+  });
+  const s0=use[0];
+  s+=`<path d="M${s0.x-96} ${s0.y} L${s0.x-46} ${s0.y}" stroke="#000" stroke-width="3" stroke-linecap="round"/>`;
+  s+=`<path d="M${s0.x-56} ${s0.y-9} L${s0.x-40} ${s0.y} L${s0.x-56} ${s0.y+9} Z" fill="#000"/>`;
+  s+=`<text x="${s0.x-96}" y="${s0.y-14}" font-size="20" font-weight="bold">СТАРТ</text>`;
+  s+=`<text x="${W/2}" y="${H-26}" text-anchor="middle" font-size="12" fill="#888">LogoKonspekt · рабочий лист · автоматизация [${snd}] · слоговое поле</text>`;
+  s+=`</svg>`;
+  return s;
+}
+
+/* =====================================================================
+   СОСТОЯНИЕ + UI
+   ===================================================================== */
+const state={
+  sound:'Р',                       // дефолт — самый частый родительский запрос
+  type:'direct',
+  cluster:SOUNDS['Р'].onset[0],
+  vowels:['А','О','У','Ы'],
+  leadVowel:'А',
+  tracks:4,
+  lineStyle:'smooth',
+  icons:'sound',
+  sheet:'tracks',
+  variant:0,
+};
+
+function currentSVG(){ return state.sheet==='field'? buildField(state) : buildTracks(state); }
+function render(){ document.getElementById('preview').innerHTML=currentSVG(); }
+
+/* ---- кнопки типа слога строим из данных, с живым примером ---- */
+const typeBox=document.getElementById('ctl-type');
+function paintTypeButtons(){
+  typeBox.innerHTML=SYL_TYPES.map(t=>
+    `<button data-v="${t.v}" class="${t.v===state.type?'on':''}">${t.label} · <b>${typeExample(state.sound,t.v)}</b></button>`
+  ).join('');
+  typeBox.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click',()=>{ state.type=b.dataset.v; sanitize(); syncUI(); render(); });
+  });
+}
+
+/* ---- сегмент-кнопки (одиночный выбор) ---- */
+function bindSeg(id,key,after){
+  const box=document.getElementById(id);
+  box.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      state[key]=b.dataset.v;
+      box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+      if(after) after();
+      render();
+    });
+  });
+  box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===state[key]));
+}
+bindSeg('ctl-sheet','sheet');
+bindSeg('ctl-linestyle','lineStyle');
+bindSeg('ctl-sound','sound',()=>{ sanitize(); paintTypeButtons(); syncUI(); });
+
+/* ---- гласные (мультивыбор) ---- */
+const vowBox=document.getElementById('ctl-vowels');
+vowBox.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const v=b.dataset.v, i=state.vowels.indexOf(v);
+    if(i>=0){ if(state.vowels.length>1) state.vowels.splice(i,1); }   // хотя бы одна гласная
+    else state.vowels.push(v);
+    const order=PRE_VOWELS;
+    state.vowels.sort((a,c)=>order.indexOf(a)-order.indexOf(c));
+    syncUI(); render();
+  });
+});
+/* ---- первая гласная интервокального слога (одиночный выбор) ---- */
+const leadBox=document.getElementById('ctl-lead');
+leadBox.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{ state.leadVowel=b.dataset.v; syncUI(); render(); });
+});
+
+/* ---- степпер дорожек ---- */
+document.getElementById('ctl-tracks').querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    state.tracks=Math.max(1,Math.min(5,state.tracks+(+b.dataset.step)));
+    document.getElementById('tracks-val').textContent=state.tracks;
+    render();
+  });
+});
+
+/* ---- картинки ---- */
+document.getElementById('ctl-icons').addEventListener('change',e=>{
+  state.icons=e.target.value; syncUI(); render();
+});
+
+/* ---- приведение состояния к легальному ---- */
+function sanitize(){
+  const t=TYPE[state.type];
+  // кластер должен принадлежать нужному списку (onset ≠ coda!)
+  if(t.cluster){
+    const list=SOUNDS[state.sound][t.cluster];
+    if(list.indexOf(state.cluster)<0) state.cluster=list[0];
+  }
+  // после целевого звука И невозможна — вычищаем
+  if(t.vowel==='post'){
+    state.vowels=state.vowels.filter(v=>POST_VOWELS.indexOf(v)>=0);
+    if(!state.vowels.length) state.vowels=['А'];
+  }
+}
+
+/* ---- перерисовка формы под текущее состояние ---- */
+function syncUI(){
+  const t=TYPE[state.type];
+  // звук
+  document.getElementById('ctl-sound').querySelectorAll('button')
+    .forEach(x=>x.classList.toggle('on',x.dataset.v===state.sound));
+  const S=SOUNDS[state.sound];
+  document.getElementById('hint-sound').textContent=
+    `игровой образ: «${S.subtitle}» — ${S.note}`;
+  // тип слога
+  typeBox.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===state.type));
+  // стечение
+  const fldC=document.getElementById('fld-cluster');
+  if(t.cluster){
+    const list=SOUNDS[state.sound][t.cluster];
+    fldC.classList.remove('hidden');
+    const pos = state.cluster.indexOf(state.sound)===0 ? 'первая' : 'вторая';
+    document.getElementById('lbl-cluster').textContent =
+      `Стечение (${state.sound} в нём — ${pos} буква)`;
+    const cbox=document.getElementById('ctl-cluster');
+    cbox.innerHTML=list.map(c=>`<button data-v="${c}" class="${c===state.cluster?'on':''}">${c}</button>`).join('');
+    cbox.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click',()=>{ state.cluster=b.dataset.v; syncUI(); render(); });
+    });
+    document.getElementById('hint-cluster').textContent = t.cluster==='onset'
+      ? `с этими стечениями слог бывает только НАЧАЛЬНЫМ (${orth(state.cluster+'А')}). В ряду стечение держим, меняем гласную.`
+      : `с этими стечениями слог бывает только КОНЕЧНЫМ (А${state.cluster}). В ряду стечение держим, меняем гласную.`;
+  }else fldC.classList.add('hidden');
+  // гласные
+  const isPre=(t.vowel==='pre');
+  document.getElementById('lbl-vowels').textContent = isPre? 'Гласные (перед звуком)':'Гласные (после звука)';
+  vowBox.querySelectorAll('button').forEach(x=>{
+    const legal = isPre? PRE_VOWELS.indexOf(x.dataset.v)>=0 : POST_VOWELS.indexOf(x.dataset.v)>=0;
+    x.classList.toggle('hide',!legal);
+    x.classList.toggle('on',state.vowels.indexOf(x.dataset.v)>=0);
+  });
+  document.getElementById('hint-vowels').innerHTML = isPre
+    ? 'гласная стоит ПЕРЕД звуком — <b>И доступна</b>: мягкость идёт назад, к предыдущей букве, а И'+
+      ` первая в слоге. И${state.sound} — звук остаётся твёрдым.`
+    : (SOUNDS[state.sound].alwaysHard
+        ? `гласная стоит ПОСЛЕ звука. У ${state.sound} нет мягкой пары, но и «${state.sound}Ы» не пишут: `+
+          `выбранная Ы печатается как ${state.sound}И и звучит [${state.sound.toLowerCase()}ы]. Отдельная кнопка И не нужна.`
+        : `гласная стоит ПОСЛЕ звука — <b>И недоступна</b>: она смягчает предыдущую букву, и ${state.sound}И `+
+          `— это уже мягкий ${state.sound}ь, другая цель и другая картотека.`);
+  // первая гласная (только интервокальный)
+  const fldL=document.getElementById('fld-lead');
+  fldL.classList.toggle('hidden',state.type!=='intervoc');
+  leadBox.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===state.leadVowel));
+  // характер линии
+  document.getElementById('ctl-linestyle').querySelectorAll('button')
+    .forEach(x=>x.classList.toggle('on',x.dataset.v===state.lineStyle));
+  // картинки
+  const words=iconPool(state).map(p=>p[1]).join(', ');
+  document.getElementById('hint-icons').textContent = state.icons==='none'
+    ? 'листа без картинок достаточно: материал несёт слог, а не рисунок'
+    : (state.icons==='neutral'
+        ? 'нейтральные объекты не содержат корригируемых звуков — безопасны при любом звуке'
+        : `в наборе: ${words} — каждое слово содержит [${state.sound}]`);
+  document.getElementById('tracks-val').textContent=state.tracks;
+}
+
+/* ---- кнопки под превью ---- */
+document.getElementById('btn-variant').addEventListener('click',()=>{
+  state.variant=(state.variant+1)%9999; render();
+});
+document.getElementById('btn-print').addEventListener('click',()=>window.print());
+
+/* PNG: SVG → canvas → toDataURL → download */
+document.getElementById('btn-png').addEventListener('click',()=>{
+  const svg=currentSVG();
+  const scale=2;                                   // ретина-качество
+  const img=new Image();
+  const url='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
+  img.onload=function(){
+    const cv=document.createElement('canvas');
+    cv.width=W*scale; cv.height=H*scale;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.drawImage(img,0,0,cv.width,cv.height);
+    const a=document.createElement('a');
+    a.download='logokonspekt_'+state.sound+'_'+state.type+'_'+state.sheet+'.png';
+    a.href=cv.toDataURL('image/png');
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  img.onerror=function(){ alert('Не удалось отрисовать PNG в этом браузере.'); };
+  img.src=url;
+});
+
+/* первый рендер — осмысленный лист без единого клика */
+auditIcons();
+paintTypeButtons();
+sanitize();
+syncUI();
+render();
+</script>

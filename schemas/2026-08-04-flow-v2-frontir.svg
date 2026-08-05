@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 900" width="1320" height="900" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5b6470"/>
+    </marker>
+  </defs>
+  <rect width="1320" height="900" fill="#fbfaf7"/>
+
+  <text x="40" y="48" font-size="25" font-weight="600" fill="#20262e">Флоу v2 — после проверки. Не «ступень», а ФРОНТИР</text>
+  <text x="40" y="74" font-size="13.5" fill="#6b7480">Логопедический генератор · 2026-08-04 · версия 1 опровергнута данными, вот что встало на её место</text>
+
+  <!-- ЧТО БЫЛО НЕВЕРНО -->
+  <rect x="40" y="98" width="620" height="188" rx="10" fill="#fdeeee" stroke="#c9767a" stroke-width="1.6"/>
+  <text x="62" y="126" font-size="15" font-weight="600" fill="#7a2f34">⛔ Что я выдумал (и автор поймал)</text>
+  <text x="62" y="152" font-size="13" fill="#7a3b40">«Логопед знает, на какой ступени ребёнок, и берёт материал</text>
+  <text x="62" y="170" font-size="13" fill="#7a3b40">этой ступени» → навигация «выбери ступень».</text>
+  <text x="62" y="196" font-size="13" font-weight="600" fill="#7a2f34">10 конспектов из 10 — несколько ступеней за занятие.</text>
+  <text x="62" y="214" font-size="13" fill="#7a3b40">Медиана 4 уровня. Из 33 названий занятий одну ступень</text>
+  <text x="62" y="232" font-size="13" fill="#7a3b40">называет ровно одно.</text>
+  <text x="62" y="258" font-size="12.5" fill="#7a3b40">ПРИЧИНА: подмена. Канонное правило «один ТИП СЛОГА на лист»</text>
+  <text x="62" y="276" font-size="12.5" fill="#7a3b40">я перенёс на ЛЕСТНИЦУ АВТОМАТИЗАЦИИ. Это разные вещи.</text>
+
+  <!-- ЧТО ВЕРНО -->
+  <rect x="680" y="98" width="600" height="188" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.6"/>
+  <text x="702" y="126" font-size="15" font-weight="600" fill="#2f4433">✅ Что проверка ОПРАВДАЛА — наш лист</text>
+  <text x="702" y="152" font-size="13" fill="#3c4b40">Многоблочность оказалась верной, а не «всё сразу».</text>
+  <text x="702" y="176" font-size="12.5" fill="#3c4b40">Карточка домашнего задания по [Ш] из картотеки практика:</text>
+  <text x="702" y="196" font-size="12.5" fill="#5d6b60">артикуляция → изолированный звук → прямые слоги →</text>
+  <text x="702" y="214" font-size="12.5" fill="#5d6b60">связка слог→слово → слова → грамматика</text>
+  <text x="702" y="240" font-size="13" font-weight="600" fill="#2f4433">Это ровно наши семь блоков.</text>
+  <text x="702" y="264" font-size="12.5" fill="#3c4b40">И сквозной словарь — тоже канон: «предложения на базе</text>
+  <text x="702" y="282" font-size="12.5" fill="#3c4b40">отработанных слов, в той же последовательности» (Фомичёва).</text>
+
+  <!-- ФРОНТИР -->
+  <rect x="40" y="308" width="1240" height="228" rx="10" fill="#f6f0fa" stroke="#9b7cb8" stroke-width="1.8"/>
+  <text x="62" y="338" font-size="17" font-weight="600" fill="#4a2f63">⭐ Правильная ручка — ФРОНТИР: «докуда дошли по ЭТОМУ звуку»</text>
+  <text x="62" y="364" font-size="13" fill="#553a6e">Лист строится как РАЗБЕГ снизу до фронтира. Нижние ступени не исчезают сразу — они работают разминкой</text>
+  <text x="62" y="382" font-size="13" fill="#553a6e">и отваливаются позже: в картотеке по [Ш] карточки №1–2 начинаются со слогов, карточка №9 — уже чистые предложения.</text>
+
+  <g font-size="12.5">
+    <rect x="62" y="400" width="176" height="52" rx="8" fill="#fff" stroke="#c3ade0"/>
+    <text x="76" y="422" font-weight="600" fill="#4a2f63">изолированно</text>
+    <text x="76" y="440" fill="#6b5185">р-р-р</text>
+
+    <rect x="250" y="400" width="176" height="52" rx="8" fill="#fff" stroke="#c3ade0"/>
+    <text x="264" y="422" font-weight="600" fill="#4a2f63">слоги</text>
+    <text x="264" y="440" fill="#6b5185">ра · ар · ара · кра</text>
+
+    <rect x="438" y="400" width="176" height="52" rx="8" fill="#fff" stroke="#c3ade0"/>
+    <text x="452" y="422" font-weight="600" fill="#4a2f63">слова</text>
+    <text x="452" y="440" fill="#6b5185">рак · гора · баран</text>
+
+    <rect x="626" y="400" width="176" height="52" rx="8" fill="#fff" stroke="#c3ade0"/>
+    <text x="640" y="422" font-weight="600" fill="#4a2f63">фразы</text>
+    <text x="640" y="440" fill="#6b5185">У мамы баран.</text>
+
+    <rect x="814" y="400" width="176" height="52" rx="8" fill="#4a2f63" stroke="#4a2f63"/>
+    <text x="828" y="422" font-weight="600" fill="#fff">текст ◀ фронтир</text>
+    <text x="828" y="440" fill="#d9cbe8">рассказ, пересказ</text>
+
+    <rect x="1002" y="400" width="256" height="52" rx="8" fill="#f0ecf4" stroke="#c3ade0" stroke-dasharray="5 4"/>
+    <text x="1016" y="422" fill="#8a7a9c">своя речь — сюда ещё не дошли</text>
+    <text x="1016" y="440" fill="#8a7a9c">лист заканчивается на фронтире</text>
+  </g>
+
+  <line x1="240" y1="426" x2="246" y2="426" stroke="#5b6470" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="428" y1="426" x2="434" y2="426" stroke="#5b6470" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="616" y1="426" x2="622" y2="426" stroke="#5b6470" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="804" y1="426" x2="810" y2="426" stroke="#5b6470" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <text x="62" y="484" font-size="13" font-weight="600" fill="#4a2f63">Две поломки, которые убивают вопрос «на какой ступени ребёнок»:</text>
+  <text x="62" y="506" font-size="12.5" fill="#553a6e">1 · Ступень принадлежит паре «ребёнок × ЗВУК». У Фомичёвой один ребёнок сразу: з в рассказах · ц в словах · р в предложениях · л в слогах.</text>
+  <text x="62" y="526" font-size="12.5" fill="#553a6e">2 · Настоящая лестница внутри звука — ~15 подступеней по трём осям (тип слога × позиция в слове × слоговая структура). Четыре кнопки её не выражают.</text>
+
+  <!-- ЧТО МЕНЯЕТСЯ -->
+  <rect x="40" y="558" width="620" height="200" rx="10" fill="#ffffff" stroke="#c9cdd3" stroke-width="1.5"/>
+  <text x="62" y="586" font-size="15" font-weight="600" fill="#2b333c">Что меняется в интерфейсе</text>
+  <text x="62" y="612" font-size="13" fill="#3c444d">Экран 1 — звук. <tspan fill="#8a929c">Не меняется.</tspan></text>
+  <text x="62" y="636" font-size="13" fill="#3c444d">Экран 2 — было «что отрабатываем», станет:</text>
+  <text x="62" y="658" font-size="13" font-weight="600" fill="#2b333c">«Докуда дошли по [Р]?»</text>
+  <text x="62" y="678" font-size="12.5" fill="#69727e">одна шкала: слоги · слова · фразы · текст</text>
+  <text x="62" y="700" font-size="12.5" fill="#3c444d">Лист собирается ОТ начала ДО отмеченной точки.</text>
+  <text x="62" y="722" font-size="12.5" fill="#3c444d">Тип слога остаётся отдельной ручкой — он законно один на лист.</text>
+  <text x="62" y="746" font-size="12.5" font-style="italic" fill="#8a929c">Движок трогать не надо. Меняется навигация и формулировка.</text>
+
+  <!-- ПРАВКА ДВИЖКА -->
+  <rect x="680" y="558" width="600" height="200" rx="10" fill="#fff6e6" stroke="#d9a441" stroke-width="1.5"/>
+  <text x="702" y="586" font-size="15" font-weight="600" fill="#6b4c0c">Одна прямая правка движка</text>
+  <text x="702" y="614" font-size="13" fill="#5f4a17">Блок [4] у нас — 12–24 слова, и эта цифра была помечена</text>
+  <text x="702" y="632" font-size="13" fill="#5f4a17">как 🔶 наша рамка: книжного источника под ней не было.</text>
+  <text x="702" y="658" font-size="13" font-weight="600" fill="#6b4c0c">Источник нашёлся. Фомичёва: «За одно занятие даётся</text>
+  <text x="702" y="676" font-size="13" font-weight="600" fill="#6b4c0c">10—16 слов, каждое проговаривается 4—5 раз».</text>
+  <text x="702" y="702" font-size="13" fill="#5f4a17">Наша верхняя граница выше канонной — подрезать.</text>
+  <text x="702" y="728" font-size="12.5" font-style="italic" fill="#7a6634">Первая книжная цифра под нормой, которая была нашей догадкой.</text>
+
+  <rect x="40" y="780" width="1240" height="86" rx="10" fill="#eef2f7" stroke="#7d95b0" stroke-width="1.5"/>
+  <text x="62" y="808" font-size="14.5" font-weight="600" fill="#2b3a4a">Единица выдачи — подтверждена источником</text>
+  <text x="62" y="832" font-size="13" fill="#3a4859">«Одна страница — одно задание (одна неделя)». И порядок листов НЕ фиксирован: «последовательность заданий может быть разной,</text>
+  <text x="62" y="852" font-size="13" fill="#3a4859">в зависимости от фонетических возможностей ребёнка». Значит автопрогрессия — не обязанность машины, а право логопеда.</text>
+</svg>

@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 830" width="1240" height="830" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5b6470"/>
+    </marker>
+    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#a9b0ba"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="830" fill="#fbfaf7"/>
+
+  <text x="40" y="50" font-size="25" font-weight="600" fill="#20262e">Одна база — много форматов. Почему это не набор отдельных инструментов</text>
+  <text x="40" y="76" font-size="13.5" fill="#6b7480">Логопедический генератор · 2026-08-04 · ✅ из источника · 🔶 наш вывод · ⚠ наше решение</text>
+
+  <!-- ВХОД -->
+  <rect x="40" y="104" width="252" height="176" rx="10" fill="#eef2f7" stroke="#7d95b0" stroke-width="1.5"/>
+  <text x="60" y="132" font-size="15" font-weight="600" fill="#2b3a4a">ВХОД — один, на ребёнка</text>
+  <text x="60" y="160" font-size="13.5" fill="#3a4859">звук · профиль · ступень</text>
+  <text x="60" y="188" font-size="12.5" fill="#5d6b7a">Профиль ребёнка — СКВОЗНОЙ:</text>
+  <text x="60" y="205" font-size="12.5" fill="#5d6b7a">отметил «нет Ш» — Ш уходит</text>
+  <text x="60" y="222" font-size="12.5" fill="#5d6b7a">из ВСЕГО, что он сегодня</text>
+  <text x="60" y="239" font-size="12.5" fill="#5d6b7a">получит.</text>
+  <text x="60" y="264" font-size="12.5" font-weight="600" fill="#2b3a4a">🔶 главный довод против</text>
+  <text x="60" y="264" font-size="12.5" fill="#2b3a4a" opacity="0"> </text>
+
+  <!-- ЯДРО -->
+  <rect x="332" y="104" width="262" height="176" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="352" y="132" font-size="15" font-weight="600" fill="#2f4433">ЯДРО — в одном экземпляре</text>
+  <text x="352" y="158" font-size="13" fill="#3c4b40">• словарь 522 слова</text>
+  <text x="352" y="178" font-size="13" fill="#3c4b40">• фонетический движок</text>
+  <text x="352" y="198" font-size="13" fill="#3c4b40">• фильтр чистоты</text>
+  <text x="352" y="218" font-size="13" fill="#3c4b40">• морфология и метрики А4</text>
+  <text x="352" y="246" font-size="12.5" font-style="italic" fill="#5d6b60">✅ Второй склад слов или второй</text>
+  <text x="352" y="263" font-size="12.5" font-style="italic" fill="#5d6b60">фильтр чистоты = брак.</text>
+
+  <line x1="292" y1="192" x2="328" y2="192" stroke="#5b6470" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ДВЕ ОСИ -->
+  <rect x="634" y="104" width="262" height="176" rx="10" fill="#fff6e6" stroke="#d9a441" stroke-width="1.5"/>
+  <text x="654" y="132" font-size="15" font-weight="600" fill="#6b4c0c">ДВЕ ОСИ НАРЕЗКИ</text>
+  <text x="654" y="160" font-size="13" fill="#5f4a17">слоговая ступень → ТИП СЛОГА</text>
+  <text x="654" y="177" font-size="12" fill="#7a6634">РА · АР · АРА · КРА · АРТ</text>
+  <text x="654" y="203" font-size="13" fill="#5f4a17">словесная → ПОЗИЦИЯ В СЛОВЕ</text>
+  <text x="654" y="220" font-size="12" fill="#7a6634">рак · корова · комар</text>
+  <text x="654" y="248" font-size="12.5" font-style="italic" fill="#7a6634">✅ Перемножать оси ЗАПРЕЩЕНО —</text>
+  <text x="654" y="265" font-size="12.5" font-style="italic" fill="#7a6634">так родились «АПЛА» и «АПЛ».</text>
+
+  <line x1="594" y1="192" x2="630" y2="192" stroke="#5b6470" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ТЕКСТОВЫЕ -->
+  <rect x="936" y="104" width="264" height="176" rx="10" fill="#ffffff" stroke="#c9cdd3" stroke-width="1.5"/>
+  <text x="956" y="132" font-size="15" font-weight="600" fill="#2b333c">ТЕКСТОВЫЕ ФОРМАТЫ</text>
+  <text x="956" y="158" font-size="13" fill="#3c444d">✅ Лист автоматизации — готов</text>
+  <text x="956" y="180" font-size="13" fill="#8a929c">⬜ Дорожка (слоги по тропе)</text>
+  <text x="956" y="202" font-size="13" fill="#8a929c">⬜ Рассказ — строить заново</text>
+  <text x="956" y="230" font-size="12.5" font-style="italic" fill="#69727e">Картинка не нужна: слово задано</text>
+  <text x="956" y="247" font-size="12.5" font-style="italic" fill="#69727e">буквами, взрослый читает вслух.</text>
+  <text x="956" y="266" font-size="12.5" font-style="italic" fill="#69727e">Ворот меньше — пул богаче.</text>
+
+  <line x1="896" y1="170" x2="932" y2="150" stroke="#5b6470" stroke-width="1.6" marker-end="url(#a)"/>
+  <line x1="896" y1="215" x2="932" y2="330" stroke="#5b6470" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- НАБОР КАРТИНОК -->
+  <rect x="40" y="330" width="556" height="240" rx="10" fill="#f6f0fa" stroke="#9b7cb8" stroke-width="1.8"/>
+  <text x="62" y="360" font-size="17" font-weight="600" fill="#4a2f63">⭐ НАБОР ИЗ 9 КАРТИНОК — вот настоящая единица</text>
+  <text x="62" y="386" font-size="13" fill="#553a6e">Не «упражнение», а НАБОР. Один набор обслуживает 3–4 задания —</text>
+  <text x="62" y="405" font-size="13" fill="#553a6e">это методическая находка Комаровой, а не экономия.</text>
+
+  <g font-size="12.5" fill="#4a2f63">
+    <rect x="62" y="424" width="120" height="34" rx="6" fill="#fff" stroke="#c3ade0"/>
+    <text x="72" y="446">лабиринт</text>
+    <rect x="192" y="424" width="120" height="34" rx="6" fill="#fff" stroke="#c3ade0"/>
+    <text x="202" y="446">4-й лишний</text>
+    <rect x="322" y="424" width="130" height="34" rx="6" fill="#fff" stroke="#c3ade0"/>
+    <text x="332" y="446">зашумлённые</text>
+    <rect x="462" y="424" width="112" height="34" rx="6" fill="#fff" stroke="#c3ade0"/>
+    <text x="472" y="446">прописи</text>
+  </g>
+  <text x="62" y="486" font-size="13" fill="#553a6e">Это НАДСТРОЙКИ над одним набором, а не отдельные продукты. Ровно то,</text>
+  <text x="62" y="505" font-size="13" fill="#553a6e">что просила Ольга: «листы, решающие одновременно несколько задач».</text>
+  <text x="62" y="532" font-size="13" font-weight="600" fill="#4a2f63">🔶 Отсюда: ВЕКТОР — условие, а не удобство.</text>
+  <text x="62" y="551" font-size="12.5" fill="#6b5185">Один SVG → целая картинка · штриховка поверх · контур · раскраска. Растр этого не даёт.</text>
+
+  <!-- ВОРОТА КАРТИНКИ -->
+  <rect x="636" y="330" width="564" height="240" rx="10" fill="#ffffff" stroke="#c9cdd3" stroke-width="1.5"/>
+  <text x="658" y="360" font-size="17" font-weight="600" fill="#2b333c">ВОРОТА КАРТИНКИ — их больше, чем у текста</text>
+  <text x="658" y="388" font-size="13" fill="#3c444d">✅ Картинка — это ЗАДАНИЕ, а не оформление: ребёнок не читает лист,</text>
+  <text x="658" y="406" font-size="13" fill="#3c444d">    он его НАЗЫВАЕТ. Убери картинку — задача исчезает.</text>
+  <text x="658" y="430" font-size="13" fill="#3c444d">✅ Фильтр чистоты идёт за голосом ребёнка. «Полудекоративной» иконки</text>
+  <text x="658" y="448" font-size="13" fill="#3c444d">    не бывает: декоративна — бесполезна, несущая — нарушение прямое.</text>
+  <text x="658" y="472" font-size="13" fill="#3c444d">✅ Приёмка = NAME AGREEMENT, а не красота. Сарафан, которого ребёнок</text>
+  <text x="658" y="490" font-size="13" fill="#3c444d">    зовёт «платьем», — брак при любом качестве рисунка.</text>
+  <text x="658" y="514" font-size="13" fill="#3c444d">⚠ Иерархия: целевой звук &gt; нейтральный &gt; ЗАПРЕТ на оппозиционный (р–л, с–ш).</text>
+  <text x="658" y="538" font-size="13" fill="#3c444d">✅ Рисуем в цвете — принимаем в ч/б. Два теста, а не компромисс.</text>
+  <text x="658" y="558" font-size="12.5" font-style="italic" fill="#69727e">Пул картиночного формата всегда беднее текстового — это плата за картинку, не баг.</text>
+
+  <!-- НЕДЕЛЯ -->
+  <rect x="40" y="600" width="556" height="120" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="62" y="628" font-size="15" font-weight="600" fill="#2f4433">Упаковка — НЕДЕЛЯ, а не лист</text>
+  <text x="62" y="654" font-size="13" fill="#3c4b40">✅ 25 детей на ставку · не менее 2 занятий в неделю (сад), 3 (школа, ТНР)</text>
+  <text x="62" y="674" font-size="13" fill="#3c4b40">✅ «Изготовление пособий» — 1 час КАЖДЫЙ день в циклограмме ДОУ</text>
+  <text x="62" y="694" font-size="13" fill="#3c4b40">🔶 ≈4–10 материалов на одного ребёнка в неделю</text>
+  <text x="62" y="712" font-size="12.5" font-style="italic" fill="#5d6b60">⚠ Но пачку сегодня не собрать: автопрогрессии нет, ступень задаёт логопед.</text>
+
+  <!-- ДЫРЫ -->
+  <rect x="636" y="600" width="564" height="120" rx="10" fill="#fdeeee" stroke="#c9767a" stroke-width="1.5"/>
+  <text x="658" y="628" font-size="15" font-weight="600" fill="#7a2f34">Чего нет — знать до стройки</text>
+  <text x="658" y="652" font-size="12.5" fill="#7a3b40">❓ Зачем методически «зашумлённые картинки» — молчат ВСЕ источники</text>
+  <text x="658" y="671" font-size="12.5" fill="#7a3b40">❓ Стиль не задан нигде · порога приёмки нет · цвет vs ч/б не измерено</text>
+  <text x="658" y="690" font-size="12.5" fill="#7a3b40">❓ Печатают ли логопеды слоги вообще — главный вопрос всего продукта</text>
+  <text x="658" y="709" font-size="12.5" fill="#7a3b40">⚡ «ИИ-картинки неузнаваемы» — источника НЕТ, Ольга говорит обратное</text>
+
+  <!-- ИТОГ -->
+  <rect x="40" y="744" width="1160" height="58" rx="10" fill="#20262e"/>
+  <text x="62" y="770" font-size="14.5" font-weight="600" fill="#ffffff">Форма продукта: ОДИН вход — МНОГО выходов. Не набор автономных инструментов.</text>
+  <text x="62" y="791" font-size="13" fill="#b9c0c9">Автономные ссылки заставили бы вводить профиль ребёнка заново в каждой и рисовать картинки заново для каждой — ров рассыпается.</text>
+</svg>

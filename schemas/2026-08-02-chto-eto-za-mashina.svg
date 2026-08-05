@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 700" width="1060" height="700" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5b6470"/>
+    </marker>
+    <marker id="ar-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#a9b0ba"/>
+    </marker>
+  </defs>
+
+  <rect width="1060" height="700" fill="#fbfaf7"/>
+
+  <text x="40" y="52" font-size="26" font-weight="600" fill="#20262e">Логопедический генератор — что это за машина</text>
+  <text x="40" y="78" font-size="14" fill="#6b7480">Капсула заведена 2026-08-02 · схема для автора · зелёное — стоит и проверено, пунктир — впереди</text>
+
+  <!-- 1. картотеки -->
+  <rect x="40" y="110" width="250" height="150" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="60" y="138" font-size="15" font-weight="600" fill="#2f4433">1 · Картотеки слов</text>
+  <text x="60" y="163" font-size="13.5" fill="#3c4b40">[Р] 162 · [С] 195 · [Ш] 165</text>
+  <text x="60" y="183" font-size="13.5" fill="#3c4b40">+ нейтральные (без спорных звуков)</text>
+  <text x="60" y="211" font-size="12.5" fill="#5d6b60">У каждого слова разобрано, как оно</text>
+  <text x="60" y="228" font-size="12.5" fill="#5d6b60">ЗВУЧИТ: слоги, стечения, где стоит</text>
+  <text x="60" y="245" font-size="12.5" fill="#5d6b60">целевой звук, нет ли чужих.</text>
+
+  <!-- 2. фильтр -->
+  <rect x="330" y="110" width="250" height="150" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="350" y="138" font-size="15" font-weight="600" fill="#2f4433">2 · Фильтр под ребёнка</text>
+  <text x="350" y="164" font-size="13.5" fill="#3c4b40">«у него ещё не поставлены Л и Ш»</text>
+  <text x="350" y="192" font-size="12.5" fill="#5d6b60">Машина выбрасывает все слова, где</text>
+  <text x="350" y="209" font-size="12.5" fill="#5d6b60">эти звуки встречаются — ребёнок не</text>
+  <text x="350" y="226" font-size="12.5" fill="#5d6b60">должен спотыкаться о звук, которого</text>
+  <text x="350" y="243" font-size="12.5" fill="#5d6b60">у него нет.</text>
+
+  <!-- 3. сборка -->
+  <rect x="620" y="110" width="250" height="150" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="640" y="138" font-size="15" font-weight="600" fill="#2f4433">3 · Сборка листа</text>
+  <text x="640" y="164" font-size="13.5" fill="#3c4b40">7 блоков по канону методики</text>
+  <text x="640" y="192" font-size="12.5" fill="#5d6b60">гимнастика → образ звука → слоги →</text>
+  <text x="640" y="209" font-size="12.5" fill="#5d6b60">слова → фразы → лабиринт →</text>
+  <text x="640" y="226" font-size="12.5" fill="#5d6b60">чистоговорка. Вёрстка проверяет,</text>
+  <text x="640" y="243" font-size="12.5" fill="#5d6b60">что всё влезло в один А4.</text>
+
+  <line x1="290" y1="185" x2="326" y2="185" stroke="#5b6470" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="580" y1="185" x2="616" y2="185" stroke="#5b6470" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- лист -->
+  <rect x="900" y="110" width="120" height="150" rx="8" fill="#ffffff" stroke="#4a5560" stroke-width="2"/>
+  <line x1="920" y1="150" x2="1000" y2="150" stroke="#c2c9d1" stroke-width="3"/>
+  <line x1="920" y1="170" x2="1000" y2="170" stroke="#c2c9d1" stroke-width="3"/>
+  <line x1="920" y1="190" x2="985" y2="190" stroke="#c2c9d1" stroke-width="3"/>
+  <line x1="920" y1="210" x2="1000" y2="210" stroke="#c2c9d1" stroke-width="3"/>
+  <line x1="920" y1="230" x2="970" y2="230" stroke="#c2c9d1" stroke-width="3"/>
+  <text x="960" y="136" font-size="12.5" font-weight="600" fill="#2b333c" text-anchor="middle">лист А4</text>
+  <line x1="870" y1="185" x2="896" y2="185" stroke="#5b6470" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- ров -->
+  <rect x="40" y="300" width="980" height="86" rx="10" fill="#fff6e6" stroke="#d9a441" stroke-width="1.5"/>
+  <text x="62" y="330" font-size="15" font-weight="600" fill="#6b4c0c">В чём ров — почему это не «ещё одна распечатка»</text>
+  <text x="62" y="356" font-size="13.5" fill="#5f4a17">Бумажное пособие в магазине — одно на всех детей: там есть слова со звуками, которые конкретному ребёнку ещё не даются.</text>
+  <text x="62" y="376" font-size="13.5" fill="#5f4a17">Отфильтровать их можно только пересобрав материал заново. Машина делает это за секунду — альбом так не может в принципе.</text>
+
+  <!-- что стоит -->
+  <rect x="40" y="418" width="470" height="172" rx="10" fill="#eef4ee" stroke="#7fa383" stroke-width="1.5"/>
+  <text x="62" y="446" font-size="15" font-weight="600" fill="#2f4433">✅ Что уже стоит и проверено</text>
+  <text x="62" y="472" font-size="13" fill="#3c4b40">• движок звучания, сборщик листа, вёрстка А4, лабиринт</text>
+  <text x="62" y="493" font-size="13" fill="#3c4b40">• 522 слова на три звука, ворота чистоты пройдены начисто</text>
+  <text x="62" y="514" font-size="13" fill="#3c4b40">• 1641 автопроверка зелёная, чеклист брака — 0 нарушений</text>
+  <text x="62" y="535" font-size="13" fill="#3c4b40">• независимая сверка нашла 3 дыры на стыке — все закрыты</text>
+  <text x="62" y="563" font-size="12.5" font-style="italic" fill="#5d6b60">Проверено кодом, а не на слово — это фундамент, на нём можно строить.</text>
+
+  <!-- что впереди -->
+  <rect x="550" y="418" width="470" height="172" rx="10" fill="#f4f5f7" stroke="#a9b0ba" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="572" y="446" font-size="15" font-weight="600" fill="#3f4854">⬜ Что впереди — по порядку</text>
+  <text x="572" y="474" font-size="13" fill="#48525e">1 · Веб-интерфейс: звук → что не поставлено → готово</text>
+  <text x="572" y="497" font-size="13" fill="#48525e">2 · Картинки (вектор, приёмка по узнаваемости)</text>
+  <text x="572" y="520" font-size="13" fill="#48525e">3 · Форматы Ольги: 4-й лишний · зашумлённые картинки</text>
+  <text x="572" y="551" font-size="12.5" font-style="italic" fill="#69727e">Гейт «готово»: любой логопед из 150 в Телеграме</text>
+  <text x="572" y="569" font-size="12.5" font-style="italic" fill="#69727e">делает себе лист по ссылке — сам, без нас.</text>
+
+  <!-- граница -->
+  <rect x="40" y="612" width="980" height="58" rx="10" fill="#fdeeee" stroke="#c9767a" stroke-width="1.5"/>
+  <text x="62" y="638" font-size="14.5" font-weight="600" fill="#7a2f34">⚠ Главная непройденная граница: ни один лист ещё не видел живого логопеда.</text>
+  <text x="62" y="659" font-size="13" fill="#7a3b40">Всё выше проверено машиной и литературой. Проверки практикой — не было. Это ближайший риск, а не объём работы.</text>
+</svg>
