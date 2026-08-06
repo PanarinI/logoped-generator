@@ -341,8 +341,8 @@ function renderMoat(st) {
   if (st.kind === 'propisi') {
     box.appendChild(el('h2', null, 'Звуковая дорожка'));
     const p = el('p', 'hint',
-      `слог ${st.syllable.toUpperCase()} · ${st.rows} дорожки · ` +
-      st.shapes.join(' → '));
+      `слог ${st.syllable.toUpperCase()} · ${st.rows} дорожки, ` +
+      st.lengths.join(' → '));
     p.style.margin = '0 0 10px';
     box.appendChild(p);
     box.appendChild(el('p', 'hint',
@@ -461,11 +461,27 @@ function renderMazeMoat(box, st, label) {
   S.prev = Object.assign({}, st);
 }
 
+/* ТРИ СПИСКА ЗВУКОВ БЫЛИ ОДНИМ ЯЗЫКОМ — и читались как бред (поймано 08-06):
+   · серые чипы            = что УЖЕ убрано автоматически (смешивается с целью)
+   · ров «убрали сразу»    = то же самое, но с мягкими парами
+   · «обратите внимание»   = совсем другое: буквы в НАЗВАНИЯХ упражнений
+   Теперь у серых чипов стоит подпись, объясняющая, почему они серые, — иначе
+   логопед видит «нельзя выбрать» и не понимает причины. */
 function renderChips() {
   const box = $('chips');
   box.innerHTML = '';
   const base = new Set(S.cfg.sounds.find((x) => x.key === S.sound).stats.base_banned);
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
+  const off = S.cfg.profile_options
+    .filter((o) => o.key !== S.sound && base.has(o.key))
+    .map((o) => o.label);
+  const note = $('chips-note');
+  if (note) {
+    note.textContent = off.length
+      ? `${off.join(', ')} — уже убраны: их путают с [${label}], поэтому слов с ними на листе нет в любом случае.`
+      : '';
+    note.hidden = !off.length;
+  }
 
   S.cfg.profile_options.forEach((o) => {
     if (o.key === S.sound) return;                    // цель не предлагаем

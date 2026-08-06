@@ -221,6 +221,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .chip.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .chip:disabled { opacity: .32; cursor: default; font-weight: 400; }
 
+.chips-note { margin-top: var(--s2) !important; font-size: 12px !important;
+              line-height: 1.45; }
+
 /* предупреждения */
 .warn[hidden] { display: none; }
 .warn ul { margin: 0; padding-left: 18px; }

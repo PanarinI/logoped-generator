@@ -236,14 +236,29 @@ def _image_for(sound: str) -> Dict[str, str]:
         return {"name": "", "utterance": "", "tier": ""}
 
 
-# ТРИ СТУПЕНИ ЛИНИИ — по образцам Ольги (ГОЛОСА.md, разбор фото 08-06) и по
-# Поповой: один и тот же слог проходится ТРИЖДЫ, каждый раз по более трудному
-# пути. Раньше здесь была грубая ошибка: форма линии зависела от гласной, то
-# есть две разные оси были свалены в одну.
+# ТРИ ДОРОЖКИ — НАРАСТАЕТ ДЛИНА, А НЕ УЗОР
+# ─────────────────────────────────────────────────────────────────────
+# Решение принято 2026-08-06, и вот на чём стоит.
+# Задача дорожки одна: чтобы ребёнок тянул звук ДОЛЬШЕ и не бросил на полпути.
+# Отсюда:
+#   • ✅ ПОВТОР одного слога тремя строками — это и есть автоматизация
+#     (многократное повторение одного материала); так устроены все виденные
+#     образцы практиков (ГОЛОСА.md, разбор фото 08-06).
+#   • 🔶 НАРАСТАЕТ ДЛИНА пути: чем длиннее дорожка, тем дольше звучит звук.
+#     Это наше решение, но оно единственное связывает линию с речевой задачей
+#     напрямую. Длительность звучания — измеримая величина, узор — нет.
+#   • ⛔ УЗОР УБРАН. Раньше здесь была лестница «улитка → волна → петли» с
+#     объяснениями вроде «петли — не отрывая пальца». Ни одно защитить нечем:
+#     единственный найденный источник — самодельное пособие практика, а таких
+#     самоделок сколько логопедов, столько и вариантов. Форма линии в них —
+#     оформление, а не метод. Выдавать оформление за метод — брак по закону
+#     проекта №1.
+# Форма одна: пологая волна. Прямая не даёт ощущения пути, петли и зигзаги
+# перетягивают внимание на руку, а работать должен звук.
 LADDER = (
-    ("straight", "прямая",  _path_straight, "ведём ровно, на одном звуке"),
-    ("wave",     "волна",   _path_wave,     "на подъёме голос выше, на спуске ниже"),
-    ("loops",    "петли",   _path_loops,    "не отрывая пальца, до самого конца"),
+    (0.62, "короткая", "тянем до буквы, не отрывая пальца"),
+    (0.82, "средняя",  "теперь дорожка длиннее — звук тянется дольше"),
+    (1.00, "длинная",  "самая длинная: тянем ровно, не торопясь"),
 )
 
 
@@ -273,10 +288,10 @@ def build_propisi(sound: str = "р",
     image = _image_for(sound)
 
     lines: List[Dict[str, Any]] = []
-    for key, shape_label, fn, hint in LADDER:
+    for frac, length_label, hint in LADDER:
         lines.append({
-            "shape": key, "shape_label": shape_label,
-            "hint": hint, "_fn": fn,
+            "length_frac": frac, "length_label": length_label,
+            "hint": hint, "_fn": _path_wave,
         })
 
     return {
@@ -314,8 +329,11 @@ def render_propisi(p: Dict[str, Any]) -> str:
 
     rows: List[str] = []
     for i, ln in enumerate(p["lines"], 1):
-        w = LINE_W - 46.0
-        d = ln["_fn"](w, ROW_H - 8.0)
+        full = LINE_W - 46.0
+        w = full * ln["length_frac"]
+        # число волн держим пропорционально длине — иначе на короткой дорожке
+        # волны стали бы частыми, то есть ТРУДНЕЕ, а она должна быть легче
+        d = ln["_fn"](w, ROW_H - 8.0, max(2, round(3 * ln["length_frac"])))
         rows.append(f"""
   <div class="row">
     <div class="hero">
@@ -323,17 +341,19 @@ def render_propisi(p: Dict[str, Any]) -> str:
     </div>
     <div class="track-wrap">
       <div class="utter">{_e(utter)}</div>
-      <svg class="track" viewBox="0 0 {w:.1f} {ROW_H - 8.0:.1f}"
-           width="{w:.1f}mm" height="{ROW_H - 8.0:.1f}mm"
-           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="{d}" fill="none" stroke="#000" stroke-width="0.5"
-              stroke-linecap="round" stroke-linejoin="round"
-              stroke-dasharray="1.6 1.4"/>
-        <circle cx="1.2" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>
-      </svg>
+      <div class="track-row">
+        <svg class="track" viewBox="0 0 {w:.1f} {ROW_H - 8.0:.1f}"
+             width="{w:.1f}mm" height="{ROW_H - 8.0:.1f}mm"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="{d}" fill="none" stroke="#000" stroke-width="0.5"
+                stroke-linecap="round" stroke-linejoin="round"
+                stroke-dasharray="1.6 1.4"/>
+          <circle cx="1.2" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>
+        </svg>
+        <div class="finish">{_e(vowel.upper())}</div>
+      </div>
       <div class="hint">{i}. {_e(ln['hint'])}</div>
     </div>
-    <div class="finish">{_e(vowel.upper())}</div>
   </div>""")
 
     return f"""<!DOCTYPE html>
@@ -364,10 +384,10 @@ h1 b {{ font-size:20pt; }}
 .track-wrap {{ flex:1 1 auto; }}
 .utter {{ font-size:11pt; font-weight:700; letter-spacing:.04em;
    margin:0 0 0.5mm 6mm; }}
-.track {{ display:block; }}
+.track-row {{ display:flex; align-items:center; gap:2mm; }}
+.track {{ display:block; flex:0 0 auto; }}
 .hint {{ font-size:8.5pt; color:#444; margin:0.5mm 0 0 6mm; }}
-.finish {{ font-size:20pt; font-weight:700; width:12mm; flex:0 0 12mm;
-   text-align:left; }}
+.finish {{ font-size:20pt; font-weight:700; line-height:1; }}
 .adult {{ margin-top:6mm; padding-top:2mm; border-top:0.4pt solid #000;
    font-size:9.5pt; line-height:1.45; }}
 </style></head><body><div class="page">
@@ -381,14 +401,15 @@ h1 b {{ font-size:20pt; }}
 
 <h1>Звуковая дорожка · слог <b>{_e(syll.upper())}</b></h1>
 <p class="task">Веди пальцем по дорожке и тяни звук, пока не доедешь до буквы.
-   В конце скажи слог целиком: <b>{_e(syll)}</b>. Дорожки идут от лёгкой к трудной.</p>
+   В конце скажи слог целиком: <b>{_e(syll)}</b>. Каждая следующая дорожка длиннее — звук тянется дольше.</p>
 {''.join(rows)}
 
 <div class="adult">
-  <b>Взрослому.</b> Слог на всех трёх дорожках <b>один и тот же</b> — меняется
-  только путь: сначала ровный, потом с горками, потом с петлями. Смысл в том,
-  чтобы ребёнок удержал звук на более трудной линии, а не в том, чтобы пройти
-  побольше разных слогов. Не торопите: доехали до буквы — произнесли слог целиком.
+  <b>Взрослому.</b> Слог на всех трёх дорожках <b>один и тот же</b>, и форма
+  линии тоже — меняется только <b>длина</b>: каждая следующая дорожка длиннее,
+  значит звук тянется дольше. В этом весь смысл: не пройти побольше разных
+  слогов, а удержать один звук на всё более длинном выдохе. Не торопите:
+  доехали до буквы — произнесли слог целиком.
 </div>
 
 </div></body></html>"""
