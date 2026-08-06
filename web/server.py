@@ -51,6 +51,7 @@ import content as C          # noqa: E402
 import sheet as S            # noqa: E402
 import maze as M             # noqa: E402
 import track as T            # noqa: E402
+import propisi as PR         # noqa: E402
 import phonetics as ph       # noqa: E402
 
 sys.path.insert(0, HERE)
@@ -148,7 +149,8 @@ def words_on_sheet(content: Dict[str, Any]) -> List[str]:
 
 
 def build_sheet(sound: str, typ: str, prof: str,
-                sheet_no: int = 1, seed: int = 0) -> Dict[str, Any]:
+                sheet_no: int = 1, seed: int = 0,
+                audience: str = "home") -> Dict[str, Any]:
     """Канонный путь сборки листа. Возвращает готовый ответ для браузера.
 
     ВАЖНО про порядок. `render_sheet_ex` внутри себя зовёт `fit()`, а `fit`
@@ -176,7 +178,7 @@ def build_sheet(sound: str, typ: str, prof: str,
     html, _ = S.render_sheet_ex(
         fitted, meta,
         options={"stress": "non_obvious", "show_warnings": False,
-                 "no_fit": True},
+                 "no_fit": True, "audience": audience},
     )
 
     words = words_on_sheet(fitted)
@@ -395,10 +397,14 @@ class Handler(BaseHTTPRequestHandler):
                 if err:
                     self._json({"ok": False, "kind": "input", "message": err}, 400)
                     return
+                aud = str(data.get("audience", "home"))
+                if aud not in ("home", "lesson"):
+                    aud = "home"
                 self._json(build_sheet(
                     sound, typ, profile_str(data.get("profile")),
                     sheet_no=as_int(data.get("sheet_no"), 1, low=1),
                     seed=as_int(data.get("seed"), 0),
+                    audience=aud,
                 ))
 
             elif path == "/api/track":
@@ -418,6 +424,40 @@ class Handler(BaseHTTPRequestHandler):
                               "cells": t["meta"]["n_cells"],
                               "vowels": t["meta"]["vowels"],
                               "type_label": t["meta"]["type_label"]},
+                })
+
+            elif path == "/api/propisi":
+                sound = str(data.get("sound", "р"))
+                typ = str(data.get("typ", "direct"))
+                if sound not in C.WORDS_BY_SOUND:
+                    self._json({"ok": False, "kind": "input",
+                                "message": f"звука [{C.ph.sound_label(sound)}] "
+                                           f"в генераторе нет"}, 400)
+                    return
+                # Прописи строятся только на чистых слогах: в стечении второй
+                # согласный, его чистоту без словаря не проверить. Тип со
+                # стечением молча подменяем на прямой и говорим об этом.
+                notes: List[str] = []
+                if typ not in PR.PROPISI_TYPES:
+                    notes.append(
+                        "Для прописей взят прямой слог: в стечении есть второй "
+                        "согласный, и генератор не может проверить, поставлен "
+                        "ли он у ребёнка.")
+                    typ = "direct"
+                p = PR.build_propisi(sound, typ,
+                                     vowel=data.get("vowel") or None,
+                                     seed=as_int(data.get("seed"), 0))
+                self._json({
+                    "ok": True,
+                    "html": PR.render_propisi(p),
+                    "syllable": p["meta"]["syllable"],
+                    "warnings": {"blocking": [], "notes": notes},
+                    "stats": {"kind": "propisi",
+                              "rows": p["meta"]["n_rows"],
+                              "type_label": p["meta"]["type_label"],
+                              "syllable": p["meta"]["syllable"],
+                              "image_name": p["meta"]["image_name"],
+                              "shapes": [l["shape_label"] for l in p["lines"]]},
                 })
 
             elif path == "/api/maze":

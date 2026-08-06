@@ -167,9 +167,38 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
 .btn.small { padding: 6px 12px; font-size: 13px; }
 
+/* «домой / на занятие» — переключатель, а не две кнопки: выбор всегда один */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+       background: var(--line); border-radius: var(--r-sm); padding: 2px;
+       margin-bottom: var(--s2); }
+.seg-btn { border: 0; background: transparent; cursor: pointer;
+           font-size: 13px; font-weight: 600; color: var(--ink-2);
+           padding: 6px 0; border-radius: 5px;
+           transition: background .12s, color .12s; }
+.seg-btn:hover { background: #ece8e0; }
+.seg-btn.is-on { background: var(--card); color: var(--ink); }
+
+/* пометка на вкладке лабиринта: картинки чужие, выкладывать нельзя */
+.tab-flag { display: inline-block; margin-left: 5px; font-size: 10px;
+            font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+            color: var(--warn); vertical-align: 1px; }
+
+/* ров — техническая справка: свёрнут, мельче остального, внизу панели */
+.moat-box { padding: 0; }
+.moat-box > summary { cursor: pointer; list-style: none;
+                      padding: var(--s3) var(--s4); font-size: 13px;
+                      font-weight: 600; color: var(--ink-2); }
+.moat-box > summary::-webkit-details-marker { display: none; }
+.moat-box > summary::after { content: '▾'; float: right; color: var(--ink-3);
+                             font-size: 11px; line-height: 1.5; }
+.moat-box[open] > summary::after { content: '▴'; }
+.moat-box > summary:hover { color: var(--ink); }
+.moat-box .moat { padding: 0 var(--s4) var(--s3); }
+.moat-box .moat h2 { display: none; }   /* заголовок уже в summary */
+
 /* ров */
-.ledger { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.ledger td { padding: 5px 0; vertical-align: baseline; }
+.ledger { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ledger td { padding: 4px 0; vertical-align: baseline; }
 .ledger td.n { text-align: right; font-variant-numeric: tabular-nums;
                font-weight: 650; white-space: nowrap; padding-left: var(--s3); }
 .ledger tr.sum td { border-top: 1px solid var(--line); padding-top: var(--s2); }

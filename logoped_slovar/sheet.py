@@ -874,8 +874,13 @@ def _head(num: Optional[str], title: str, hint: str = "", task: str = "",
             f'{h}{t}{extra}</div>')
 
 
+# Подпись звука для человека («р'» → «Рь») живёт в phonetics.py — там же, где
+# классы мягкости. Здесь только ссылка, чтобы правило имело один дом.
+from phonetics import sound_label            # noqa: E402
+
+
 def _b0_header(meta: Dict[str, Any]) -> str:
-    sound = str(meta.get("sound", "")).upper()
+    sound = sound_label(meta.get("sound", ""))
     days = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
     ticks = "".join(f'<div class="tick"><i></i><s>{d}</s></div>' for d in days)
     return f"""<div class="doc">
@@ -1027,7 +1032,18 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
         warns.extend(fit_warns)
     warns.extend(lint(c, meta))
 
-    parts: List[str] = [_b0_header(meta)]
+    # КУДА идёт лист. Речевое содержание для дома и для занятия одинаково —
+    # различаются только две обёртки: шапка-документ [0] (неделя, клетки
+    # отметок, подпись родителя) и подвал взрослому [9] (как заниматься).
+    # Дома они нужны: там материал ведёт родитель-непрофессионал и тетрадь
+    # служит документом обмена. На занятии логопед рядом — обе лишние.
+    audience = opt.get("audience", "home")
+    if audience not in ("home", "lesson"):
+        raise SystemExit("audience должен быть 'home' или 'lesson'")
+
+    parts: List[str] = []
+    if audience == "home":
+        parts.append(_b0_header(meta))
     if c.get("articulation"):
         parts.append(_b1_articulation(c["articulation"]))
     if c.get("isolated"):
@@ -1043,7 +1059,7 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
         parts.append(_b6_sentences(c["sentences"], lk, sp))
     if c.get("chant"):
         parts.append(_b7_chant(c["chant"], lk, sp))
-    if c.get("footer"):
+    if c.get("footer") and audience == "home":
         parts.append(_b9_footer(c["footer"]))
 
     est = total_height(c)
@@ -1058,7 +1074,7 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Лист автоматизации [{_e(str(meta.get('sound', '')).upper())}]</title>
+<title>Лист автоматизации [{_e(sound_label(meta.get('sound', '')))}]</title>
 <!-- занято по модели: {est:.1f} мм из {CONTENT_H:.0f} мм -->
 <style>{_css(opt)}</style>
 </head>

@@ -116,7 +116,8 @@ if str(HERE) not in sys.path:                      # чтобы модуль р�
     sys.path.insert(0, str(HERE))
 
 import phonetics as ph                             # noqa: E402
-import content as C                                # noqa: E402
+import content as C
+import phonetics as _P                                # noqa: E402
 import sheet as S                                  # noqa: E402
 
 __all__ = [
@@ -1046,7 +1047,7 @@ def _render_scheme(sound: str, position: str) -> str:
         if hit:
             boxes.append(
                 f'<text x="{x + 11}" y="47" text-anchor="middle" font-size="15" '
-                f'font-weight="700">{html.escape(sound.upper())}</text>')
+                f'font-weight="700">{html.escape(_P.sound_label(sound))}</text>')
     return (
         f'<svg class="pic" viewBox="0 0 {PIC_VB_W:g} {PIC_VB_H:g}" '
         f'preserveAspectRatio="xMidYMid meet" role="img" aria-label="звуковая схема">'
@@ -1267,7 +1268,7 @@ def _header_html(maze: Dict[str, Any]) -> str:
     return (
         '<div class="doc">'
         '<div class="doc-row">'
-        f'<span class="f sound-badge">Звук [{_e(m["sound"].upper())}]</span>'
+        f'<span class="f sound-badge">Звук [{_e(_P.sound_label(m["sound"]))}]</span>'
         f'<span class="f">Дорожка · {_e(m["position_label"])}</span>'
         f'<span class="f">Имя: {name}</span>'
         f'<span class="f">Дата: <span class="fill fill-date"></span></span>'
@@ -1311,7 +1312,7 @@ def render_maze(maze: Dict[str, Any], options: Optional[Dict[str, Any]] = None) 
     options = options or {}
     cell = maze["meta"]["cell_mm"]
     cells = "".join(_cell_html(c, maze) for c in maze["cells"])
-    title = (f'Дорожка · звук [{maze["meta"]["sound"].upper()}] · '
+    title = (f'Дорожка · звук [{_P.sound_label(maze["meta"]["sound"])}] · '
              f'{maze["meta"]["position_label"]}')
     return (
         "<!DOCTYPE html>\n"
@@ -1334,7 +1335,7 @@ def render_maze(maze: Dict[str, Any], options: Optional[Dict[str, Any]] = None) 
 def render_preview(maze: Dict[str, Any]) -> str:
     m = maze["meta"]
     lines = [
-        f"ДОРОЖКА  звук [{m['sound'].upper()}]  {m['position_label']}"
+        f"ДОРОЖКА  звук [{_P.sound_label(m['sound'])}]  {m['position_label']}"
         f"  (позиция {m['position']}, режим {m['position_mode']})",
         f"профиль: {m['profile'] or 'чистый'}   запрещено: {m['banned']}",
         f"маршрут: {m['route']} — {m['route_label']}"

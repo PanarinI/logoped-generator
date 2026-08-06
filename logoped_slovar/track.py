@@ -49,7 +49,8 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
-import content as C            # noqa: E402
+import content as C
+import phonetics as _P            # noqa: E402
 
 
 class TrackError(Exception):
@@ -112,7 +113,7 @@ def build_track(sound: str = "р",
     return {
         "meta": {
             "sound": sound,
-            "sound_label": sound.upper(),
+            "sound_label": _P.sound_label(sound),
             "syl_type": syl_type,
             "type_label": C.SYL_TYPE_LABEL.get(syl_type, syl_type),
             "rows": rows,

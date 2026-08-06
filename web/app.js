@@ -14,6 +14,7 @@ const S = {
   position: 'initial',
   syllable: '',    // слог, который РЕАЛЬНО на текущем листе
   prev: null,      // прошлые числа рва — чтобы подсветить, что изменилось
+  audience: 'home', // куда лист: домой (с шапкой и подвалом) или на занятие
 };
 
 const $ = (id) => document.getElementById(id);
@@ -69,9 +70,9 @@ function renderSounds() {
     box.appendChild(b);
   });
   $('sounds-note').textContent =
-    'Собраны словари трёх звуков — на них генератор проверен. ' +
-    'Остальные звуки не показаны, потому что словаря под них ещё нет: ' +
-    'показать пустую кнопку было бы обманом.';
+    'Это все звуки, которые умеет этот лист. Ц и Ч сюда не входят: их нельзя ' +
+    'тянуть на одном выдохе, и порядок слогов у них обратный — им нужен ' +
+    'другой лист. Смычные (П Б Т Д К Г) — по той же причине.';
 }
 
 /* ── шаг 2: слог ─────────────────────────────────────────── */
@@ -103,6 +104,7 @@ function renderSyls() {
       $('moat').innerHTML = '';
       show('result');
       renderChips();
+      renderAudience();
       renderTabs();
       load();
     };
@@ -158,8 +160,29 @@ function renderTabs() {
   $('maze-note').hidden = (S.tab !== 'maze');
   if (S.tab === 'maze') renderPositions();
   $('reroll').hidden = (S.tab !== 'sheet');
-  // Профиль ребёнка меняет лист и лабиринт, но не дорожку: там нет слов.
-  $('ask').hidden = (S.tab === 'track') || !S.syllable;
+  // Профиль ребёнка меняет лист и лабиринт, но не дорожку и не прописи:
+  // там нет слов, а слог по построению чист (целевой звук + гласная).
+  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi') || !S.syllable;
+  // «Домой / на занятие» — свойство ЛИСТА: шапка-документ и подвал взрослому
+  // есть только у него. У дорожки и лабиринта их нет, переключать нечего.
+  $('where').hidden = (S.tab !== 'sheet');
+  // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
+  // на прописях было бы неправдой — там не лист, а дорожки.
+  $('moat-summary').textContent = {
+    sheet:   'Из чего собран этот лист',
+    track:   'Из чего собрана эта слоговая дорожка',
+    propisi: 'Из чего собрана эта звуковая дорожка',
+    maze:    'Из чего собран этот лабиринт',
+  }[S.tab] || 'Из чего это собрано';
+}
+
+function renderAudience() {
+  document.querySelectorAll('#audience .seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', b.dataset.aud === S.audience);
+  });
+  $('audience-hint').textContent = S.audience === 'home'
+    ? 'С шапкой на неделю и подписью родителя.'
+    : 'Без шапки и подсказок взрослому — логопед рядом.';
 }
 
 function renderPositions() {
@@ -190,12 +213,16 @@ async function load() {
       // Дорожка Ольги: слоги по тропе. Слов нет — профиль на неё не влияет,
       // слог по построению чист (целевой звук + гласная).
       res = await post('/api/track', { sound: S.sound, typ: S.typ });
+    } else if (S.tab === 'propisi') {
+      // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
+      res = await post('/api/propisi', { sound: S.sound, typ: S.typ });
     } else if (S.tab === 'maze') {
       res = await post('/api/maze',
         { sound: S.sound, position: S.position, profile: profile });
     } else {
       res = await post('/api/sheet',
-        { sound: S.sound, typ: S.typ, profile: profile, sheet_no: S.sheetNo });
+        { sound: S.sound, typ: S.typ, profile: profile, sheet_no: S.sheetNo,
+          audience: S.audience });
     }
   } catch (e) {
     if (my !== TICKET) return;
@@ -218,15 +245,17 @@ async function load() {
   renderMoat(res.stats);
   renderWarnings(res.warnings);   // она же решает, можно ли печатать
   // Вопрос о профиле — только ПОСЛЕ первого материала и только там, где он
-  // на что-то влияет. На дорожке слов нет, убирать нечего.
-  $('ask').hidden = (S.tab === 'track');
+  // на что-то влияет. На дорожке и в прописях слов нет, убирать нечего.
+  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi');
 }
 
 function showError(res) {
   const box = $('stage-msg');
   box.innerHTML = '';
-  const THING = { maze: 'лабиринт', track: 'дорожка' }[S.tab] || 'лист';
-  const VIN = { лабиринт: 'лабиринт', дорожка: 'дорожку', лист: 'лист' }[THING];
+  const THING = { maze: 'лабиринт', track: 'дорожка',
+                  propisi: 'звуковая дорожка' }[S.tab] || 'лист';
+  const VIN = { лабиринт: 'лабиринт', дорожка: 'дорожку',
+                'звуковая дорожка': 'звуковую дорожку', лист: 'лист' }[THING];
   const title = { internal: `Не удалось собрать ${VIN}`,
                   network: 'Нет связи с генератором' }[res.kind]
                 || `Такой ${THING} не собирается`;
@@ -309,6 +338,20 @@ function renderMoat(st) {
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
 
   if (st.kind === 'maze') { renderMazeMoat(box, st, label); return; }
+  if (st.kind === 'propisi') {
+    box.appendChild(el('h2', null, 'Звуковая дорожка'));
+    const p = el('p', 'hint',
+      `слог ${st.syllable.toUpperCase()} · ${st.rows} дорожки · ` +
+      st.shapes.join(' → '));
+    p.style.margin = '0 0 10px';
+    box.appendChild(p);
+    box.appendChild(el('p', 'hint',
+      'Слог на всех трёх дорожках ОДИН — меняется только путь: ровный, ' +
+      'с горками, с петлями. Так устроены образцы логопеда: один слог ' +
+      'проходится трижды, каждый раз по более трудной линии.'));
+    S.prev = null;
+    return;
+  }
   if (st.kind === 'track') {
     box.appendChild(el('h2', null, 'Звуковая дорожка'));
     const p = el('p', 'hint',
@@ -566,6 +609,15 @@ function bindActions() {
 
   document.querySelectorAll('.tab').forEach((b) => {
     b.onclick = () => { S.tab = b.dataset.tab; renderTabs(); load(); };
+  });
+
+  document.querySelectorAll('#audience .seg-btn').forEach((b) => {
+    b.onclick = () => {
+      if (S.audience === b.dataset.aud) return;
+      S.audience = b.dataset.aud;
+      renderAudience();
+      load();
+    };
   });
 }
 
