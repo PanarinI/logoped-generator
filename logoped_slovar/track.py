@@ -95,6 +95,17 @@ def build_track(sound: str = "р",
         order += chunk
 
     vowels = base
+    # Целевой звук обязан уцелеть в печатной записи слога. У звонких в конце
+    # слова оглушение обязательно: тропа на [Ж] печатала бы «аж · ож · ыж»,
+    # а ребёнок читал бы [аш · ош · ыш] — то есть отрабатывал бы Ш вместо Ж.
+    probe = C.ortho(C._syllable_text(sound, vowels[0], syl_type))
+    if not C.syllable_keeps_sound(sound, probe):
+        raise TrackError(
+            f"обратного слога у звука [{_P.sound_label(sound)}] не бывает: "
+            f"звонкий согласный в конце слова оглушается, «{probe}» звучит "
+            f"как [{_P.sound_label(_P.analyze(probe).transcription[-1])}]. "
+            f"Такая дорожка учила бы ребёнка не тому звуку. Возьмите прямой слог.")
+
     cells: List[Dict[str, Any]] = []
     n = rows * COLS
     prev = None

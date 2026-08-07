@@ -347,6 +347,14 @@ def build_propisi(sound: str = "р",
     else:
         phon = C._syllable_text(sound, vowel, syl_type)
         syllable = C.ortho(phon)
+        # Целевой звук обязан уцелеть в том, что попадёт на бумагу. У звонких
+        # в конце слова оглушение обязательно: «аж» читается [аш].
+        if not C.syllable_keeps_sound(sound, syllable):
+            raise PropisiError(
+                f"обратного слога у звука [{_P.sound_label(sound)}] не бывает: "
+                f"звонкий согласный в конце слова оглушается, «{syllable}» "
+                f"звучит как [{_P.sound_label(C.ph.analyze(syllable).transcription[-1])}]. "
+                f"Такой лист учил бы ребёнка не тому звуку. Возьмите прямой слог.")
     image = _image_for(sound)
 
     lines: List[Dict[str, Any]] = []
