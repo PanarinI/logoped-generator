@@ -903,6 +903,31 @@ def _words_path(sound: str, words_path: Optional[str]) -> str:
 #  5. ОТБОР СЛОВ ДЛЯ БЛОКА [4]
 # ═══════════════════════════════════════════════════════════════════════
 
+def _cons_spans(cl: str) -> List[Tuple[int, int]]:
+    """Границы каждого СОГЛАСНОГО в фонемной записи стечения, вместе с его
+    апострофом: «р'к» -> [(0, 2), (2, 3)].
+
+    Нужно потому, что мягкий согласный занимает два символа. Пока резали по
+    символам, у мягкой цели «стечение» получалось из одного согласного и
+    апострофа — и блок печатал «арь · орь · урь», то есть обратный слог под
+    заголовком «стечение» (замер 08-08 на р', л', с').
+    """
+    spans: List[Tuple[int, int]] = []
+    i = 0
+    while i < len(cl):
+        j = i + 1
+        if j < len(cl) and cl[j] == "'":
+            j += 1
+        spans.append((i, j))
+        i = j
+    return spans
+
+
+def _n_consonants(frame: str) -> int:
+    """Сколько СОГЛАСНЫХ в фонемной записи стечения (апостроф не считается)."""
+    return sum(1 for ch in frame if ch != "'" and ch not in "аоуыэи")
+
+
 def occurrence_kind(occ: Dict[str, Any],
                     vowels: Sequence[str] = VOWELS) -> Set[str]:
     """Каким типам слога отвечает данное вхождение целевого звука.
@@ -1245,8 +1270,17 @@ def _cluster_frames(groups: Sequence[Dict[str, Any]], syl_type: str,
             if not cl:
                 continue
             i = _ROLE_INDEX.get(occ["cluster_role"] or "", 0)
-            frame = cl[:i + 1] if syl_type == "cluster_onset" else cl[i:i + 2]
-            if len(frame) < 2 or len(frame) > 3:
+            spans = _cons_spans(cl)
+            if i >= len(spans):
+                continue
+            if syl_type == "cluster_onset":
+                frame = cl[:spans[i][1]]                    # от начала до цели включительно
+            else:
+                if i + 1 >= len(spans):
+                    continue                               # второго согласного нет
+                frame = cl[spans[i][0]:spans[i + 1][1]]     # цель + следующий согласный
+            # Стечение — это ДВА СОГЛАСНЫХ, а не два символа.
+            if _n_consonants(frame) < 2 or _n_consonants(frame) > 3:
                 continue
             fuse = _fuses(frame)
             if fuse:
@@ -1715,11 +1749,19 @@ def _template_ok(template: str, service: Dict[str, int]) -> bool:
 
 def _rhyme_candidates(groups: Sequence[Dict[str, Any]], syllable: str,
                       banned: FrozenSet[str],
+                      pool: Optional[Sequence[Dict[str, Any]]] = None,
                       ) -> List[Tuple[str, Dict[str, Any], bool]]:
-    """Формы блока [4] (ед. ч. + мн. ч. с известным ударением), у которых
-    ПОСЛЕДНИЙ слог = целевой и он УДАРНЫЙ."""
+    """Слова, у которых ПОСЛЕДНИЙ слог = целевой и он УДАРНЫЙ.
+
+    Ищем по ВСЕМУ словарю звука (`pool`), а не только среди 12–24 слов листа.
+    Канон нигде не требует, чтобы рифмующее слово стояло в словесном блоке:
+    чистоговорка — свой блок. Пока искали в блоке [4], она собиралась на 11
+    листах из 19 — это был наш технический потолок, а не свойство языка
+    (замер 08-06).
+    """
     out: List[Tuple[str, Dict[str, Any], bool]] = []
-    for g in groups:
+    source = ([{"items": list(pool)}] if pool is not None else groups)
+    for g in source:
         for it in g["items"]:
             forms: List[Tuple[str, Optional[int], bool]] = [
                 (it["word"], it["stress_syllable"], False)]
@@ -1743,7 +1785,9 @@ def _build_chistogovorka(groups: Sequence[Dict[str, Any]], sound: str,
                          syllables: Dict[str, Any], banned: FrozenSet[str],
                          service: Dict[str, int], rnd: random.Random,
                          derived: Dict[str, str],
-                         warnings: List[str]) -> Optional[Dict[str, Any]]:
+                         warnings: List[str],
+                         pool: Optional[Sequence[Dict[str, Any]]] = None,
+                         ) -> Optional[Dict[str, Any]]:
     # Рифмуемся слогом ТОГО ЖЕ шага, что и блок [3]: «ра-ра-ра — тут гора»
     # на прямом листе и «ор-ор-ор — вот забор» на обратном. Слово обязано
     # ОКАНЧИВАТЬСЯ этим слогом, и слог обязан быть ударным.
@@ -1763,7 +1807,7 @@ def _build_chistogovorka(groups: Sequence[Dict[str, Any]], sound: str,
         return None
 
     for syl in order:
-        cands = _rhyme_candidates(groups, syl, banned)
+        cands = _rhyme_candidates(groups, syl, banned, pool)
         pairs = [(form, item, is_pl, f, kind)
                  for form, item, is_pl in cands
                  for f, kind in frames if _frame_ok(item, kind)]
@@ -1942,6 +1986,13 @@ def build_content(sound: str = "р",
                        allow_rule_diminutive, service, n_game_items)
     sentences = _build_sentences(groups, sound, banned, service, rnd,
                                  n_sentences, warnings)
+    # ⚠ Рифму НЕЛЬЗЯ искать по всему словарю: правило 13 «сквозной словарь»
+    # требует, чтобы каждое слово блоков [5][6][7] пришло из блока [4].
+    # Это КАНОН (Фомичёва: «автоматизация в предложениях проводится на базе
+    # отработанных слов»), а не наш потолок — проверено 08-08: попытка отдать
+    # сюда весь словарь уронила линтер на 'сестра'. Значит чистоговорку чинит
+    # не расширение поиска, а СЛОВАРЬ (слова с ударным конечным слогом) плюс
+    # предпочтение таких слов при отборе в блок [4].
     chisto = _build_chistogovorka(groups, sound, syllables, banned, service,
                                   rnd, derived, warnings)
 
