@@ -110,6 +110,17 @@ def build_track(sound: str = "р",
         # «шы», и «ше», а не «шэ». Фонемную оставляем — по ней движок считает.
         cells.append({"syllable": C.ortho(syl), "syllable_phon": syl, "vowel": v})
 
+    # Персонаж маршрута — канонный образ ЭТОГО звука, тот же, что в блоке [2]
+    # листа и у старта звуковой дорожки. Ребёнок встречает одно существо во
+    # всех материалах: это не украшение, а связность.
+    import propisi as _PR
+    hero = (_PR.image_for(sound).get("name") or "").strip()
+    # Глагол не подбираем: мотор едет, комарик летит, водичка течёт — под
+    # каждый образ пришлось бы вести таблицу спряжений. «Проведи по тропе»
+    # верно для любого существа и ничего не обещает сверх того, что нарисовано.
+    task = (f"Проведи {hero} по тропе до финиша." if hero
+            else "Пройди тропу от старта до финиша.")
+
     return {
         "meta": {
             "sound": sound,
@@ -120,9 +131,12 @@ def build_track(sound: str = "р",
             "cols": COLS,
             "n_cells": len(cells),
             "vowels": vowels,
+            "hero": hero,
         },
         "cells": cells,
-        "instruction": "Веди пальчиком по дорожке и называй каждый кружок.",
+        "instruction": task,
+        "lead": "Веди пальчиком по тропе от старта. На каждом кружке — шаг, "
+                "и на каждом шаге скажи слог вслух.",
         "adult": "Идите вместе. Если звук «сорвался» — вернитесь на кружок назад "
                  "и скажите его медленно.",
     }
@@ -146,61 +160,158 @@ body { background:#f2f2f2; padding:10px; }
 .fill { display:inline-block; border-bottom:0.4pt solid #000; min-width:34mm; }
 h1 { font-size:15pt; margin:5mm 0 1mm; font-weight:700; }
 .hint { font-size:10pt; font-style:italic; color:#444; margin:0 0 4mm; }
-.track { margin-top:2mm; }
-.row { display:flex; align-items:center; gap:3mm; margin-bottom:2mm; }
-.row.rtl { flex-direction:row-reverse; }
-.cell { width:31mm; height:31mm; border-radius:50%; border:1.1pt solid #000;
-        display:flex; align-items:center; justify-content:center;
-        font-size:19pt; font-weight:700; letter-spacing:0.5pt; }
-.arr { font-size:13pt; line-height:1; }
-.turn { display:flex; justify-content:flex-end; margin:0 6mm 2mm 0; font-size:13pt; }
-.row.rtl + .turn { justify-content:flex-start; margin:0 0 2mm 6mm; }
-.start { position:relative; }
-.start::before { content:"★"; position:absolute; left:-6mm; top:-1mm; font-size:13pt; }
+.lead { display:flex; align-items:center; gap:4mm; margin:0 0 3mm; }
+.hero { width:22mm; height:22mm; border:0.6pt dashed #999; border-radius:2mm;
+        display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+        font-size:8.5pt; color:#555; text-align:center; padding:1mm; }
+.route { display:block; margin:0 auto; }
 .adult { font-size:10pt; font-style:italic; color:#444; margin-top:5mm;
          border-top:0.4pt solid #000; padding-top:1.5mm; }
 """
+
+
+# ── МАРШРУТ, А НЕ ТАБЛИЦА ────────────────────────────────────────────
+# До 2026-08-06 дорожка печаталась сеткой 6×5 со стрелками между клетками.
+# Ребёнок видел таблицу и ЧИТАЛ её; у практика на образце — извилистая тропа,
+# по которой ИДУТ. Автор назвал это прямо: «не таблица, которую читаем, а
+# проход по маршруту».
+#
+# Что здесь метод, а что оформление — разделено честно:
+#   ✅ МЕТОД. Персонаж у старта — наш канонный ОБРАЗ ЗВУКА (мотор · комарик ·
+#      водичка), тот же, что печатает блок [2] листа и звуковая дорожка.
+#      Провенанс у него уже есть (Фомичёва / Спивак). Ничего нового не выдумано:
+#      взято существо, которое у ребёнка уже связано с этим звуком.
+#   ✅ МЕТОД. Кружок = шаг, и на каждом шаге произносится слог. «Шагание» по
+#      дорожке — засвидетельствованное бытование приёма (у практиков ребёнок
+#      «надевает на пальцы тапочки-игрушки и начинает шагать по дорожке»).
+#   🔶 ОФОРМЛЕНИЕ. Что тропа именно извилистая, что у неё есть финиш и что
+#      задание сформулировано как «помоги доехать» — наше. Ни одного
+#      методического утверждения это не добавляет: маршрут ничего не обещает
+#      про речь, он только держит внимание.
+#
+# ⛔ Чего здесь намеренно НЕТ: слова у финиша. Слово — речевой материал, оно
+# обязано пройти фильтр чистоты по профилю ребёнка, а профиля у дорожки нет.
+# Поставить слово «просто для красоты» — ровно тот брак, который проект ловит.
+# Финиш обозначен флажком: он ничего не требует произнести.
+
+_W = 178.0         # рабочая ширина, мм
+_R = 9.0           # радиус кружка, мм — меньше кружок, виднее тропа
+_ROW_H = 34.0      # шаг между рядами, мм
+_AMP = 7.0         # размах волны: тропа должна ВИДНО вилять, иначе снова ряды
+_TURN = 13.0       # вынос разворота наружу
+_MARGIN = _TURN + 3.0   # поля, чтобы развороты не уезжали за край листа
+_TOP = _R + _AMP + 2.0
+
+
+def _row_y(r: int) -> float:
+    return _TOP + r * _ROW_H
+
+
+def _wave(x0: float, x1: float, y: float, t: float) -> tuple:
+    """Точка на волне ряда: доля пути t → (x, y)."""
+    return x0 + (x1 - x0) * t, y - _AMP * math.sin(2 * math.pi * 1.5 * t)
+
+
+def _row_ends(r: int) -> tuple:
+    left, right = _MARGIN, _W - _MARGIN
+    return (right, left) if (r % 2 == 1) else (left, right)
+
+
+def _route_path(rows: int, cols: int) -> str:
+    """Непрерывная тропа змейкой: волна вдоль ряда + разворот петлёй на краю."""
+    d: List[str] = []
+    for r in range(rows):
+        y, (x0, x1) = _row_y(r), _row_ends(r)
+        pts = [f"{px:.1f} {py:.1f}"
+               for px, py in (_wave(x0, x1, y, i / 60) for i in range(61))]
+        d.append(("M " if r == 0 else "L ") + " L ".join(pts))
+        if r < rows - 1:
+            out = _TURN if x1 > x0 else -_TURN
+            d.append(f"C {x1 + out:.1f} {y:.1f} "
+                     f"{x1 + out:.1f} {_row_y(r + 1):.1f} "
+                     f"{x1:.1f} {_row_y(r + 1):.1f}")
+    return " ".join(d)
+
+
+def _cell_xy(r: int, i: int, cols: int) -> tuple:
+    x0, x1 = _row_ends(r)
+    t = 0.0 if cols == 1 else i / (cols - 1)
+    return _wave(x0, x1, _row_y(r), t)
 
 
 def render_track(track: Dict[str, Any]) -> str:
     m = track["meta"]
     cells = track["cells"]
     e = lambda s: html.escape(str(s), quote=False)   # noqa: E731
+    hero = m.get("hero") or m["sound_label"]
 
-    rows_html: List[str] = []
-    for r in range(m["rows"]):
-        chunk = cells[r * m["cols"]:(r + 1) * m["cols"]]
-        if not chunk:
+    rows, cols = m["rows"], m["cols"]
+    height = _TOP + (rows - 1) * _ROW_H + _R + _AMP + 8.0
+
+    svg = [f'<path d="{_route_path(rows, cols)}" fill="none" stroke="#000" '
+           f'stroke-width="2.2" stroke-linecap="round" opacity="0.22"/>']
+    last = None
+    for idx, c in enumerate(cells):
+        r, i = divmod(idx, cols)
+        if r >= rows:
             break
-        rtl = (r % 2 == 1)
-        parts = []
-        for i, c in enumerate(chunk):
-            cls = "cell start" if (r == 0 and i == 0) else "cell"
-            parts.append(f'<div class="{cls}">{e(c["syllable"].upper())}</div>')
-            if i < len(chunk) - 1:
-                parts.append(f'<div class="arr">{"←" if rtl else "→"}</div>')
-        rows_html.append(f'<div class="row{" rtl" if rtl else ""}">{"".join(parts)}</div>')
-        if r < m["rows"] - 1:
-            rows_html.append('<div class="turn">↓</div>')
+        x, y = _cell_xy(r, i, cols)
+        last = (x, y)
+        svg.append(
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{_R:.1f}" fill="#fff" '
+            f'stroke="#000" stroke-width="0.9"/>'
+            f'<text x="{x:.1f}" y="{y + 2.3:.1f}" text-anchor="middle" '
+            f'font-size="6.6" font-weight="700" font-family="Georgia,serif">'
+            f'{e(c["syllable"].upper())}</text>')
+    # старт и финиш — концы маршрута, а не украшения по краям листа
+    sx, sy = _cell_xy(0, 0, cols)
+    svg.insert(1,
+        f'<path d="M {sx - _R - 8.0:.1f} {sy:.1f} L {sx - _R - 1.5:.1f} {sy:.1f} '
+        f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
+        f'fill="none" stroke="#000" stroke-width="0.9" stroke-linecap="round" '
+        f'stroke-linejoin="round"/>'
+        f'<text x="{sx:.1f}" y="{sy - _R - 2.5:.1f}" font-size="4.2" '
+        f'text-anchor="middle">старт</text>')
+    if last:
+        fx, fy = last
+        # Флажок ставим ПО ХОДУ движения: на обратном ряду ребёнок идёт справа
+        # налево, и цель у него слева. Иначе финиш оказывается позади него.
+        last_row = (len(cells) - 1) // cols
+        fwd = -1.0 if (last_row % 2 == 1) else 1.0
+        px = fx + fwd * (_R + 2.5)
+        svg.append(
+            f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
+            f'L {px + fwd * 7.5:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
+            f'fill="#000" stroke="#000" stroke-width="0.9" '
+            f'stroke-linejoin="round"/>'
+            f'<text x="{px:.1f}" y="{fy + 9.5:.1f}" font-size="4.2" '
+            f'text-anchor="middle">финиш</text>')
 
     return f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>Звуковая дорожка [{e(m['sound_label'])}]</title>
+<title>Слоговая дорожка [{e(m['sound_label'])}]</title>
 <style>{_CSS}</style>
 </head>
 <body>
 <div class="page">
   <div class="doc">
     <span class="badge">Звук [{e(m['sound_label'])}]</span>
-    <span>Звуковая дорожка · {e(m['type_label'])}</span>
+    <span>Слоговая дорожка · {e(m['type_label'])}</span>
     <span>Имя: <span class="fill"></span></span>
     <span>Дата: <span class="fill" style="min-width:24mm"></span></span>
   </div>
   <h1>{e(track['instruction'])}</h1>
-  <p class="hint">Начни у звёздочки. На каждом кружке произнеси слог вслух.</p>
-  <div class="track">{''.join(rows_html)}</div>
+  <div class="lead">
+    <div class="hero"><span>{e(hero)}</span></div>
+    <p class="hint">{e(track['lead'])}</p>
+  </div>
+  <svg class="route" viewBox="0 0 {_W:.0f} {height:.0f}"
+       width="{_W:.0f}mm" height="{height:.0f}mm"
+       xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    {''.join(svg)}
+  </svg>
   <div class="adult">{e(track['adult'])}</div>
 </div>
 </body>
