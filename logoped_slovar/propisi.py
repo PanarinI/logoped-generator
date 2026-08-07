@@ -45,8 +45,21 @@ propisi.py — ПРОПИСИ: линия, которую ребёнок вед�
   🔶 «нельзя наращивать нагрузку к низу листа» — наш довод, источника нет;
      у Поповой занятие идёт КАК РАЗ от простого к сложному
 
-Поэтому порядок форм здесь — от простой к сложной (улитка → непрерывные →
-прерывистая), а не «ровный по трудности», как было записано раньше.
+⚠ ОТКРЫТАЯ РАЗВИЛКА (08-06, ждёт автора). Что нарастает от строки к строке:
+  • ФОРМА линии (прямая → волна → петли) — так у Поповой и так на 7 из 10
+    образцов Ольги, то есть ДВА независимых практических источника;
+  • ДЛИНА пути при одной форме — наше решение того же дня, источника нет.
+Сейчас код делает ДЛИНУ (см. LADDER ниже). Пока развилка открыта, шапка не
+имеет права описывать реализацию иначе, чем она есть, — здесь это записано.
+
+ДВЕ СТУПЕНИ ОДНОГО МАТЕРИАЛА (mode)
+─────────────────────────────────────────────────────────────────────
+  • "isolated" — только звук: ребёнок ведёт по линии и тянет [р], слога нет.
+    ✅ Попова: «произносит звук Р и проводит пальчиком по линии».
+  • "syllable" — линия + гласная в конце: Р ~~~~ А = РА.
+    ✅ Борисова 2008 (изданное пособие): «обведи трафарет и произнеси: с-са».
+Порядок канонический: изолированный звук отрабатывается ДО слога. Ступень
+изолированного добавлена 2026-08-06 по решению автора.
 
 ЧТО ЗДЕСЬ ГАРАНТИРОВАНО КОДОМ
 ─────────────────────────────────────────────────────────────────────
@@ -255,18 +268,34 @@ def _image_for(sound: str) -> Dict[str, str]:
 #     проекта №1.
 # Форма одна: пологая волна. Прямая не даёт ощущения пути, петли и зигзаги
 # перетягивают внимание на руку, а работать должен звук.
+# Подсказка под строкой зависит от ступени: на изолированной буквы в конце нет,
+# и обещать «доедешь до буквы» нельзя — на листе её не будет (закон проекта №2).
 LADDER = (
-    (0.62, "короткая", "тянем до буквы, не отрывая пальца"),
-    (0.82, "средняя",  "теперь дорожка длиннее — звук тянется дольше"),
-    (1.00, "длинная",  "самая длинная: тянем ровно, не торопясь"),
+    (0.62, "короткая", "тянем до буквы, не отрывая пальца",
+                       "тянем до точки, не отрывая пальца"),
+    (0.82, "средняя",  "теперь дорожка длиннее — звук тянется дольше",
+                       "теперь дорожка длиннее — звук тянется дольше"),
+    (1.00, "длинная",  "самая длинная: тянем ровно, не торопясь",
+                       "самая длинная: тянем ровно, не торопясь"),
 )
+
+
+MODES = ("isolated", "syllable")
 
 
 def build_propisi(sound: str = "р",
                   syl_type: str = "direct",
                   vowel: Optional[str] = None,
-                  seed: int = 0) -> Dict[str, Any]:
-    """Звуковая дорожка: ОДИН слог, три строки по нарастанию сложности."""
+                  seed: int = 0,
+                  mode: str = "syllable") -> Dict[str, Any]:
+    """Звуковая дорожка, три строки.
+
+    mode="isolated" — только звук, гласной в конце нет (ступень ДО слога);
+    mode="syllable" — линия + гласная, собирается слог.
+    """
+    if mode not in MODES:
+        raise PropisiError(
+            "у звуковой дорожки две ступени: «только звук» и «звук + слог»")
     if sound not in C.WORDS_BY_SOUND:
         raise PropisiError(
             f"звука [{_P.sound_label(sound)}] в генераторе нет; собраны: "
@@ -283,20 +312,27 @@ def build_propisi(sound: str = "р",
     if vowel not in vowels:
         vowel = vowels[seed % len(vowels)]
 
-    phon = C._syllable_text(sound, vowel, syl_type)
-    syllable = C.ortho(phon)
+    if mode == "isolated":
+        # На этой ступени гласной нет вовсе: ребёнок тянет один звук.
+        # Тип слога тоже ни на что не влияет — тянуть можно только сам звук.
+        vowel, phon, syllable = "", "", ""
+    else:
+        phon = C._syllable_text(sound, vowel, syl_type)
+        syllable = C.ortho(phon)
     image = _image_for(sound)
 
     lines: List[Dict[str, Any]] = []
-    for frac, length_label, hint in LADDER:
+    for frac, length_label, hint_syl, hint_iso in LADDER:
         lines.append({
             "length_frac": frac, "length_label": length_label,
-            "hint": hint, "_fn": _path_wave,
+            "hint": hint_iso if mode == "isolated" else hint_syl,
+            "_fn": _path_wave,
         })
 
     return {
         "lines": lines,
         "meta": {
+            "mode": mode,
             "sound": sound,
             "sound_label": _P.sound_label(sound),
             "syl_type": syl_type,
@@ -326,6 +362,7 @@ def render_propisi(p: Dict[str, Any]) -> str:
     m = p["meta"]
     label, syll, vowel = m["sound_label"], m["syllable"], m["vowel"]
     utter = m["utterance"] or f"{m['sound']}-{m['sound']}-{m['sound']}"
+    isolated = m.get("mode") == "isolated"
 
     rows: List[str] = []
     for i, ln in enumerate(p["lines"], 1):
@@ -349,8 +386,10 @@ def render_propisi(p: Dict[str, Any]) -> str:
                 stroke-linecap="round" stroke-linejoin="round"
                 stroke-dasharray="1.6 1.4"/>
           <circle cx="1.2" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>
+          {f'<circle cx="{w - 1.2:.1f}" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>'
+           if isolated else ''}
         </svg>
-        <div class="finish">{_e(vowel.upper())}</div>
+        {'' if isolated else f'<div class="finish">{_e(vowel.upper())}</div>'}
       </div>
       <div class="hint">{i}. {_e(ln['hint'])}</div>
     </div>
@@ -358,7 +397,7 @@ def render_propisi(p: Dict[str, Any]) -> str:
 
     return f"""<!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8">
-<title>Звуковая дорожка [{_e(label)}] — {_e(syll)}</title>
+<title>Звуковая дорожка [{_e(label)}] — {_e(syll) if syll else 'только звук'}</title>
 <style>
 @page {{ size: A4; margin: 12mm {MARGIN_R}mm 12mm {MARGIN_L}mm; }}
 * {{ box-sizing: border-box; }}
@@ -395,21 +434,29 @@ h1 b {{ font-size:20pt; }}
 <div class="doc">
   <span>Ребёнок <span class="fill"></span></span>
   <span class="badge">Звук [{_e(label)}]</span>
-  <span>{_e(m['type_label'])}</span>
+  <span>{'только звук' if isolated else _e(m['type_label'])}</span>
   <span>Дата <span class="fill" style="min-width:24mm"></span></span>
 </div>
 
-<h1>Звуковая дорожка · слог <b>{_e(syll.upper())}</b></h1>
-<p class="task">Веди пальцем по дорожке и тяни звук, пока не доедешь до буквы.
-   В конце скажи слог целиком: <b>{_e(syll)}</b>. Каждая следующая дорожка длиннее — звук тянется дольше.</p>
+{f'<h1>Звуковая дорожка · звук <b>[{_e(label)}]</b></h1>' if isolated
+ else f'<h1>Звуковая дорожка · слог <b>{_e(syll.upper())}</b></h1>'}
+{f'''<p class="task">Веди пальцем по дорожке и тяни звук <b>[{_e(label)}]</b>, пока не
+   доедешь до точки. Не отрывай палец. Каждая следующая дорожка длиннее — звук тянется дольше.</p>'''
+ if isolated else f'''<p class="task">Веди пальцем по дорожке и тяни звук, пока не доедешь до буквы.
+   В конце скажи слог целиком: <b>{_e(syll)}</b>. Каждая следующая дорожка длиннее — звук тянется дольше.</p>'''}
 {''.join(rows)}
 
 <div class="adult">
-  <b>Взрослому.</b> Слог на всех трёх дорожках <b>один и тот же</b>, и форма
+{f'''  <b>Взрослому.</b> Это ступень <b>до слога</b>: ребёнок тянет один звук
+  [{_e(label)}] и ничего больше не произносит — гласной в конце нет намеренно.
+  Меняется только <b>длина</b> дорожки: каждая следующая длиннее, значит звук
+  держится дольше. Когда звук уверенно тянется на самой длинной дорожке,
+  переходите на ступень со слогом.'''
+ if isolated else '''  <b>Взрослому.</b> Слог на всех трёх дорожках <b>один и тот же</b>, и форма
   линии тоже — меняется только <b>длина</b>: каждая следующая дорожка длиннее,
   значит звук тянется дольше. В этом весь смысл: не пройти побольше разных
   слогов, а удержать один звук на всё более длинном выдохе. Не торопите:
-  доехали до буквы — произнесли слог целиком.
+  доехали до буквы — произнесли слог целиком.'''}
 </div>
 
 </div></body></html>"""
@@ -421,11 +468,13 @@ if __name__ == "__main__":
     ap.add_argument("--sound", default="р")
     ap.add_argument("--type", dest="typ", default="direct",
                     choices=list(PROPISI_TYPES))
-    ap.add_argument("--rows", type=int, default=ROWS_DEFAULT)
+    ap.add_argument("--vowel", default=None)
+    ap.add_argument("--mode", default="syllable", choices=list(MODES))
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default="propisi_demo.html")
     a = ap.parse_args()
-    p = build_propisi(a.sound, a.typ, a.rows, a.seed)
+    p = build_propisi(a.sound, a.typ, a.vowel, a.seed, a.mode)
     Path(a.out).write_text(render_propisi(p), encoding="utf-8")
-    print(f"{a.out}: [{p['meta']['sound_label']}] "
-          f"{' · '.join(l['syllable'] for l in p['lines'])}")
+    m = p["meta"]
+    print(f"{a.out}: [{m['sound_label']}] {m['mode']} "
+          f"{m['syllable'] or '(без слога)'} · {m['n_rows']} дорожки")

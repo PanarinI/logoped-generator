@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "logoped-web",
+      "name": "logoped",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["web/server.py"],
+      "runtimeArgs": ["web/server.py", "--port", "8784"],
       "port": 8784
     }
   ]

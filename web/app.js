@@ -15,6 +15,7 @@ const S = {
   syllable: '',    // слог, который РЕАЛЬНО на текущем листе
   prev: null,      // прошлые числа рва — чтобы подсветить, что изменилось
   audience: 'home', // куда лист: домой (с шапкой и подвалом) или на занятие
+  propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
 };
 
 const $ = (id) => document.getElementById(id);
@@ -141,7 +142,10 @@ function renderCrumbs() {
   };
   if (S.sound) add('звук', S.cfg.sounds.find((x) => x.key === S.sound).label,
                    () => show('sound'));
-  if (S.typ && !$('step-result').hidden) {
+  // На изолированной ступени слога нет вовсе — крошка «слог РА» была бы
+  // обещанием того, чего на листе не напечатано.
+  const noSyllable = (S.tab === 'propisi' && S.propisiMode === 'isolated');
+  if (S.typ && !noSyllable && !$('step-result').hidden) {
     // слог берём из ОТВЕТА (S.syllable), а не из подписи кнопки: подписи
     // посчитаны на старте при пустом профиле, а профиль слог меняет —
     // «РША» на кнопке против «ФША» на листе, когда ребёнку убрали [Р]
@@ -166,6 +170,10 @@ function renderTabs() {
   // «Домой / на занятие» — свойство ЛИСТА: шапка-документ и подвал взрослому
   // есть только у него. У дорожки и лабиринта их нет, переключать нечего.
   $('where').hidden = (S.tab !== 'sheet');
+  // Ступень «только звук / звук + слог» есть лишь у звуковой дорожки.
+  $('stage-step').hidden = (S.tab !== 'propisi');
+  if (S.tab === 'propisi') renderPropisiMode();
+  renderCrumbs();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
   $('moat-summary').textContent = {
@@ -183,6 +191,15 @@ function renderAudience() {
   $('audience-hint').textContent = S.audience === 'home'
     ? 'С шапкой на неделю и подписью родителя.'
     : 'Без шапки и подсказок взрослому — логопед рядом.';
+}
+
+function renderPropisiMode() {
+  document.querySelectorAll('#propisi-mode .seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', b.dataset.mode === S.propisiMode);
+  });
+  $('propisi-mode-hint').textContent = S.propisiMode === 'isolated'
+    ? 'Гласной в конце нет: ребёнок тянет один звук. Это ступень до слога.'
+    : 'В конце линии гласная — собирается слог.';
 }
 
 function renderPositions() {
@@ -215,7 +232,8 @@ async function load() {
       res = await post('/api/track', { sound: S.sound, typ: S.typ });
     } else if (S.tab === 'propisi') {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
-      res = await post('/api/propisi', { sound: S.sound, typ: S.typ });
+      res = await post('/api/propisi',
+        { sound: S.sound, typ: S.typ, mode: S.propisiMode });
     } else if (S.tab === 'maze') {
       res = await post('/api/maze',
         { sound: S.sound, position: S.position, profile: profile });
@@ -340,20 +358,26 @@ function renderMoat(st) {
   if (st.kind === 'maze') { renderMazeMoat(box, st, label); return; }
   if (st.kind === 'propisi') {
     box.appendChild(el('h2', null, 'Звуковая дорожка'));
+    const iso = st.mode === 'isolated';
     const p = el('p', 'hint',
-      `слог ${st.syllable.toUpperCase()} · ${st.rows} дорожки, ` +
-      st.lengths.join(' → '));
+      (iso ? 'только звук' : `слог ${st.syllable.toUpperCase()}`) +
+      ` · ${st.rows} дорожки, ` + st.lengths.join(' → '));
     p.style.margin = '0 0 10px';
     box.appendChild(p);
+    // Текст обязан описывать ТО, что нарисовано. Форма линии у всех трёх строк
+    // одна (пологая волна), нарастает ДЛИНА — раньше здесь было обещание
+    // «горки и петли», которого на листе нет.
     box.appendChild(el('p', 'hint',
-      'Слог на всех трёх дорожках ОДИН — меняется только путь: ровный, ' +
-      'с горками, с петлями. Так устроены образцы логопеда: один слог ' +
-      'проходится трижды, каждый раз по более трудной линии.'));
+      (iso
+        ? 'Гласной в конце нет: ребёнок ведёт по линии и тянет один звук. '
+        : 'Слог на всех трёх дорожках ОДИН. ') +
+      'Форма линии у всех строк одинаковая — меняется только длина: ' +
+      'каждая следующая дорожка длиннее, значит звук держится дольше.'));
     S.prev = null;
     return;
   }
   if (st.kind === 'track') {
-    box.appendChild(el('h2', null, 'Звуковая дорожка'));
+    box.appendChild(el('h2', null, 'Слоговая дорожка'));
     const p = el('p', 'hint',
       `${st.cells} кружков · ${st.type_label} · гласные ` +
       st.vowels.map((v) => v.toUpperCase()).join(' · '));
@@ -632,6 +656,16 @@ function bindActions() {
       if (S.audience === b.dataset.aud) return;
       S.audience = b.dataset.aud;
       renderAudience();
+      load();
+    };
+  });
+
+  document.querySelectorAll('#propisi-mode .seg-btn').forEach((b) => {
+    b.onclick = () => {
+      if (S.propisiMode === b.dataset.mode) return;
+      S.propisiMode = b.dataset.mode;
+      renderPropisiMode();
+      renderCrumbs();   // на изолированной ступени крошка «слог» уходит
       load();
     };
   });

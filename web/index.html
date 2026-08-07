@@ -106,6 +106,17 @@
           <p class="hint" id="audience-hint">С шапкой на неделю и подписью родителя.</p>
         </div>
 
+        <!-- Ступень звуковой дорожки. Изолированный звук идёт ДО слога:
+             сначала ребёнок держит один звук, потом добавляется гласная. -->
+        <div class="card where" id="stage-step" hidden>
+          <h2>Какая ступень?</h2>
+          <div class="seg" id="propisi-mode">
+            <button class="seg-btn" data-mode="isolated">Только звук</button>
+            <button class="seg-btn is-on" data-mode="syllable">Звук + слог</button>
+          </div>
+          <p class="hint" id="propisi-mode-hint">В конце линии гласная — собирается слог.</p>
+        </div>
+
         <div class="card warn" id="warn" hidden></div>
 
         <!-- 3. РОВ — техническая справка, вниз и мельче, свёрнута -->

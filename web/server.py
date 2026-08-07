@@ -438,21 +438,30 @@ class Handler(BaseHTTPRequestHandler):
                 # согласный, его чистоту без словаря не проверить. Тип со
                 # стечением молча подменяем на прямой и говорим об этом.
                 notes: List[str] = []
+                mode = str(data.get("mode") or "syllable")
+                if mode not in PR.MODES:
+                    mode = "syllable"
                 if typ not in PR.PROPISI_TYPES:
                     notes.append(
                         "Для прописей взят прямой слог: в стечении есть второй "
                         "согласный, и генератор не может проверить, поставлен "
                         "ли он у ребёнка.")
                     typ = "direct"
+                if mode == "isolated":
+                    notes.append(
+                        "Это ступень до слога: ребёнок тянет один звук, гласной "
+                        "в конце нет. Тип слога здесь ни на что не влияет.")
                 p = PR.build_propisi(sound, typ,
                                      vowel=data.get("vowel") or None,
-                                     seed=as_int(data.get("seed"), 0))
+                                     seed=as_int(data.get("seed"), 0),
+                                     mode=mode)
                 self._json({
                     "ok": True,
                     "html": PR.render_propisi(p),
                     "syllable": p["meta"]["syllable"],
                     "warnings": {"blocking": [], "notes": notes},
                     "stats": {"kind": "propisi",
+                              "mode": p["meta"]["mode"],
                               "rows": p["meta"]["n_rows"],
                               "type_label": p["meta"]["type_label"],
                               "syllable": p["meta"]["syllable"],
