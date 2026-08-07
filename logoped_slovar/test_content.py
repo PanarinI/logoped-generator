@@ -287,12 +287,22 @@ def test_game_has_sample_with_completed_first_item():
               first["answer"] in g["sample"], True)
 
 
-def test_all_three_games_reachable():
+def test_games_reachable():
+    """Игры, которые СЕЙЧАС имеют право строиться, — строятся.
+
+    «Посчитай 1-5» выбыла 2026-08-08: её формы порождало правило, и оно врало
+    (см. test_count_game_forms). Пока падежная таблица не выверена руками,
+    игра не собирается, и слот забирает следующая по очереди — это норма, а не
+    поломка. Когда таблица появится, строку ниже вернуть к set(C.GAME_KINDS).
+    """
     kinds = set()
     for seed in range(6):
         for sheet in (1, 2, 3):
             kinds.add(build(seed=seed, sheet_no=sheet, n_words=24)["game"]["kind"])
-    check("доступны все три игры", kinds, set(C.GAME_KINDS))
+    check("строятся «один — много» и «назови ласково»",
+          kinds, {"one_many", "diminutive"})
+    check("«посчитай 1-5» не печатается, пока формы не выверены",
+          "count_1_5" in kinds, False)
 
 
 def test_one_many_skips_uncountable():
@@ -316,25 +326,52 @@ def test_diminutive_never_uses_blocked_word():
 
 
 def test_count_game_forms():
-    check("рама: род. ед.", C._gen_sg("рама", "f"), "рамы")
-    check("рама: род. мн.", C._gen_pl("рама", "f"), "рам")
-    check("комар: род. ед.", C._gen_sg("комар", "m"), "комара")
-    check("комар: род. мн.", C._gen_pl("комар", "m"), "комаров")
-    check("ведро: род. ед.", C._gen_sg("ведро", "n"), "ведра")
-    check("ведро: род. мн. (по таблице)", C._gen_pl("ведро", "n"), "вёдер")
-    check("парта: род. мн. без беглой гласной", C._gen_pl("парта", "f"), "парт")
-    check("марка: род. мн. с беглой О", C._gen_pl("марка", "f"), "марок")
-    check("ручка: род. мн. с беглой Е", C._gen_pl("ручка", "f"), "ручек")
+    """Падежная форма берётся ТОЛЬКО из выверенной таблицы.
+
+    Тест переписан 2026-08-08. Раньше он закреплял работу правила-генератора —
+    и вместе с ней брак: «два угола · пять уголов · лобов · козёлов · левов ·
+    пёсов · заяцов · лужайок · пять редьк», а после расширения стоп-листа
+    вылезли осётр, улей, репей, ёж, ёрш. Русское словоизменение не ловится
+    хвостом слова, поэтому правило выключено (C.ALLOW_RULE_CASES = False).
+    """
+    check("правило падежей выключено", C.ALLOW_RULE_CASES, False)
+
+    # что в таблице — то и печатается
     check("рот: род. ед. по таблице", C._gen_sg("рот", "m"), "рта")
-    check("рынок: беглая гласная — только по таблице",
-          C._gen_sg("рынок", "m"), "рынка")
-    check("ветер: беглая гласная — только по таблице",
-          C._gen_sg("ветер", "m"), "ветра")
-    check("неизвестное на -ец правило не выдумывает",
-          C._gen_sg("ранец", "m"), "ранца")
-    check("ок-слово вне таблицы даёт None", C._gen_sg("горшок", "m"), "горшка")
-    check("средний род вне таблицы: род. мн. = None",
-          C._gen_pl("болото", "n"), None)
+    check("рот: род. мн. по таблице", C._gen_pl("рот", "m"), "ртов")
+    check("ведро: род. мн. по таблице", C._gen_pl("ведро", "n"), "вёдер")
+    check("лоб: род. ед. по таблице", C._gen_sg("лоб", "m"), "лба")
+    check("стул: род. мн. по таблице", C._gen_pl("стул", "m"), "стульев")
+
+    # чего в таблице нет — движок молчит, а не выдумывает
+    for word, gender in (("рама", "f"), ("комар", "m"), ("парта", "f"),
+                         ("осётр", "m"), ("улей", "m"), ("ёж", "m")):
+        check(f"{word}: род. ед. не выдумывается", C._gen_sg(word, gender), None)
+        check(f"{word}: род. мн. не выдумывается", C._gen_pl(word, gender), None)
+
+
+def test_count_game_never_prints_wrong_form():
+    """Ни одно слово всех словарей не даёт формы мимо выверенной таблицы."""
+    import json as _json, glob as _glob, os as _os
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    leaked = []
+    for path in _glob.glob(_os.path.join(here, "words_*.jsonl")):
+        if "neutral" in path or "enriched" in path:
+            continue
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                d = _json.loads(line)
+                w, g = d["word"], d.get("gender")
+                if not g:
+                    continue
+                if C._gen_sg(w, g) and w not in C.GEN_SG_OVERRIDES:
+                    leaked.append(w)
+                if C._gen_pl(w, g) and w not in C.GEN_PL_OVERRIDES:
+                    leaked.append(w)
+    check(f"форм мимо таблицы нет (утекло: {leaked[:5]})", len(leaked), 0)
 
 
 def test_diminutive_table_is_sane():
