@@ -1171,8 +1171,11 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
             "hints": list(art.get("hints") or []),
             "instruction": art.get("instruction", ""),
             "hint": art.get("time_note", ""),
-            "adult": " · ".join(x for x in (art.get("note"), art.get("dosage"),
-                                            art.get("source_ref")) if x),
+            # На листе — только доза приёма. «4 из 7 — остальные у логопеда» и
+            # ссылка на источник ценности ребёнку, родителю и логопеду не несут:
+            # лист — это лист. Решение автора 2026-08-06. Провенанс никуда не
+            # делся — он живёт в панели методики, отдельным слоем.
+            "adult": art.get("dosage") or "",
         }
 
     iso = c.get("isolated") or {}
