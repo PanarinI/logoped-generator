@@ -466,7 +466,7 @@ class Handler(BaseHTTPRequestHandler):
                               "type_label": p["meta"]["type_label"],
                               "syllable": p["meta"]["syllable"],
                               "image_name": p["meta"]["image_name"],
-                              "lengths": [l["length_label"] for l in p["lines"]]},
+                              "tasks": [l["task_label"] for l in p["lines"]]},
                 })
 
             elif path == "/api/maze":
