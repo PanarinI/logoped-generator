@@ -287,7 +287,11 @@ def artic_block(sound: str, gym: Optional[Dict[str, Any]] = None
         return block, warns
 
     by_id = {e["id"]: e for e in gym.get("exercises", [])}
-    names, ids = [], list(comp.get("sheet_4", []))
+    # Рядом с названием несём КАК ДЕЛАТЬ. Домашний лист читает родитель, а он
+    # упражнения не знает: «Лошадка» без подсказки для него пустое слово.
+    # Данные уже собраны и выверены — `sheet_hint` и `dosage` лежат в реестре
+    # у каждого упражнения; до 08-06 лист их просто выбрасывал.
+    names, hints, ids = [], [], list(comp.get("sheet_4", []))
     for i, ex_id in enumerate(ids):
         ex = by_id.get(ex_id)
         if not ex:
@@ -300,7 +304,13 @@ def artic_block(sound: str, gym: Optional[Dict[str, Any]] = None
             continue
         names.append(comp.get("sheet_4_names", [])[i]
                      if i < len(comp.get("sheet_4_names", [])) else ex["name"])
+        # На листе — только «как делать», одной строкой. Дозировку («10-15
+        # щелчков») сюда не тащим: она удваивает высоту блока, а на листе уже
+        # стоит канонная доза приёма («за один приём — 2-3 из 4»). Полное
+        # описание с дозировкой — дело вкладыша с комплексом.
+        hints.append(ex.get("sheet_hint") or "")
     block["items"] = names
+    block["hints"] = hints
     src_id = comp.get("canonical_full", {}).get("source") or ""
     block["source"] = src_id or "gymnastics.json"
     block["source_title"] = comp.get("canonical_full", {}).get("title", "")

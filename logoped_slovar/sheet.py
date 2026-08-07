@@ -366,15 +366,26 @@ def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
 
     art = content.get("articulation")
     if art:
-        # поток с переносом: считаем реальные ширины имён + галочка + зазор
-        box_mm = 4.2 + 1.6 + 7.0                              # квадрат + отступ + gap
-        rows, line = 1, 0.0
-        for x in art.get("items", []):
-            w = len(str(x)) * METRICS["fs_body"] * CHAR_W * PT_MM + box_mm
-            if line and line + w > CONTENT_W:
-                rows, line = rows + 1, w
-            else:
-                line += w
+        if art.get("hints"):
+            # С подсказками каждое упражнение занимает свою строку — но длинная
+            # подсказка переносится, и это надо считать, а не надеяться.
+            rows = 0
+            hs = art["hints"]
+            for i, x in enumerate(art.get("items", [])):
+                hint = hs[i] if i < len(hs) else ""
+                mm = (len(str(x)) * METRICS["fs_body"]
+                      + (len(str(hint)) + 3) * METRICS["fs_adult"]) * CHAR_W * PT_MM + 5.8
+                rows += max(1, math.ceil(mm / CONTENT_W))
+        else:
+            # поток с переносом: считаем реальные ширины имён + галочка + зазор
+            box_mm = 4.2 + 1.6 + 7.0                          # квадрат + отступ + gap
+            rows, line = 1, 0.0
+            for x in art.get("items", []):
+                w = len(str(x)) * METRICS["fs_body"] * CHAR_W * PT_MM + box_mm
+                if line and line + w > CONTENT_W:
+                    rows, line = rows + 1, w
+                else:
+                    line += w
         h["articulation"] = (_head_line(art, "Разминка") + rows * _body_line()
                              + _wrap(art.get("adult"), METRICS["fs_adult"]) * _adult_line()
                              + g)
@@ -448,6 +459,18 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     warns: List[str] = []
     if total_height(c) <= budget_mm:
         return c, warns
+
+    # −1) подсказки «как делать» в разминке — снимаются ПЕРВЫМИ.
+    # Они полезны родителю, но это не речевой материал. Лучше родитель без
+    # подсказки, чем ребёнок без ступени: без этого шага четыре строки
+    # разминки выдавливали с плотного листа целый блок [6] (замер 08-06).
+    art = c.get("articulation") or {}
+    if art.get("hints"):
+        art.pop("hints")
+        if total_height(c) <= budget_mm:
+            warns.append("не влезало: в разминке оставлены только названия "
+                         "упражнений — подсказки «как делать» сняты")
+            return c, warns
 
     # 0) предложения — до канонного минимума 6
     sent = c.get("sentences") or {}
@@ -762,6 +785,9 @@ html, body {{
       с переносом — при длинных именах строка честно становится второй ─── */
 .artic {{ display: flex; flex-wrap: wrap; column-gap: 7mm; row-gap: 0; }}
 .artic div {{ white-space: nowrap; }}
+.artic-list .arow {{ white-space: normal; }}
+.artic-list .ahint {{ font-size: {METRICS['fs_adult']}pt; color: #444; }}
+.artic-list .ahint::before {{ content: " — "; }}
 .box {{
   display: inline-block; width: 4.2mm; height: 4.2mm;
   border: var(--hair); margin-right: 1.6mm; vertical-align: -0.4mm;
@@ -899,13 +925,32 @@ def _b0_header(meta: Dict[str, Any]) -> str:
 </div>"""
 
 
-def _b1_articulation(b: Dict[str, Any]) -> str:
-    items = "".join(f'<div><span class="box"></span>{_e(x)}</div>'
-                    for x in b.get("items", []))
+def _b1_articulation(b: Dict[str, Any], with_hints: bool = True) -> str:
+    """Разминка. Дома — название + КАК ДЕЛАТЬ; на занятии — только названия.
+
+    Разница не косметическая: дома лист ведёт родитель-непрофессионал, и
+    «Лошадка» без подсказки ему ничего не говорит. Логопед упражнения знает,
+    ему нужен чек-лист, а не инструктаж (найдено 2026-08-06).
+    """
+    names = b.get("items", [])
+    hints = b.get("hints") or []
+    if with_hints and any(hints):
+        rows = []
+        for i, x in enumerate(names):
+            h = hints[i] if i < len(hints) else ""
+            tail = f'<span class="ahint">{_e(h)}</span>' if h else ""
+            rows.append(f'<div class="arow"><span class="box"></span>'
+                        f'<b>{_e(x)}</b>{tail}</div>')
+        body = f'<div class="artic-list">{"".join(rows)}</div>'
+    else:
+        body = ('<div class="artic">'
+                + "".join(f'<div><span class="box"></span>{_e(x)}</div>'
+                          for x in names)
+                + '</div>')
     adult = f'<div class="adult">{_e(b["adult"])}</div>' if b.get("adult") else ""
     return (f'<section class="block">'
             f'{_head("1", "Разминка", b.get("hint", ""), b.get("instruction", ""))}'
-            f'<div class="artic">{items}</div>{adult}</section>')
+            f'{body}{adult}</section>')
 
 
 def _b2_isolated(b: Dict[str, Any]) -> str:
@@ -1026,26 +1071,38 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
     sp = opt.get("stress", "non_obvious")
 
     warns: List[str] = list(content.get("notes") or [])
-    c = content
-    if not opt.get("no_fit"):
-        c, fit_warns = fit(content, CONTENT_H)
-        warns.extend(fit_warns)
-    warns.extend(lint(c, meta))
 
-    # КУДА идёт лист. Речевое содержание для дома и для занятия одинаково —
-    # различаются только две обёртки: шапка-документ [0] (неделя, клетки
-    # отметок, подпись родителя) и подвал взрослому [9] (как заниматься).
-    # Дома они нужны: там материал ведёт родитель-непрофессионал и тетрадь
-    # служит документом обмена. На занятии логопед рядом — обе лишние.
+    # КУДА идёт лист — и КОМУ. Речевой материал одинаков, различается объём
+    # ОБЪЯСНЕНИЯ, потому что читатели разные:
+    #   home   — родителю: шапка-документ [0], подвал [9] и подсказки «как
+    #            делать» в разминке. Родитель методики не знает.
+    #   lesson — логопеду: обёрток нет, разминка голым чек-листом. Он знает.
+    # Проверено 2026-08-06: отдельного печатного жанра «лист для занятия» в
+    # источниках нет — на занятии ребёнок работает с картиночным материалом
+    # (альбом, лабиринт, дорожки). Этот режим существует для ЛОГОПЕДА как
+    # источник чистого речевого материала по ступеням, а не для ребёнка.
     audience = opt.get("audience", "home")
     if audience not in ("home", "lesson"):
         raise SystemExit("audience должен быть 'home' или 'lesson'")
+
+    c = content
+    if audience != "home" and (content.get("articulation") or {}).get("hints"):
+        # снимаем ДО расчёта высоты: иначе движок бережёт место под строки,
+        # которых на этом листе не будет
+        c = dict(content)
+        c["articulation"] = {k: v for k, v in c["articulation"].items()
+                             if k != "hints"}
+    if not opt.get("no_fit"):
+        c, fit_warns = fit(c, CONTENT_H)
+        warns.extend(fit_warns)
+    warns.extend(lint(c, meta))
 
     parts: List[str] = []
     if audience == "home":
         parts.append(_b0_header(meta))
     if c.get("articulation"):
-        parts.append(_b1_articulation(c["articulation"]))
+        parts.append(_b1_articulation(c["articulation"],
+                                      with_hints=(audience == "home")))
     if c.get("isolated"):
         parts.append(_b2_isolated(c["isolated"]))
     if c.get("syllables"):
@@ -1111,6 +1168,7 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
     if art.get("items"):
         out["articulation"] = {
             "items": list(art["items"]),
+            "hints": list(art.get("hints") or []),
             "instruction": art.get("instruction", ""),
             "hint": art.get("time_note", ""),
             "adult": " · ".join(x for x in (art.get("note"), art.get("dosage"),
