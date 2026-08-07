@@ -172,9 +172,10 @@ body { background:#f2f2f2; padding:10px; }
 h1 { font-size:15pt; margin:5mm 0 1mm; font-weight:700; }
 .hint { font-size:10pt; font-style:italic; color:#444; margin:0 0 4mm; }
 .lead { display:flex; align-items:center; gap:4mm; margin:0 0 3mm; }
-.hero { width:22mm; height:22mm; border:0.6pt dashed #999; border-radius:2mm;
+.hero { width:22mm; height:22mm; border:0; border-radius:2mm;
         display:flex; align-items:center; justify-content:center; flex:0 0 auto;
-        font-size:8.5pt; color:#555; text-align:center; padding:1mm; }
+        font-size:13pt; font-weight:700; color:#000; text-align:center;
+        padding:1mm; line-height:1.15; }
 .route { display:block; margin:0 auto; }
 .adult { font-size:10pt; font-style:italic; color:#444; margin-top:5mm;
          border-top:0.4pt solid #000; padding-top:1.5mm; }
@@ -259,8 +260,10 @@ def render_track(track: Dict[str, Any]) -> str:
     rows, cols = m["rows"], m["cols"]
     height = _TOP + (rows - 1) * _ROW_H + _R + _AMP + 8.0
 
+    # Тропа должна быть ВИДНА ребёнку: по ней ведут пальцем. При opacity 0.22
+    # она пропадала между кружками и лист снова читался как ряды.
     svg = [f'<path d="{_route_path(rows, cols)}" fill="none" stroke="#000" '
-           f'stroke-width="2.2" stroke-linecap="round" opacity="0.22"/>']
+           f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']
     last = None
     for idx, c in enumerate(cells):
         r, i = divmod(idx, cols)

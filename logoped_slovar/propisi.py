@@ -419,7 +419,7 @@ def render_propisi(p: Dict[str, Any]) -> str:
         <svg class="track" viewBox="0 0 {w:.1f} {ROW_H - 8.0:.1f}"
              width="{w:.1f}mm" height="{ROW_H - 8.0:.1f}mm"
              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="{d}" fill="none" stroke="#000" stroke-width="0.5"
+          <path d="{d}" fill="none" stroke="#000" stroke-width="1.1"
                 stroke-linecap="round" stroke-linejoin="round"{dash}/>
           <circle cx="1.2" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>
           {f'<circle cx="{w - 1.2:.1f}" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>'
@@ -452,10 +452,15 @@ h1 {{ font-size:14pt; margin:5mm 0 1mm; font-weight:700; }}
 h1 b {{ font-size:20pt; }}
 .task {{ font-size:12pt; margin:0 0 6mm; }}
 .row {{ display:flex; align-items:center; gap:3mm; height:{ROW_H + 6}mm; }}
+/* Пока своей картинки нет, у старта стоит НАЗВАННЫЙ образ звука — крупно и
+   чёрным, как полноценный элемент листа, а не как пустая рамка-заглушка.
+   Образ канонный (Фомичёва / Спивак), поэтому он честен сам по себе: ребёнок
+   узнаёт мотор со слов взрослого. Рамка снята — она объявляла материал
+   недоделанным. Картинка встанет на то же место. */
 .hero {{ width:24mm; flex:0 0 24mm; }}
-.hero-box {{ height:22mm; border:0.4pt dashed #999; border-radius:2mm;
-   display:flex; align-items:center; justify-content:center; text-align:center;
-   font-size:9pt; color:#555; padding:1mm; }}
+.hero-box {{ height:22mm; display:flex; align-items:center;
+   justify-content:center; text-align:center; padding:1mm;
+   font-size:13pt; font-weight:700; color:#000; line-height:1.15; }}
 .track-wrap {{ flex:1 1 auto; }}
 .utter {{ font-size:11pt; font-weight:700; letter-spacing:.04em;
    margin:0 0 0.5mm 6mm; }}
