@@ -930,6 +930,26 @@ ANIMATE_CATEGORIES: FrozenSet[str] = frozenset({
 })
 
 
+# Класс подлежащего. Одушевлённости мало: рыба плавает, птица летает,
+# змея ползает — глаголы движения не взаимозаменяемы. У глагола в
+# `verbs_X.jsonl` лежит список классов, которые могут быть его подлежащим.
+SUBJECT_CLASS: Dict[str, str] = {
+    "люди": "люди", "люди/профессии": "люди", "люди/семья": "люди",
+    "люди/спорт": "люди", "сказка": "люди", "сказка/люди": "люди",
+    "животные": "звери", "животные/дикие": "звери", "животные/домашние": "звери",
+    "животные/мелкие": "звери", "животные/зоопарк": "звери", "животные/группа": "звери",
+    "птицы": "птицы", "животные/птицы": "птицы",
+    "животные/водные": "водные", "животные/земноводные": "водные",
+    "насекомые": "насекомые", "животные/насекомые": "насекомые",
+    "насекомые/природа": "насекомые",
+}
+
+
+def subject_class(row: Dict[str, Any]) -> Optional[str]:
+    """К какому классу подлежащего относится слово. None = неживое."""
+    return SUBJECT_CLASS.get(row.get("semantic_category") or "")
+
+
 def is_animate(row: Dict[str, Any]) -> bool:
     """Живое ли слово. Один дом у факта — эта таблица, а не поле в файлах:
     генераторы перезаписывают jsonl и поле бы терялось."""
@@ -947,6 +967,7 @@ def load_words(path: str) -> Tuple[Dict[str, Any], ...]:
                 # признак считается на загрузке — тогда его не потеряет
                 # перезапуск генератора словаря
                 row["animate"] = is_animate(row)
+                row["subject_class"] = subject_class(row)
                 rows.append(row)
     return tuple(rows)
 
@@ -1822,12 +1843,58 @@ def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
             used[it["word"]] = used.get(it["word"], 0) + 1
         return out
 
+    # ── ПРЕДЛОЖЕНИЯ С ГЛАГОЛОМ (2026-08-08) ──────────────────────────
+    # Раньше блок строился из одних существительных («Вот тут баран»), и
+    # целевой звук стоял в 3–35 % слов. Глагол даёт второй носитель звука в
+    # той же фразе: «Тут лиса слушает» — два слова из трёх со звуком [с].
+    #
+    # Что здесь гарантировано и почему без этого нельзя:
+    #   • только НЕСОВЕРШЕННЫЙ вид: у совершенного форма 3-го лица — будущее,
+    #     и лист смешал бы «Лиса летит» с «Медвежонок убежит»;
+    #   • подлежащее и глагол сходятся по КЛАССУ: рыба плавает, птица летает,
+    #     змея ползает. Без этого выходило «Рыба бегает» и «Ворона ползает»;
+    #   • подлежащее — только живое: «Замок заходит» печаталось ровно потому,
+    #     что одушевлённость выводили из темы слова.
+    # Каркас с локативом («Тут …») держит канонную шкалу длины: у Спивак она
+    # начинается с трёх слов, а «Лиса слушает» — два.
+    used_verbs: List[str] = []
+    verb_pairs: List[Tuple[Dict[str, Any], Dict[str, Any]]] = []
+    for v in load_verbs(sound):
+        # глагол — такой же речевой материал: через тот же фильтр чистоты.
+        # Поймано сразу: «слушает» несёт [ш] и на лист [С] не имеет права.
+        if not is_clean(v["form_3sg"], banned, v.get("form_3sg_stress")):
+            continue
+        for it in items:
+            cls = subject_class({"semantic_category": it.get("semantic_category")})
+            if cls and cls in v["subject_classes"]:
+                verb_pairs.append((it, v))
+    rnd.shuffle(verb_pairs)
+    VERB_FRAMES = [f for f in ("Тут {subj} {verb}.", "Там {subj} {verb}.",
+                               "Дома {subj} {verb}.")
+                   if _template_ok(f.replace("{subj}", " ").replace("{verb}", " "), service)]
+
     plan = [3] * 3 + [4] * 3 + [5] * max(0, n_sentences - 6)
     plan = plan[:n_sentences]
 
     sentences: List[Dict[str, Any]] = []
     used_templates: Set[str] = set()
+    used_subjects: Set[str] = set()
     for want in plan:
+        # На трёхсловной ступени сперва пробуем фразу с глаголом — она плотнее
+        if want == 3 and verb_pairs and VERB_FRAMES:
+            pick = None
+            for i, (it, v) in enumerate(verb_pairs):
+                if it["word"] not in used_subjects:
+                    pick = verb_pairs.pop(i); break
+            if pick:
+                it, v = pick
+                used_subjects.add(it["word"])
+                frame = VERB_FRAMES[rnd.randrange(len(VERB_FRAMES))]
+                text = frame.format(subj=it["word"], verb=v["form_3sg"])
+                used_verbs.append(v["form_3sg"])      # объявляем явно, см. verify_crosscut
+                sentences.append({"text": text, "n_words": 3, "scale": "Три слова"})
+                used[it["word"]] = used.get(it["word"], 0) + 1
+                continue
         templates = [(t, f) for t, f in SENTENCE_TEMPLATES[want]
                      if _template_ok(t, service) and len(pools[f]) >= 1]
         if not templates:
@@ -1861,10 +1928,41 @@ def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
     if len(sentences) < 6:
         warnings.append(f"предложений {len(sentences)} — меньше канонических 6")
     return {
+        "verbs": sorted(set(used_verbs)),
         "instruction": "Повтори, прочитай предложения.",
         "items": sentences,
         "n": len(sentences),
     }
+
+
+VERBS_BY_SOUND: Dict[str, str] = {
+    "р": "verbs_r.jsonl", "р'": "verbs_r_soft.jsonl", "л": "verbs_l.jsonl",
+    "л'": "verbs_l_soft.jsonl", "с": "verbs_s.jsonl", "с'": "verbs_s_soft.jsonl",
+    "з": "verbs_z.jsonl", "з'": "verbs_z_soft.jsonl", "ш": "verbs_sh.jsonl",
+    "ж": "verbs_zh.jsonl", "щ": "verbs_shch.jsonl",
+}
+
+
+@lru_cache(maxsize=16)
+def load_verbs(sound: str) -> Tuple[Dict[str, Any], ...]:
+    """Глаголы звука. Берём только несовершенный вид: у совершенного форма
+    3-го лица — будущее время, и на листе смешались бы «летит» и «убежит»."""
+    name = VERBS_BY_SOUND.get(sound)
+    if not name:
+        return ()
+    path = HERE / name
+    if not path.exists():
+        return ()
+    out = []
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            v = json.loads(line)
+            if v.get("aspect") == "несов" and v.get("subject_classes"):
+                out.append(v)
+    return tuple(out)
 
 
 def _template_ok(template: str, service: Dict[str, int]) -> bool:
@@ -2122,8 +2220,14 @@ def verify_crosscut(content: Dict[str, Any]) -> None:
     которого нет ни в блоке [4], ни в объявленных производных, ни в служебных."""
     vocab = content["vocabulary"]
     # слоги блока [3] — не слова, но законная часть чистоговорки («ра-ра-ра — …»)
+    # Глаголы предложений — четвёртый ЗАЯВЛЕННЫЙ источник (с 2026-08-08).
+    # Правило 13 держит смысл «ничего с потолка»: каждое слово листа пришло из
+    # места, которое можно назвать. Канон Фомичёвой про «базу отработанных
+    # слов» относится к словарю ребёнка; глагол, несущий целевой звук, сам
+    # является отрабатываемым материалом и проходит тот же фильтр чистоты.
     allowed: Set[str] = (set(vocab["block4"]) | set(vocab["derived"])
-                         | set(vocab["service"]) | set(vocab["syllables"]))
+                         | set(vocab["service"]) | set(vocab["syllables"])
+                         | set(vocab.get("verbs", ())))
     leaked: List[str] = []
     checked: List[Tuple[str, str]] = []
     if content.get("game"):
@@ -2300,6 +2404,7 @@ def build_content(sound: str = "р",
         # [8] графика — сознательно отсутствует в v1
         "footer": list(FOOTER_LINES),    # [9]
         "vocabulary": {
+            "verbs": (sentences or {}).get("verbs", []),
             "block4": block4,
             "derived": derived,
             "service": sorted(service),

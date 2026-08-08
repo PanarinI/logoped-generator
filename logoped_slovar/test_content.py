@@ -123,9 +123,16 @@ def test_crosscut_holds():
         check(f"{syl_type}: сквозной словарь держится", True, True)
 
 
-def test_sentences_use_only_block4_nouns():
+def test_sentences_use_only_declared_sources():
+    """Каждое слово предложения пришло из места, которое можно назвать.
+
+    С 2026-08-08 источников четыре, а не три: к блоку [4] и служебным
+    добавились ГЛАГОЛЫ листа. Они объявляются в vocabulary["verbs"] и проходят
+    тот же фильтр чистоты — «слушает» на лист [С] не пускается, в нём [ш].
+    """
     c = build()
-    allowed = set(c["vocabulary"]["block4"]) | set(c["vocabulary"]["service"])
+    allowed = (set(c["vocabulary"]["block4"]) | set(c["vocabulary"]["service"])
+               | set(c["vocabulary"]["verbs"]))
     for s in c["sentences"]["items"]:
         for tok in C._tokens(s["text"]):
             check(f"предложение: {tok} из блока [4] или служебное",
@@ -751,3 +758,49 @@ def test_verb_aspect_marked_everywhere():
                     check(f"«{v['word']}»: форма 3 л. названа будущим",
                           v.get("form_3sg_tense"), "будущее")
     check(f"вид проставлен у всех {total} глаголов", unmarked, 0)
+
+
+def test_verb_sentences_are_sane():
+    """Глагол в предложении: несовершенный вид, живое подлежащее, свой класс.
+
+    Три ловушки, каждая печаталась на пробном заходе 08-08:
+    «Медвежонок убежит» (совершенный вид — будущее время),
+    «Замок заходит» (неживое подлежащее),
+    «Рыба бегает» (класс подлежащего не тот).
+    """
+    import glob as _glob, json as _json, os as _os
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    forms = {}
+    for path in _glob.glob(_os.path.join(here, "verbs_*.jsonl")):
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    v = _json.loads(line)
+                    forms[v["form_3sg"]] = v
+    for sound in ("р", "л", "с", "ж", "щ"):
+        c = C.build_content(sound=sound, syl_type="direct",
+                            profile=frozenset(), sheet_no=1)
+        block4 = {w: True for w in c["vocabulary"]["block4"]}
+        rows = {it["word"]: it for g in c["words"]["groups"] for it in g["items"]}
+        for verb in c["vocabulary"]["verbs"]:
+            v = forms.get(verb)
+            truthy(f"[{sound}] глагол «{verb}» есть в картотеке", v)
+            if not v:
+                continue
+            check(f"[{sound}] «{verb}» несовершенного вида", v["aspect"], "несов")
+            truthy(f"[{sound}] «{verb}» имеет класс подлежащего", v["subject_classes"])
+        for s in c["sentences"]["items"]:
+            toks = C._tokens(s["text"])
+            used = [t for t in toks if t in forms]
+            if not used:
+                continue
+            subj = [t for t in toks if t in block4]
+            truthy(f"[{sound}] «{s['text']}» имеет подлежащее из блока [4]", subj)
+            for w in subj:
+                row = rows.get(w)
+                if row:
+                    cls = C.subject_class({"semantic_category": row.get("semantic_category")})
+                    truthy(f"[{sound}] подлежащее «{w}» живое", cls)
+                    check(f"[{sound}] «{w}» подходит глаголу «{used[0]}»",
+                          cls in forms[used[0]]["subject_classes"], True)

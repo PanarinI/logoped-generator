@@ -220,9 +220,14 @@ def run_case(tag: str, kw: Dict[str, Any]) -> Dict[str, Any]:
 
     # ── 13. сквозной словарь ────────────────────────────────────────────
     voc = fitted.get("vocabulary") or {}
+    # Источников объявленного словаря ЧЕТЫРЕ (с 2026-08-08): к блоку [4],
+    # производным и служебным добавились ГЛАГОЛЫ предложений. Смысл правила
+    # не меняется — «ничего с потолка»: глагол объявлен в vocabulary["verbs"]
+    # и прошёл тот же фильтр чистоты, что и любое слово листа.
     allowed = {S._strip_marks(str(x).lower()) for x in
                (list(voc.get("block4", [])) + list(voc.get("derived", {}).keys())
-                + list(voc.get("service", [])) + list(voc.get("syllables", [])))}
+                + list(voc.get("service", [])) + list(voc.get("syllables", []))
+                + list(voc.get("verbs", [])))}
     stray = []
     for b, t in units:
         if b in ("[5]", "[6]", "[7]"):
