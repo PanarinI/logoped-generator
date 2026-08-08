@@ -709,3 +709,45 @@ def test_chistogovorka_coverage_not_worse():
                 built += 1
     check(f"чистоговорка строится не меньше чем на 16 листах (сейчас {built})",
           built >= 16, True)
+
+
+def test_animacy_is_not_derived_from_topic():
+    """Одушевлённость — признак слова, а не его темы.
+
+    Ловушка, на которой сломался первый заход в предложения с глаголами:
+    «животные/части» это ЛАПА, «птицы/части» это ПЕРО, а «сказка» держит и
+    принцессу, и ЗАМОК. Печаталось «Замок заходит» и «Лапа ловит».
+    """
+    rows = {r["word"]: r for r in C.load_words(C._words_path("з", ""))}
+    check("«заяц» живой", rows["заяц"]["animate"], True)
+    check("«замок» НЕ живой", rows["замок"]["animate"], False)
+    rows_r = {r["word"]: r for r in C.load_words(C._words_path("р", ""))}
+    if "рыба" in rows_r:
+        check("«рыба» живая", rows_r["рыба"]["animate"], True)
+    for w in ("рама", "ракета", "рынок"):
+        if w in rows_r:
+            check(f"«{w}» не живой", rows_r[w]["animate"], False)
+
+
+def test_verb_aspect_marked_everywhere():
+    """У каждого глагола проставлен вид, и у совершенного форма — будущее.
+
+    Без этого на листе смешивались времена: «Лиса летит» и «Медвежонок убежит».
+    """
+    import glob as _glob, json as _json, os as _os
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    total = unmarked = 0
+    for path in _glob.glob(_os.path.join(here, "verbs_*.jsonl")):
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                v = _json.loads(line)
+                total += 1
+                if v.get("aspect") not in ("сов", "несов"):
+                    unmarked += 1
+                elif v["aspect"] == "сов":
+                    check(f"«{v['word']}»: форма 3 л. названа будущим",
+                          v.get("form_3sg_tense"), "будущее")
+    check(f"вид проставлен у всех {total} глаголов", unmarked, 0)
