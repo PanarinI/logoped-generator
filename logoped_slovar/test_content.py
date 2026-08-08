@@ -551,7 +551,10 @@ def test_purity_is_stress_independent():
 
 def test_dictionary_rows_are_analyzable():
     rows = C.load_words(str(C.HERE / "words_r.jsonl"))
-    check("словарь загружен целиком", len(rows), 162)
+    # Число растёт по мере пополнения картотеки — важно не оно, а то, что
+    # каждая строка разбирается движком. Жёсткая цифра здесь только ловила бы
+    # руку на случайной потере строк, поэтому держим нижнюю границу.
+    check("словарь [Р] не усох", len(rows) >= 162, True)
     for r in rows:
         ph.analyze(r["word"], r["stress_syllable"])
 
