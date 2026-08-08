@@ -674,3 +674,38 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def test_rhyme_swap_keeps_word_count():
+    """Подмена ради чистоговорки МЕНЯЕТ слово, а не добавляет.
+
+    Иначе сдвинулось бы правило 11 (слоговой блок ≤ ¼ словесного) и лист мог
+    бы перестать влезать в А4. Проверяем на звуках, где подмена реально
+    случается (замер 08-08: 4 листа из 19).
+    """
+    for sound, typ in (("с", "direct"), ("з", "direct"), ("ш", "direct"),
+                       ("л'", "direct")):
+        c = C.build_content(sound=sound, syl_type=typ, profile=frozenset(),
+                            sheet_no=1, n_words=16)
+        n = sum(len(g["items"]) for g in (c.get("words") or {}).get("groups", []))
+        check(f"[{sound}/{typ}] слов ровно столько, сколько просили", n, 16)
+
+
+def test_chistogovorka_coverage_not_worse():
+    """Сколько листов несут чистоговорку. Ниже этой планки — регресс.
+
+    11 из 19 было до 08-08 · 16 стало после пополнения словаря, ударений
+    мн. ч. и подмены ради рифмы.
+    """
+    built = 0
+    for sound in sorted(C.WORDS_BY_SOUND):
+        for typ in ("direct", "reverse"):
+            try:
+                c = C.build_content(sound=sound, syl_type=typ,
+                                    profile=frozenset(), sheet_no=1)
+            except Exception:
+                continue
+            if (c.get("chistogovorka") or {}).get("text"):
+                built += 1
+    check(f"чистоговорка строится не меньше чем на 16 листах (сейчас {built})",
+          built >= 16, True)

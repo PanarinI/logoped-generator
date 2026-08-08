@@ -1227,7 +1227,76 @@ def _select_words(sound: str, syl_type: str, banned: FrozenSet[str],
             "tier_b": [it["word"] for it in items if it["tier"] == "б"],
             "items": items,
         })
-    return groups, rejected
+    # Остаток колонок отдаём наружу: из него можно доменять одно слово на
+    # рифмуемое, если чистоговорке рифмовать не на что (см. _ensure_rhyme).
+    return groups, rejected, {v: queues[v] for v in vowels}
+
+
+def _last_syllable_forms(item: Dict[str, Any]) -> List[Tuple[str, Optional[int], bool]]:
+    """Формы слова, годные в рифму: ед. ч. и мн. ч. с ИЗВЕСТНЫМ ударением."""
+    out = [(item["word"], item.get("stress_syllable"), False)]
+    pl = item.get("plural")
+    if pl and pl != item["word"] and pl in PLURAL_STRESS:
+        out.append((pl, PLURAL_STRESS[pl], True))
+    return out
+
+
+def _rhymes_on(item: Dict[str, Any], syllables: Sequence[str],
+               banned: FrozenSet[str]) -> bool:
+    """Может ли это слово закрыть чистоговорку на одном из слогов ряда.
+
+    Мало срифмовать — слово должно ещё встать во фразу. Каркасы «Вот …» и
+    «У мамы …» проходят семантические ворота: «Вот усы» отсекается воротами
+    категории «тело». Без этой проверки отбор считал лист рифмуемым, а
+    чистоговорка всё равно не строилась (поймано на [С]: «усы» на листе есть,
+    рифма есть, фразы нет).
+    """
+    if not (_frame_ok(item, "exist") or _frame_ok(item, "possess")):
+        return False
+    for form, stress, _ in _last_syllable_forms(item):
+        if not is_clean(form, banned, stress):
+            continue
+        try:
+            a = _analyze(form, stress)
+        except Exception:
+            continue
+        if not a.syllables or not a.syllables[-1]["stressed"]:
+            continue
+        if any(a.transcription.endswith(s) for s in syllables):
+            return True
+    return False
+
+
+def _ensure_rhyme(groups: List[Dict[str, Any]], leftovers: Dict[str, List[Dict[str, Any]]],
+                  syllables: Sequence[str], banned: FrozenSet[str],
+                  warnings: List[str]) -> None:
+    """Если рифмовать не на что — меняем ОДНО слово на рифмуемое.
+
+    Канон сквозного словаря (правило 13) требует, чтобы слово чистоговорки
+    пришло из блока [4]. Отбор в блок [4] ранжирует слова по канону — ярус,
+    позиция, ударность, частотность — и рифмуемость в этом ранге не участвует.
+    Из-за этого «часы» и «трусы» лежали в картотеке [С] годными в рифму и на
+    лист не попадали (замер 08-08: чистоговорка 12 листов из 19).
+
+    Меняем, а не добавляем: число слов на листе не меняется, правило 11
+    (слоговой блок ≤ ¼ словесного) не сдвигается. Жертвуем САМЫМ НИЗКИМ
+    в ранге словом той же колонки — оно последнее в списке.
+    """
+    if any(_rhymes_on(it, syllables, banned) for g in groups for it in g["items"]):
+        return
+    for g in groups:
+        for cand in leftovers.get(g["vowel"], []):
+            if not _rhymes_on(cand, syllables, banned):
+                continue
+            victim = g["items"][-1]
+            g["items"][-1] = cand
+            g["tier_a"] = [it["word"] for it in g["items"] if it["tier"] == "а"]
+            g["tier_b"] = [it["word"] for it in g["items"] if it["tier"] == "б"]
+            warnings.append(
+                f"ради чистоговорки слово «{victim['word']}» заменено на "
+                f"«{cand['word']}»: рифмовать было не на что, а канон требует "
+                f"брать слово чистоговорки из блока слов")
+            return
 
 
 def _shortfall_message(found: int, requested: int, rejected: Dict[str, int],
@@ -1998,8 +2067,9 @@ def build_content(sound: str = "р",
     warnings: List[str] = []
 
     rows = load_words(_words_path(sound, words_path))
-    groups, rejected = _select_words(sound, syl_type, banned, rows, n_words,
-                                     sheet_no, rnd, markova_max, min_familiarity)
+    groups, rejected, leftovers = _select_words(
+        sound, syl_type, banned, rows, n_words,
+        sheet_no, rnd, markova_max, min_familiarity)
     found = sum(len(g["items"]) for g in groups)
     if found == 0:
         raise ContentError(
@@ -2021,6 +2091,13 @@ def build_content(sound: str = "р",
     service = _service_pool(sound, banned)
 
     syllables = _build_syllables(sound, syl_type, groups, found, rnd, warnings)
+
+    # Слоговой ряд построен — теперь известно, на что рифмовать. Если ни одно
+    # выбранное слово не годится, меняем одно (см. _ensure_rhyme).
+    _row_syls = [u for r in syllables.get("rows", [])
+                 for u in r.get("units_phon", r.get("units", []))]
+    if _row_syls:
+        _ensure_rhyme(groups, leftovers, _row_syls, banned, warnings)
     game = _build_game(groups, banned, seed, sheet_no, derived, warnings,
                        allow_rule_diminutive, service, n_game_items)
     sentences = _build_sentences(groups, sound, banned, service, rnd,
