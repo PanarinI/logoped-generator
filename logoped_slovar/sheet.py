@@ -390,6 +390,11 @@ def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
                              + _wrap(art.get("adult"), METRICS["fs_adult"]) * _adult_line()
                              + g)
 
+    fill = content.get("fill_syllable")
+    if fill:
+        n = max(1, _wrap(" ".join(fill.get("items", [])), METRICS["fs_speech"]))
+        h["fill_syllable"] = (_head_line(fill, "Вставь слог") + n * _speech_line() + g)
+
     iso = content.get("isolated")
     if iso:
         h["isolated"] = (_speech_line() + METRICS["title_gap"] + g
@@ -470,6 +475,16 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
         if total_height(c) <= budget_mm:
             warns.append("не влезало: в разминке оставлены только названия "
                          "упражнений — подсказки «как делать» сняты")
+            return c, warns
+
+    # −0.5) «вставь слог» — снимается раньше речевых блоков ядра.
+    # Блок канонный, но он НАДСТРОЙКА над словами: без него лист остаётся
+    # полным, а без предложений — теряет ступень.
+    if c.get("fill_syllable"):
+        c.pop("fill_syllable")
+        if total_height(c) <= budget_mm:
+            warns.append("не влезало: снят блок «вставь слог» — он надстройка "
+                         "над словами, а лестница ступеней важнее")
             return c, warns
 
     # 0) предложения — до канонного минимума 6
@@ -953,6 +968,31 @@ def _b1_articulation(b: Dict[str, Any], with_hints: bool = True) -> str:
             f'{body}{adult}</section>')
 
 
+# ✅ КАНОН, дословно — Жихарева-Норкина, «Домашняя тетрадь», с. 9:
+#     «Повтори, прочитай слова. Поиграй в игру «Исправь взрослого». Взрослый
+#      произносит слова неправильно, копируя произношение ребёнка, а ребёнок
+#      «исправляет». Пример: «сапка» — шапка.»
+#
+# Печатается ТОЛЬКО на домашнем листе: игру ведёт взрослый, и ему нужно
+# объяснение. Логопед приём знает.
+#
+# ⛔ Пример подмены («сапка») мы НЕ печатаем. Он утверждает, чем именно ЭТОТ
+# ребёнок заменяет звук, — а профиль такого не знает и знать не может.
+CORRECT_ADULT = ("Поиграйте: взрослый читает слово неправильно, ребёнок исправляет.")
+
+
+def _b4b_fill(b: Dict[str, Any]) -> str:
+    """«Вставь пропущенный слог» — ✅ Жихарева, «Домашняя тетрадь», с. 36.
+
+    Стоит сразу за словами и работает на них же: слова взяты из блока [4],
+    поэтому сквозной словарь (правило 13) держится сам собой.
+    """
+    items = " &nbsp; ".join(f'<span class="w">{_e(x)}</span>' for x in b.get("items", []))
+    return (f'<section class="block">'
+            f'{_head("4б", "Вставь слог", "", b.get("instruction", ""))}'
+            f'<div class="fill">{items}</div></section>')
+
+
 def _b2_isolated(b: Dict[str, Any]) -> str:
     line = (f'<span class="iso">{_e(b.get("instruction", ""))} '
             f'<b>{_e(b.get("text", ""))}</b></span>')
@@ -1002,10 +1042,11 @@ def _b4_words(b: Dict[str, Any], sp: str) -> str:
                     f'{"".join(items)}</div>')
     hint = " · ".join(str(t["label"]) for t in b.get("tiers", [])
                       if t.get("label")) if marks else ""
+    play = (f'<div class="adult">{_e(b["play"])}</div>' if b.get("play") else "")
     return (f'<section class="block">'
             f'{_head("4", "Слова", hint, b.get("instruction", ""))}'
             f'<div class="wcols" style="grid-template-columns:repeat({ncol},1fr)">'
-            f'{"".join(cols)}</div></section>')
+            f'{"".join(cols)}</div>{play}</section>')
 
 
 def _b5_game(b: Dict[str, Any], lk: Dict[str, int], sp: str) -> str:
@@ -1109,7 +1150,12 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
         parts.append(_b3_syllables(c["syllables"], sp))
     lk = _stress_lookup(c)
     if c.get("words"):
-        parts.append(_b4_words(c["words"], sp))
+        w = dict(c["words"])
+        if audience == "home":
+            w["play"] = CORRECT_ADULT
+        parts.append(_b4_words(w, sp))
+    if c.get("fill_syllable"):
+        parts.append(_b4b_fill(c["fill_syllable"]))
     if c.get("game"):
         parts.append(_b5_game(c["game"], lk, sp))
     if c.get("sentences"):
@@ -1176,6 +1222,15 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
             # лист — это лист. Решение автора 2026-08-06. Провенанс никуда не
             # делся — он живёт в панели методики, отдельным слоем.
             "adult": art.get("dosage") or "",
+        }
+
+    fill = c.get("fill_syllable") or {}
+    if fill.get("items"):
+        out["fill_syllable"] = {
+            "instruction": fill["instruction"],
+            "items": [i["masked"] for i in fill["items"]],
+            # ответы нужны линтеру сквозного словаря: слова-то из блока [4]
+            "words": [i["word"] for i in fill["items"]],
         }
 
     iso = c.get("isolated") or {}

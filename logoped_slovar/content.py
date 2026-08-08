@@ -1889,6 +1889,106 @@ def _rhyme_candidates(groups: Sequence[Dict[str, Any]], syllable: str,
     return out
 
 
+# ═══════════════════════════════════════════════════════════════════════
+#  БЛОК «ВСТАВЬ ПРОПУЩЕННЫЙ СЛОГ»
+# ═══════════════════════════════════════════════════════════════════════
+#
+# ✅ КАНОН, дословно — Жихарева-Норкина Ю.Б., «Домашняя тетрадь для
+# логопедических занятий с детьми», с. 36:
+#     «Прочитай слова, вставив пропущенные слоги жа, жо, жи, же.
+#      пи_ма  е_нок  на_м  дра_  лу_  медве_нок»
+#
+# Чем этот блок ценен именно нам: это ЕДИНСТВЕННАЯ найденная форма «половинок»,
+# которая живёт на чистой бумаге и не требует ни одной картинки. Всё остальное
+# из этой группы («назови недостающий слог» у Комаровой) построено на картинках.
+#
+# Ограничение, вытекающее из самого приёма: пропуск ставится на месте ОТКРЫТОГО
+# слога, поэтому блок строится на прямых и интервокальных листах. На обратном
+# слоге («ар» в «комар») пропуск разрезал бы слог посередине — «ком_» получалось
+# бы из «ко-мар», то есть не из слога, а из хвоста. Так делать нельзя.
+
+_ORTHO_VOWELS = "аеёиоуыэюя"
+
+
+def _ortho_chunks(word: str) -> List[str]:
+    """Орфографическое деление слова на открытые слоги.
+
+    Правило: в слоге ровно одна гласная, согласные между гласными отходят
+    к СЛЕДУЮЩЕЙ (тяготение к открытому слогу). Проверено на образцах
+    источника: пижама -> пи|жа|ма · лужа -> лу|жа · медвежонок -> мед|ве|жо|нок.
+    Фонемное деление движка сюда не годится: оно работает по звукам, а пропуск
+    печатается по буквам.
+    """
+    out: List[str] = []
+    cur, seen_vowel = "", False
+    for ch in word:
+        if ch in _ORTHO_VOWELS:
+            if seen_vowel:
+                j = len(cur)
+                while j > 0 and cur[j - 1] not in _ORTHO_VOWELS:
+                    j -= 1
+                head, tail = cur[:j], cur[j:]
+                if len(tail) > 1:            # из группы согласных вперёд идёт один
+                    head, tail = cur[:len(cur) - 1], cur[-1:]
+                out.append(head)
+                cur = tail
+            cur += ch
+            seen_vowel = True
+        else:
+            cur += ch
+    out.append(cur)
+    return [c for c in out if c]
+
+
+def _build_fill_syllable(groups: Sequence[Dict[str, Any]], syl_type: str,
+                         syllables: Dict[str, Any],
+                         n_items: int = 6) -> Optional[Dict[str, Any]]:
+    """Слова блока [4] с вырезанным целевым слогом: «пи_ма»."""
+    if syl_type not in ("direct", "intervocal"):
+        return None
+    row_syls = {u for r in syllables.get("rows", []) for u in r.get("units", [])}
+    if not row_syls:
+        return None
+    items: List[Dict[str, str]] = []
+    seen: Set[str] = set()
+    for g in groups:
+        for it in g["items"]:
+            w = it["word"]
+            if w in seen:
+                continue
+            parts = _ortho_chunks(w)
+            hit = None
+            for i, part in enumerate(parts):
+                if i == 0:
+                    continue            # первый слог не режем: не за что зацепиться
+                # Вырезается НАЧАЛО слога (согласный + гласная), хвост остаётся:
+                # у источника «нажим» -> «на_м», а не «на_». Целый слог — частный
+                # случай, когда хвоста нет: «лужа» -> «лу_».
+                for syl in sorted(row_syls, key=len, reverse=True):
+                    if part.startswith(syl):
+                        hit = ("".join(parts[:i]) + "_" + part[len(syl):]
+                               + "".join(parts[i + 1:]), syl)
+                        break
+                if hit:
+                    break
+            if not hit:
+                continue
+            stump, syl = hit
+            if len(stump) - 1 < 2:      # что осталось, должно читаться («лу_»)
+                continue
+            seen.add(w)
+            items.append({"masked": stump, "word": w, "syllable": syl})
+    if len(items) < 4:
+        return None
+    used = sorted({it["syllable"] for it in items[:n_items]})
+    return {
+        "instruction": "Прочитай слова, вставив пропущенные слоги: "
+                       + ", ".join(used) + ".",
+        "items": items[:n_items],
+        "syllables": used,
+    }
+
+
 def _build_chistogovorka(groups: Sequence[Dict[str, Any]], sound: str,
                          syllables: Dict[str, Any], banned: FrozenSet[str],
                          service: Dict[str, int], rnd: random.Random,
@@ -2111,6 +2211,9 @@ def build_content(sound: str = "р",
     # предпочтение таких слов при отборе в блок [4].
     chisto = _build_chistogovorka(groups, sound, syllables, banned, service,
                                   rnd, derived, warnings)
+    # «Вставь пропущенный слог» — ✅ Жихарева с. 36. Стоит рядом со словами:
+    # он работает на них же, значит сквозной словарь не нарушается.
+    fill = _build_fill_syllable(groups, syl_type, syllables)
 
     # [1] и [2] — из разобранного источника, а не из головы
     gym = load_gymnastics()
@@ -2167,6 +2270,7 @@ def build_content(sound: str = "р",
         },
         "game": game,                    # [5]
         "sentences": sentences,          # [6]
+        "fill_syllable": fill,           # [4б] «вставь слог»
         "chistogovorka": chisto,         # [7]
         # [8] графика — сознательно отсутствует в v1
         "footer": list(FOOTER_LINES),    # [9]
