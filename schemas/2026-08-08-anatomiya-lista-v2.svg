@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1420 900" width="1420" height="900" font-family="-apple-system, Segoe UI, Roboto, sans-serif">
+<style>
+  .t { fill:#1a1a1a }
+  .m { fill:#6b6b6b }
+  .h1 { font-size:26px; font-weight:700 }
+  .h2 { font-size:13px; font-weight:700; letter-spacing:.07em }
+  .num { font-size:12px; font-weight:700; fill:#fff }
+  .nm { font-size:15px; font-weight:700 }
+  .mm { font-size:15px; font-weight:700 }
+  .sm { font-size:12px }
+  .xs { font-size:11px }
+  .box { fill:#fff; stroke:#d8d4cc; stroke-width:1.2 }
+  .canon { fill:#eaf1e7; stroke:#7d9b72 }
+  .ours  { fill:#fdf4e3; stroke:#d9a441 }
+  .gap   { fill:#f7edec; stroke:#c0796f }
+</style>
+<rect width="1420" height="900" fill="#faf9f6"/>
+
+<text x="40" y="48" class="t h1">Лист автоматизации: из чего он собран</text>
+<text x="40" y="72" class="m sm">Замер 2026-08-08 · лист [Р], прямые слоги, режим «домой». Миллиметры взяты из движка, а не нарисованы: их же считает вёрстка, когда решает, что ужать.</text>
+
+<g transform="translate(40,94)">
+  <rect x="0" y="0" width="13" height="13" class="canon" rx="3"/>
+  <text x="20" y="11" class="t xs">стоит на цитате из изданного пособия</text>
+  <rect x="250" y="0" width="13" height="13" class="ours" rx="3"/>
+  <text x="270" y="11" class="t xs">наше решение, источника нет</text>
+  <rect x="470" y="0" width="13" height="13" class="gap" rx="3"/>
+  <text x="490" y="11" class="t xs">работает, но с названной дырой</text>
+</g>
+
+<!-- ══ ЛЕВАЯ КОЛОНКА: ЛЕСТНИЦА ══ -->
+<text x="40" y="146" class="t h2">ЛЕСТНИЦА СТУПЕНЕЙ · порядок канонный, человеку не отдаётся</text>
+
+<g transform="translate(40,158)">
+  <g>
+    <rect x="0" y="0" width="740" height="48" class="box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#8a8580"/><text x="26" y="29" class="num" text-anchor="middle">0</text>
+    <text x="50" y="21" class="t nm">Шапка-документ</text>
+    <text x="50" y="38" class="m sm">ребёнок · звук · тип слога · неделя с__по__ · 7 клеток отметок · подпись взрослого</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">17 мм</text>
+  </g>
+  <g transform="translate(0,56)">
+    <rect x="0" y="0" width="740" height="48" class="canon box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#7d9b72"/><text x="26" y="29" class="num" text-anchor="middle">1</text>
+    <text x="50" y="21" class="t nm">Разминка <tspan class="m sm">· Фомичёва 1989, комплексы по укладу звука</tspan></text>
+    <text x="50" y="38" class="m sm">4 упражнения + как делать каждое + галочки</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">40 мм</text>
+  </g>
+  <g transform="translate(0,112)">
+    <rect x="0" y="0" width="740" height="48" class="canon box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#7d9b72"/><text x="26" y="29" class="num" text-anchor="middle">2</text>
+    <text x="50" y="21" class="t nm">Изолированный звук <tspan class="m sm">· Фомичёва / Спивак, с провенансом</tspan></text>
+    <text x="50" y="38" class="m sm">«Спой песенку мотора: р-р-р» — канонный образ этого звука</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">14 мм</text>
+  </g>
+  <g transform="translate(0,168)">
+    <rect x="0" y="0" width="740" height="48" class="canon box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#7d9b72"/><text x="26" y="29" class="num" text-anchor="middle">3</text>
+    <text x="50" y="21" class="t nm">Слоги <tspan class="m sm">· связка «слог → слово» — канон: слог один не остаётся</tspan></text>
+    <text x="50" y="38" class="m sm">ряды одного типа, каждый кончается словом: «ра — рак»</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">28 мм</text>
+  </g>
+  <g transform="translate(0,224)">
+    <rect x="0" y="0" width="740" height="48" class="canon box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#7d9b72"/><text x="26" y="29" class="num" text-anchor="middle">4</text>
+    <text x="50" y="21" class="t nm">Слова — ядро листа <tspan class="m sm">· Фомичёва: «за одно занятие 10–16 слов»</tspan></text>
+    <text x="50" y="38" class="m sm">12–24 слова колонками по гласной · ярусы а) короткие б) длиннее</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">45 мм</text>
+  </g>
+  <g transform="translate(0,280)">
+    <rect x="0" y="0" width="740" height="48" class="canon box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#7d9b72"/><text x="26" y="29" class="num" text-anchor="middle">4б</text>
+    <text x="50" y="21" class="t nm">Вставь слог <tspan class="m sm">· Жихарева с. 36 — алгоритм повторил её строку дословно</tspan></text>
+    <text x="50" y="38" class="m sm">те же слова с вырезанным слогом: «пи_ма · лу_ · медве_нок»</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">16 мм</text>
+  </g>
+  <g transform="translate(0,336)">
+    <rect x="0" y="0" width="740" height="48" class="gap box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#c0796f"/><text x="26" y="29" class="num" text-anchor="middle">5</text>
+    <text x="50" y="21" class="t nm">Грамматическая игра <tspan class="m sm">· «Посчитай 1-5» выключена: правило врало «пять стулов»</tspan></text>
+    <text x="50" y="38" class="m sm">«Один — много» · «Назови ласково» — формы только по выверенной таблице</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">30 мм</text>
+  </g>
+  <g transform="translate(0,392)">
+    <rect x="0" y="0" width="740" height="48" class="gap box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#c0796f"/><text x="26" y="29" class="num" text-anchor="middle">6</text>
+    <text x="50" y="21" class="t nm">Предложения <tspan class="m sm">· самый дорогой блок · плотность звука 3–35 %: нет глаголов</tspan></text>
+    <text x="50" y="38" class="m sm">6–10 предложений со шкалой длины «Три слова / Четыре слова»</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">66 мм</text>
+  </g>
+  <g transform="translate(0,448)">
+    <rect x="0" y="0" width="740" height="48" class="gap box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#c0796f"/><text x="26" y="29" class="num" text-anchor="middle">7</text>
+    <text x="50" y="21" class="t nm">Чистоговорка <tspan class="m sm">· строится на 16 листах из 19 — было 11</tspan></text>
+    <text x="50" y="38" class="m sm">«Ра-ра-ра — тут дыра» — рифма на ударный конечный слог</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">19 мм</text>
+  </g>
+  <g transform="translate(0,504)">
+    <rect x="0" y="0" width="740" height="48" class="box" rx="4"/>
+    <circle cx="26" cy="24" r="13" fill="#8a8580"/><text x="26" y="29" class="num" text-anchor="middle">9</text>
+    <text x="50" y="21" class="t nm">Подвал взрослому <tspan class="m sm">· только на домашнем листе</tspan></text>
+    <text x="50" y="38" class="m sm">три строки бытовым языком · ни одной выдуманной нормы</text>
+    <text x="726" y="30" class="t mm" text-anchor="end">16 мм</text>
+  </g>
+</g>
+
+<g transform="translate(40,732)">
+  <rect x="0" y="0" width="740" height="96" fill="#f2efe8" stroke="#d8d4cc" stroke-width="1.2" rx="4"/>
+  <text x="20" y="26" class="t h2">БУМАГА НЕ РЕЗИНОВАЯ</text>
+  <text x="20" y="50" class="m sm">Сумма блоков — <tspan class="t" font-weight="700">291 мм</tspan>, а на странице доступно <tspan class="t" font-weight="700">273 мм</tspan>. Значит лист всегда ужимается,</text>
+  <text x="20" y="69" class="m sm">и любой новый блок кого-то вытесняет. Бесплатных прибавок здесь не бывает.</text>
+  <text x="20" y="88" class="m xs">15 листов из 19 не влезают до ужатия — это обычная работа движка, а не поломка.</text>
+</g>
+
+<!-- ══ ПРАВАЯ КОЛОНКА ══ -->
+<text x="820" y="146" class="t h2">ЧТО СНИМАЕТСЯ ПЕРВЫМ, ЕСЛИ НЕ ВЛЕЗЛО</text>
+<text x="820" y="164" class="m xs">Решает движок. Человеку это решение не отдаётся: правильный ответ зашит.</text>
+
+<g transform="translate(820,176)">
+  <rect x="0" y="0" width="560" height="42" class="ours box" rx="4"/>
+  <text x="16" y="18" class="t nm">1 · подсказки к разминке</text>
+  <text x="16" y="34" class="m xs">родитель без подсказки — не то же, что ребёнок без ступени</text>
+
+  <rect x="0" y="50" width="560" height="42" class="ours box" rx="4"/>
+  <text x="16" y="68" class="t nm">2 · блок «вставь слог»</text>
+  <text x="16" y="84" class="m xs">надстройка над словами: без него лист остаётся полным</text>
+
+  <rect x="0" y="100" width="560" height="42" class="box" rx="4"/>
+  <text x="16" y="118" class="t nm">3 · предложения — до канонных 6</text>
+  <text x="16" y="134" class="m xs">режем объём внутри канонной вилки, ступень остаётся</text>
+
+  <rect x="0" y="150" width="560" height="42" class="box" rx="4"/>
+  <text x="16" y="168" class="t nm">4 · слова — до канонных 12</text>
+  <text x="16" y="184" class="m xs">то же: количество, а не ступень</text>
+
+  <rect x="0" y="200" width="560" height="42" class="gap box" rx="4"/>
+  <text x="16" y="218" class="t nm">5 · целый блок — и всегда вслух</text>
+  <text x="16" y="234" class="m xs">лист говорит, что именно снял и почему</text>
+</g>
+
+<text x="820" y="470" class="t h2">ЧЕГО НА ЛИСТЕ НЕТ И ПОЧЕМУ</text>
+
+<g transform="translate(820,482)">
+  <rect x="0" y="0" width="560" height="42" class="gap box" rx="4"/>
+  <text x="16" y="18" class="t nm">Словосочетания «прил. + сущ.»</text>
+  <text x="16" y="34" class="m xs">Спивак: 48 пар на [Р] · у нас нет прилагательных — собираются сейчас</text>
+
+  <rect x="0" y="50" width="560" height="42" class="gap box" rx="4"/>
+  <text x="16" y="68" class="t nm">Рассказы и тексты</text>
+  <text x="16" y="84" class="m xs">нужны глаголы — собираются сейчас</text>
+
+  <rect x="0" y="100" width="560" height="42" class="gap box" rx="4"/>
+  <text x="16" y="118" class="t nm">4-й лишний · зашумлённые картинки</text>
+  <text x="16" y="134" class="m xs">задания на узнавание — без картинок не бывают, обойти нельзя</text>
+
+  <rect x="0" y="150" width="560" height="42" class="box" rx="4"/>
+  <text x="16" y="168" class="t nm">Графический блок [8]</text>
+  <text x="16" y="184" class="m xs">осознанный вычет первой версии</text>
+
+  <rect x="0" y="200" width="560" height="42" class="box" rx="4"/>
+  <text x="16" y="218" class="t nm">Скороговорки · стихи · загадки</text>
+  <text x="16" y="234" class="m xs">их не собирают из словаря, а подбирают — и тексты в пособиях авторские</text>
+</g>
+
+<g transform="translate(820,760)">
+  <text x="0" y="0" class="m xs">Одно и то же ядро кормит и другие материалы: звуковая дорожка берёт слог ступени [3],</text>
+  <text x="0" y="17" class="m xs">слоговая — весь ряд, лабиринт — слова ступени [4]. Лист и инструменты стоят на одном словаре.</text>
+</g>
+</svg>
