@@ -90,6 +90,7 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
+import characters as CH        # noqa: E402
 import content as C            # noqa: E402
 import phonetics as _P         # noqa: E402
 
@@ -411,7 +412,8 @@ def render_propisi(p: Dict[str, Any]) -> str:
         rows.append(f"""
   <div class="row">
     <div class="hero">
-      <div class="hero-box"><span>{_e(m['image_name'] or label)}</span></div>
+      <div class="hero-box">{CH.character_svg(m['image_name'], 30.0, 2.4)
+        or f'<span>{_e(m["image_name"] or label)}</span>'}</div>
     </div>
     <div class="track-wrap">
       <div class="utter">{_e(utter)}</div>
@@ -457,7 +459,7 @@ h1 b {{ font-size:20pt; }}
    Образ канонный (Фомичёва / Спивак), поэтому он честен сам по себе: ребёнок
    узнаёт мотор со слов взрослого. Рамка снята — она объявляла материал
    недоделанным. Картинка встанет на то же место. */
-.hero {{ width:24mm; flex:0 0 24mm; }}
+.hero {{ width:32mm; flex:0 0 32mm; }}
 .hero-box {{ height:22mm; display:flex; align-items:center;
    justify-content:center; text-align:center; padding:1mm;
    font-size:13pt; font-weight:700; color:#000; line-height:1.15; }}

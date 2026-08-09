@@ -49,6 +49,8 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
+import characters as CH          # noqa: E402
+import scenes as SC              # noqa: E402
 import content as C
 import phonetics as _P            # noqa: E402
 
@@ -67,7 +69,8 @@ ROWS_DEFAULT = 6   # рядов на А4
 def build_track(sound: str = "р",
                 syl_type: str = "direct",
                 rows: int = ROWS_DEFAULT,
-                seed: int = 0) -> Dict[str, Any]:
+                seed: int = 0,
+                scene: Optional[str] = None) -> Dict[str, Any]:
     """Кружки дорожки. Возвращает структуру, рендер — отдельно."""
     if sound not in C.WORDS_BY_SOUND:
         raise TrackError(
@@ -80,6 +83,10 @@ def build_track(sound: str = "р",
             f"и его чистоту без словаря не проверить")
     if not (3 <= rows <= 8):
         raise TrackError("рядов на дорожке — от 3 до 8")
+    if scene is not None and scene and scene not in SC.SCENES:
+        raise TrackError(
+            f"фона «{scene}» нет; есть: "
+            + ", ".join(k for k in SC.SCENE_LABELS if k) + " (или без фона)")
 
     # Порядок слогов ПЕРЕМЕШИВАЕТСЯ по рядам. Строгий цикл РА-РО-РУ-РЫ-РЭ
     # ребёнок выучивает наизусть и перестаёт читать кружки — тренируется
@@ -129,6 +136,10 @@ def build_track(sound: str = "р",
     # Глагол не подбираем: мотор едет, комарик летит, водичка течёт — под
     # каждый образ пришлось бы вести таблицу спряжений. «Проведи по тропе»
     # верно для любого существа и ничего не обещает сверх того, что нарисовано.
+    # scene=None — «реши сам»: берём умолчание по персонажу. Пустая строка —
+    # осознанный выбор логопеда «без фона», и его мы не переопределяем.
+    if scene is None:
+        scene = SC.DEFAULT_SCENE.get(hero, "")
     task = (f"Проведи {hero} по тропе до финиша." if hero
             else "Пройди тропу от старта до финиша.")
 
@@ -143,6 +154,7 @@ def build_track(sound: str = "р",
             "n_cells": len(cells),
             "vowels": vowels,
             "hero": hero,
+            "scene": scene,
         },
         "cells": cells,
         "instruction": task,
@@ -172,7 +184,7 @@ body { background:#f2f2f2; padding:10px; }
 h1 { font-size:15pt; margin:5mm 0 1mm; font-weight:700; }
 .hint { font-size:10pt; font-style:italic; color:#444; margin:0 0 4mm; }
 .lead { display:flex; align-items:center; gap:4mm; margin:0 0 3mm; }
-.hero { width:22mm; height:22mm; border:0; border-radius:2mm;
+.hero { width:30mm; height:24mm; border:0; border-radius:2mm;
         display:flex; align-items:center; justify-content:center; flex:0 0 auto;
         font-size:13pt; font-weight:700; color:#000; text-align:center;
         padding:1mm; line-height:1.15; }
@@ -262,7 +274,10 @@ def render_track(track: Dict[str, Any]) -> str:
 
     # Тропа должна быть ВИДНА ребёнку: по ней ведут пальцем. При opacity 0.22
     # она пропадала между кружками и лист снова читался как ряды.
-    svg = [f'<path d="{_route_path(rows, cols)}" fill="none" stroke="#000" '
+    # Сцена идёт ПЕРВЫМ слоем: тропа и кружки ложатся поверх неё, а кружки
+    # залиты белым — слоги «пробивают» фон насквозь, как на образце Ольги.
+    svg = [SC.scene_svg(m.get("scene", ""), _W, height)] if m.get("scene") else []
+    svg += [f'<path d="{_route_path(rows, cols)}" fill="none" stroke="#000" '
            f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']
     last = None
     for idx, c in enumerate(cells):
@@ -318,7 +333,8 @@ def render_track(track: Dict[str, Any]) -> str:
   </div>
   <h1>{e(track['instruction'])}</h1>
   <div class="lead">
-    <div class="hero"><span>{e(hero)}</span></div>
+    <div class="hero">{CH.character_svg(hero, 30.0, 2.4)
+      or f'<span>{e(hero)}</span>'}</div>
     <p class="hint">{e(track['lead'])}</p>
   </div>
   <svg class="route" viewBox="0 0 {_W:.0f} {height:.0f}"

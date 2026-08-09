@@ -679,8 +679,6 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
 
 
 def test_rhyme_swap_keeps_word_count():
@@ -804,3 +802,165 @@ def test_verb_sentences_are_sane():
                     truthy(f"[{sound}] подлежащее «{w}» живое", cls)
                     check(f"[{sound}] «{w}» подходит глаголу «{used[0]}»",
                           cls in forms[used[0]]["subject_classes"], True)
+
+
+def test_phrases_material_is_agreed_and_clean():
+    """Словосочетания — ОТДЕЛЬНЫЙ материал (`phrases.py`), ✅ Спивак.
+
+    Проверяем ровно то, на чём материал стоит:
+      • прилагательное согласовано по роду ФОРМОЙ ИЗ СЛОВАРЯ, не по хвосту;
+      • обе части чисты по профилю ребёнка;
+      • сочетаемость взята из таблицы, а не из правила по категории;
+      • причастию и признаку внешности досталось СВОЁ подлежащее.
+    """
+    import phrases as F
+    table = C.load_combinability()
+    for sound in ("р", "с", "ш", "щ", "л"):
+        p = F.build_phrases_sheet(sound=sound, n=12)
+        check(f"[{sound}] словосочетаний на листе", p["meta"]["n"], 12)
+        rows = {r["word"]: r for r in C.load_words(C._words_path(sound, None))}
+        for it in p["items"]:
+            noun = rows[it["noun"]]
+            adj = next(a for a in C.load_adjectives(sound)
+                       if a["word"] == it["adj_lemma"])
+            check(f"[{sound}] «{it['text']}»: форма по роду из словаря",
+                  it["adj"], C._agreed_form(adj, noun["gender"]))
+            truthy(f"[{sound}] «{it['text']}»: класс сочетаемости разрешён",
+                   it["noun_class"]
+                   in table["adjective_classes"][it["comb_class"]]["fits"])
+            truthy(f"[{sound}] «{it['text']}»: не тавтология",
+                   not C._same_root(it["adj"], it["noun"]))
+            allowed = (table["adjective_classes"][it["comb_class"]]
+                       .get("subject_classes", {}).get(it["adj_lemma"]))
+            if allowed:
+                truthy(f"[{sound}] «{it['text']}»: подлежащее своего класса",
+                       C.subject_class(noun) in allowed)
+
+
+def test_phrases_respect_profile():
+    """Профиль ребёнка режет ОБЕ части словосочетания, а не только слово."""
+    import phrases as F
+    profile = {"л", "ш", "ж"}
+    p = F.build_phrases_sheet(sound="р", profile=profile, n=8)
+    banned = C.banned_phonemes("р", profile)
+    for it in p["items"]:
+        for tok in C._tokens(it["text"]):
+            check(f"«{it['text']}»: {tok} чист по профилю",
+                  sorted(C.corrigible_of(tok) & banned), [])
+
+
+def test_phrases_are_not_on_the_automation_sheet():
+    """Лист автоматизации словосочетаний НЕ несёт: А4 переполнен, решение
+    автора 08-09 — отдельный материал. Если блок вернётся на лист молча,
+    сломается канонное правило 11 (замер в DECISIONS)."""
+    c = C.build_content()
+    check("на листе автоматизации блока словосочетаний нет",
+          "phrases" in c, False)
+
+
+def test_combinability_table_is_whole():
+    """Таблица покрывает КАЖДОЕ прилагательное словаря — либо классом, либо
+    строкой «не размечено». Без этого блок молча теряет слова, а мы думаем,
+    что их нет. Ловушка поймана 08-08: правка по строке не применилась, и
+    «сырой» оказался разом и в классе, и в неразмеченных."""
+    import glob as _glob, json as _json, os as _os
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    table = C.load_combinability()
+    classed = {}
+    dupes = []
+    for cls, spec in table["adjective_classes"].items():
+        for w in spec["words"]:
+            if w in classed:
+                dupes.append(w)
+            classed[w] = cls
+    unmarked = set(table["unmarked"]["words"])
+    check("ни одно прилагательное не лежит в двух классах", dupes, [])
+    check("класс и «не размечено» не пересекаются",
+          sorted(set(classed) & unmarked), [])
+    words = set()
+    for path in _glob.glob(_os.path.join(here, "adjectives_*.jsonl")):
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    words.add(_json.loads(line)["word"])
+    check("каждое прилагательное словаря есть в таблице",
+          sorted(words - set(classed) - unmarked), [])
+    check("в таблице нет призраков (слов, которых нет в словаре)",
+          sorted((set(classed) | unmarked) - words), [])
+    # у каждого класса fits — непустой список известных классов существительных
+    known = ({"живое", "предмет", "одежда", "игрушка", "растение", "тело",
+              "часть-вещи", "плод", "еда", "блюдо", "напиток", "вода",
+              "природа", "постройка", "вещество"})
+    for cls, spec in table["adjective_classes"].items():
+        truthy(f"класс «{cls}»: fits непуст", bool(spec["fits"]))
+        check(f"класс «{cls}»: fits знает только известные классы",
+              sorted(set(spec["fits"]) - known), [])
+
+
+def test_noun_class_uses_animacy_not_topic():
+    """Класс существительного считается по одушевлённости, а НЕ по полю
+    записи: в блок [4] запись приходит урезанной. На этом 08-08 молча
+    выпадало всё живое — щенок, щука, рак."""
+    c = C.build_content(sound="щ", syl_type="direct")
+    rows = {it["word"]: it for g in c["words"]["groups"] for it in g["items"]}
+    for w in ("щенок", "щука"):
+        if w in rows:
+            truthy(f"«{w}» в урезанной записи всё равно живой",
+                   "animate" not in rows[w])
+            check(f"«{w}» — класс «живое»", C.noun_class(rows[w]), "живое")
+
+
+
+
+def test_characters_are_drawn_not_written():
+    """Персонаж звука на дорожках — РИСУНОК, а не слово.
+
+    Поймано автором 08-09: обе дорожки печатали «мотор» текстом, и на детской
+    половине листа не стояло ничего — ребёнок 5-7 лет не читает. Проверяем,
+    что у каждого звука есть свой рисунок и что он попадает в печать."""
+    import characters as CH
+    import propisi as PR
+    import track as TR
+    for sound in C.WORDS_BY_SOUND:
+        name = PR._image_for(sound).get("name") or ""
+        truthy(f"[{sound}] у образа «{name}» есть рисунок", CH.has_character(name))
+        svg = CH.character_svg(name, 30.0)
+        truthy(f"[{sound}] рисунок — контур без заливки",
+               bool(svg) and 'fill="none"' in svg and "fill:#" not in svg)
+    html = PR.render_propisi(PR.build_propisi("р", "direct"))
+    truthy("звуковая дорожка печатает рисунок, а не слово «мотор»",
+           "<svg class=\"chr\"" in html)
+    html_t = TR.render_track(TR.build_track("р", "direct"))
+    truthy("слоговая дорожка печатает рисунок", "<svg class=\"chr\"" in html_t)
+
+
+def test_scene_is_chosen_and_never_absurd():
+    """Фон — строка запроса Ольги «менять фон». Проверяем три вещи:
+    выбор работает, умолчание подобрано под героя, и чужой фон не молчит."""
+    import scenes as SC
+    import track as TR
+    for sound, expect in (("р", "дорога"), ("л", "небо"), ("ш", "лес")):
+        t = TR.build_track(sound, "direct")
+        check(f"[{sound}] фон по умолчанию", t["meta"]["scene"], expect)
+    t = TR.build_track("р", "direct", scene="море")
+    check("логопед переопределяет умолчание", t["meta"]["scene"], "море")
+    t0 = TR.build_track("р", "direct", scene="")
+    check("«без фона» — законный выбор, а не сбой", t0["meta"]["scene"], "")
+    try:
+        TR.build_track("р", "direct", scene="марс")
+        check("несуществующий фон отвергнут вслух", False, True)
+    except TR.TrackError:
+        check("несуществующий фон отвергнут вслух", True, True)
+    # Сцена не должна перекрывать слоги: внутри SVG МАРШРУТА она обязана идти
+    # первым слоем. Считаем позиции только внутри маршрута — иначе первым
+    # <circle> в документе оказывается глаз змеи в рисунке персонажа.
+    html = TR.render_track(TR.build_track("ш", "direct"))
+    route = html[html.find('class="route"'):]
+    i_scene, i_circle = route.find('opacity="0.3'), route.find('fill="#fff"')
+    truthy("сцена нарисована ДО кружков (иначе закроет слоги)",
+           0 <= i_scene < i_circle)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

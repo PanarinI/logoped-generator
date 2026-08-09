@@ -15,6 +15,7 @@ const S = {
   syllable: '',    // слог, который РЕАЛЬНО на текущем листе
   prev: null,      // прошлые числа рва — чтобы подсветить, что изменилось
   audience: 'home', // куда лист: домой (с шапкой и подвалом) или на занятие
+  scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
   propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
 };
 
@@ -143,8 +144,10 @@ function renderCrumbs() {
   if (S.sound) add('звук', S.cfg.sounds.find((x) => x.key === S.sound).label,
                    () => show('sound'));
   // На изолированной ступени слога нет вовсе — крошка «слог РА» была бы
-  // обещанием того, чего на листе не напечатано.
-  const noSyllable = (S.tab === 'propisi' && S.propisiMode === 'isolated');
+  // обещанием того, чего на листе не напечатано. У словосочетаний слога нет
+  // тем более: они собираются из слов, а не из слогов.
+  const noSyllable = (S.tab === 'propisi' && S.propisiMode === 'isolated')
+    || (S.tab === 'phrases');
   if (S.typ && !noSyllable && !$('step-result').hidden) {
     // слог берём из ОТВЕТА (S.syllable), а не из подписи кнопки: подписи
     // посчитаны на старте при пустом профиле, а профиль слог меняет —
@@ -166,12 +169,15 @@ function renderTabs() {
   $('reroll').hidden = (S.tab !== 'sheet');
   // Профиль ребёнка меняет лист и лабиринт, но не дорожку и не прописи:
   // там нет слов, а слог по построению чист (целевой звук + гласная).
-  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi') || !S.syllable;
+  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi')
+    || (S.tab === 'phrases') || !S.syllable;
   // «Домой / на занятие» — свойство ЛИСТА: шапка-документ и подвал взрослому
   // есть только у него. У дорожки и лабиринта их нет, переключать нечего.
   $('where').hidden = (S.tab !== 'sheet');
   // Ступень «только звук / звук + слог» есть лишь у звуковой дорожки.
   $('stage-step').hidden = (S.tab !== 'propisi');
+  $('scene-card').hidden = (S.tab !== 'track');
+  if (S.tab === 'track') renderScenePick();
   if (S.tab === 'propisi') renderPropisiMode();
   renderCrumbs();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
@@ -180,6 +186,7 @@ function renderTabs() {
     sheet:   'Из чего собран этот лист',
     track:   'Из чего собрана эта слоговая дорожка',
     propisi: 'Из чего собрана эта звуковая дорожка',
+    phrases: 'Из чего собраны эти словосочетания',
     maze:    'Из чего собран этот лабиринт',
   }[S.tab] || 'Из чего это собрано';
 }
@@ -192,6 +199,29 @@ function renderAudience() {
     ? 'С шапкой на неделю и подписью родителя.'
     : 'Без шапки и подсказок взрослому — логопед рядом.';
 }
+
+function renderScenePick() {
+  const box = $('scene-pick');
+  if (box.dataset.built !== '1') {
+    box.innerHTML = '';
+    (S.cfg.scenes || []).forEach((sc) => {
+      const b = el('button', 'seg-btn', sc.label);
+      b.dataset.scene = sc.key;
+      b.addEventListener('click', () => {
+        if (S.scene === sc.key) return;
+        S.scene = sc.key;
+        renderScenePick();
+        request();
+      });
+      box.appendChild(b);
+    });
+    box.dataset.built = '1';
+  }
+  box.querySelectorAll('.seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', S.scene !== null && b.dataset.scene === S.scene);
+  });
+}
+
 
 function renderPropisiMode() {
   document.querySelectorAll('#propisi-mode .seg-btn').forEach((b) => {
@@ -229,11 +259,16 @@ async function load() {
     if (S.tab === 'track') {
       // Дорожка Ольги: слоги по тропе. Слов нет — профиль на неё не влияет,
       // слог по построению чист (целевой звук + гласная).
-      res = await post('/api/track', { sound: S.sound, typ: S.typ });
+      res = await post('/api/track',
+        { sound: S.sound, typ: S.typ, ...(S.scene === null ? {} : { scene: S.scene }) });
     } else if (S.tab === 'propisi') {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
       res = await post('/api/propisi',
         { sound: S.sound, typ: S.typ, mode: S.propisiMode });
+    } else if (S.tab === 'phrases') {
+      // Здесь профиль работает на ОБЕ части пары: и на существительное,
+      // и на прилагательное. Тип слога на словосочетания не влияет.
+      res = await post('/api/phrases', { sound: S.sound, profile: profile });
     } else if (S.tab === 'maze') {
       res = await post('/api/maze',
         { sound: S.sound, position: S.position, profile: profile });
@@ -264,14 +299,16 @@ async function load() {
   renderWarnings(res.warnings);   // она же решает, можно ли печатать
   // Вопрос о профиле — только ПОСЛЕ первого материала и только там, где он
   // на что-то влияет. На дорожке и в прописях слов нет, убирать нечего.
-  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi');
+  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi')
+    || (S.tab === 'phrases');
 }
 
 function showError(res) {
   const box = $('stage-msg');
   box.innerHTML = '';
   const THING = { maze: 'лабиринт', track: 'дорожка',
-                  propisi: 'звуковая дорожка' }[S.tab] || 'лист';
+                  propisi: 'звуковая дорожка',
+                  phrases: 'словосочетания' }[S.tab] || 'лист';
   const VIN = { лабиринт: 'лабиринт', дорожка: 'дорожку',
                 'звуковая дорожка': 'звуковую дорожку', лист: 'лист' }[THING];
   const title = { internal: `Не удалось собрать ${VIN}`,
@@ -356,6 +393,24 @@ function renderMoat(st) {
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
 
   if (st.kind === 'maze') { renderMazeMoat(box, st, label); return; }
+  if (st.kind === 'phrases') {
+    box.appendChild(el('h2', null, 'Словосочетания'));
+    const p = el('p', 'hint',
+      `${st.n} пар «прилагательное + существительное» на звук [${label}]. ` +
+      'Ступень между словом и фразой: звук надо удержать в двух словах подряд.');
+    p.style.margin = '0 0 10px';
+    box.appendChild(p);
+    box.appendChild(el('p', 'hint',
+      'Тип задания и его объём — Спивак Е.Н. (ГНОМ): пункт «Повтори ' +
+      'словосочетания» стоит во всех десяти разделах пособия, 9–12 пар. ' +
+      'Речевой материал наш: и прилагательное, и существительное прошли ' +
+      'фильтр по профилю ребёнка.'));
+    box.appendChild(el('p', 'hint',
+      'Сочетаемость («деревянный стул» можно, «деревянный суп» нельзя) взята ' +
+      'из выверенной руками таблицы, а не из правила по категории: правило ' +
+      'здесь врёт.'));
+    return;
+  }
   if (st.kind === 'propisi') {
     box.appendChild(el('h2', null, 'Звуковая дорожка'));
     const iso = st.mode === 'isolated';

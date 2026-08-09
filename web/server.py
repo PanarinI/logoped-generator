@@ -52,6 +52,8 @@ import sheet as S            # noqa: E402
 import maze as M             # noqa: E402
 import track as T            # noqa: E402
 import propisi as PR         # noqa: E402
+import scenes as SCN         # noqa: E402
+import phrases as PH         # noqa: E402
 import phonetics as ph       # noqa: E402
 
 sys.path.insert(0, HERE)
@@ -294,6 +296,9 @@ def config() -> Dict[str, Any]:
             "syllables": syllable_buttons(),
             "profile_options": [{"key": k, "label": v} for k, v in PROFILE_OPTIONS],
             "positions": [{"key": k, "label": v} for k, v in POSITION_LABEL.items()],
+            # Фоны слоговой дорожки — строка запроса Ольги «менять фон».
+            # Умолчание считает сервер по персонажу звука, логопед меняет.
+            "scenes": [{"key": k, "label": v} for k, v in SCN.SCENE_LABELS.items()],
         })
     return CONFIG_CACHE
 
@@ -414,16 +419,55 @@ class Handler(BaseHTTPRequestHandler):
                     self._json({"ok": False, "kind": "input",
                                 "message": f"звука [{sound}] в генераторе нет"}, 400)
                     return
+                scene = data.get("scene")
+                if scene is not None:
+                    scene = str(scene)
+                    if scene and scene not in SCN.SCENES:
+                        scene = None
                 t = T.build_track(sound, typ,
-                                  seed=as_int(data.get("seed"), 0))
+                                  seed=as_int(data.get("seed"), 0),
+                                  scene=scene)
                 self._json({
                     "ok": True,
                     "html": T.render_track(t),
                     "warnings": {"blocking": [], "notes": []},
                     "stats": {"kind": "track",
+                              "scene": t["meta"].get("scene", ""),
                               "cells": t["meta"]["n_cells"],
                               "vowels": t["meta"]["vowels"],
                               "type_label": t["meta"]["type_label"]},
+                })
+
+            elif path == "/api/phrases":
+                # Словосочетания «прил. + сущ.» — ✅ Спивак, «Повтори
+                # словосочетания». Отдельный лист, а не блок листа: замер
+                # 08-09 показал, что на А4 автоматизации места нет (см.
+                # phrases.py). Профиль здесь работает на ОБЕ части пары.
+                sound = str(data.get("sound", "р"))
+                if sound not in C.WORDS_BY_SOUND:
+                    self._json({"ok": False, "kind": "input",
+                                "message": f"звука [{C.ph.sound_label(sound)}] "
+                                           f"в генераторе нет"}, 400)
+                    return
+                prof = S._expand_profile(",".join(data.get("profile") or []))
+                try:
+                    ph_sheet = PH.build_phrases_sheet(
+                        sound=sound, profile=prof,
+                        n=min(PH.MAX_PHRASES,
+                              as_int(data.get("n"), PH.MAX_PHRASES,
+                                     low=PH.MIN_PHRASES)),
+                        seed=as_int(data.get("seed"), 0))
+                except PH.PhrasesError as exc:
+                    self._json({"ok": False, "kind": "input",
+                                "message": str(exc)}, 400)
+                    return
+                self._json({
+                    "ok": True,
+                    "html": PH.render_phrases(ph_sheet),
+                    "warnings": human.split([], ph_sheet["warnings"]),
+                    "stats": {"kind": "phrases",
+                              "n": ph_sheet["meta"]["n"],
+                              "items": [i["text"] for i in ph_sheet["items"]]},
                 })
 
             elif path == "/api/propisi":

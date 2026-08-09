@@ -1900,7 +1900,21 @@ def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
         if not templates:
             warnings.append(f"нет пригодного шаблона для предложения из {want} слов")
             continue
-        fresh = [tf for tf in templates if tf[0] not in used_templates] or templates
+        # Каркас выбираем по тому, ЧЕМ его заполнять, а не только по новизне
+        # самого каркаса. Замер 08-09 (поймал автор глазами на листе [Р]):
+        # у «possess» пул 3 слова против 13 у «exist» — «горох · ручка ·
+        # рубашка» крутились по всем предложениям, тогда как пять слов блока
+        # [4] не встречались ни разу. Предпочитаем каркас, который можно
+        # набрать ЦЕЛИКОМ из ещё не звучавших слов; если таких нет — прежнее
+        # поведение. Это отбор, а не методическое утверждение: канон и так
+        # требует, чтобы предложения работали на словах блока [4].
+        def _fresh_supply(tf: Tuple[str, str]) -> int:
+            need_n = sum(1 for k in ("{n1}", "{n2}", "{n3}") if k in tf[0])
+            have = sum(1 for it in pools[tf[1]] if not used.get(it["word"]))
+            return min(have, need_n) - need_n          # 0 = хватает свежих
+        best = max(_fresh_supply(tf) for tf in templates)
+        rich = [tf for tf in templates if _fresh_supply(tf) == best]
+        fresh = [tf for tf in rich if tf[0] not in used_templates] or rich
         tpl, frame = fresh[rnd.randrange(len(fresh))]
         used_templates.add(tpl)
 
@@ -2168,6 +2182,254 @@ def _build_chistogovorka(groups: Sequence[Dict[str, Any]], sound: str,
         f"словами типа «гора», «ведро», «комары»)"
     )
     return None
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  9б. СЛОВОСОЧЕТАНИЯ «прил. + сущ.» — отдельный печатный материал
+# ═══════════════════════════════════════════════════════════════════════
+#
+# ✅ КАНОН — Спивак Е.Н., «Речевой материал для автоматизации и дифференциации
+# звуков у детей 5-7 лет» (ГНОМ). Пункт озаглавлен дословно «Повтори
+# словосочетания.» и стоит во ВСЕХ 10 разделах пособия Ш·Ж·Ч·Щ — в каждом из
+# четырёх разделов автоматизации и в каждом из шести разделов дифференциации.
+#
+# Замер 2026-08-08 по разделам автоматизации Ш · Ж · Ч · Щ (45 пар):
+#   • 44 из 45 — «прилагательное + существительное» (одно исключение —
+#     предложная конструкция), значит форма блока задана источником;
+#   • объём 9-12 пар на звук;
+#   • у Спивак это ОТДЕЛЬНАЯ страница, стоящая после слов и перед предложениями.
+#     Мы сначала сделали блоком листа — и замер 08-09 показал, что на плотном
+#     А4 ему места нет: лист и без него переполнен, а если резать ядро ради
+#     него, ломается канонное правило 11. Решение автора 08-09: печатать
+#     отдельным материалом, как слоговую и звуковую дорожки. Отсюда и пул
+#     существительных — ВЕСЬ словарь звука, а не блок [4]: правило 13 живёт
+#     внутри одного листа, а это самостоятельный лист (так же устроен лабиринт).
+#   • целевой звук в ОБОИХ словах только у 17 из 45 (38 %). Канон НЕ требует
+#     звука в обеих частях. У нас он выходит в обоих сам собой: и словарь
+#     существительных, и словарь прилагательных собраны по целевому звуку.
+#     То есть мы строже источника — и это не наша прихоть, а следствие
+#     устройства словарей.
+# ⛔ Речевой материал пособия НЕ переносится (АП ГНОМ). Перенесён метод:
+#    тип задания, его место, объём и правило звука.
+#
+# На каком признаке стоит блок (закон №7):
+#   • род существительного → форма прилагательного — ЕСТЬ данными (`gender`
+#     у сущ., `form_f`/`form_n` у прил.). Это единственное здесь правило,
+#     и оно механическое;
+#   • сочетаемость прил. ↔ сущ. — признака в данных НЕТ. Правило по паре
+#     категорий печатает «деревянный суп» и «кислый шар». Поэтому таблица —
+#     `combinability.json`, выверенная руками; прилагательное без класса в
+#     блок не идёт.
+
+ADJECTIVES_BY_SOUND: Dict[str, str] = {
+    "р": "adjectives_r.jsonl", "р'": "adjectives_r_soft.jsonl",
+    "л": "adjectives_l.jsonl", "л'": "adjectives_l_soft.jsonl",
+    "с": "adjectives_s.jsonl", "с'": "adjectives_s_soft.jsonl",
+    "з": "adjectives_z.jsonl", "з'": "adjectives_z_soft.jsonl",
+    "ш": "adjectives_sh.jsonl", "ж": "adjectives_zh.jsonl",
+    "щ": "adjectives_shch.jsonl",
+}
+
+
+@lru_cache(maxsize=1)
+def load_combinability() -> Dict[str, Any]:
+    """Таблица сочетаемости. Падает, если файла нет: молча строить блок на
+    правиле нельзя — именно это запрещает закон №7."""
+    path = HERE / "combinability.json"
+    if not path.exists():
+        raise ContentError("нет combinability.json — таблицы сочетаемости "
+                           "прил.+сущ.; без неё блок [5б] не строится")
+    with path.open(encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+@lru_cache(maxsize=16)
+def load_adjectives(sound: str) -> Tuple[Dict[str, Any], ...]:
+    """Прилагательные звука с проставленным классом сочетаемости.
+
+    Прилагательное без класса выбрасывается здесь же: пусть блок будет
+    короче, чем напечатает «шёлковый ёжик»."""
+    name = ADJECTIVES_BY_SOUND.get(sound)
+    if not name:
+        return ()
+    path = HERE / name
+    if not path.exists():
+        return ()
+    table = load_combinability()
+    cls_of: Dict[str, str] = {}
+    for cls, spec in table["adjective_classes"].items():
+        for w in spec["words"]:
+            cls_of[w] = cls
+    out: List[Dict[str, Any]] = []
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            a = json.loads(line)
+            cls = cls_of.get(a["word"])
+            if not cls:
+                continue
+            spec = table["adjective_classes"][cls]
+            a["comb_class"] = cls
+            a["fits"] = frozenset(spec["fits"])
+            # причастию мало «живого»: у «летящий» подлежащее — птица или
+            # насекомое, но не щука. Признак берём из уже размеченного
+            # SUBJECT_CLASS, а не заводим второй такой же.
+            subj = spec.get("subject_classes", {}).get(a["word"])
+            a["subject_classes"] = frozenset(subj) if subj else None
+            out.append(a)
+    return tuple(out)
+
+
+def noun_class(row: Dict[str, Any]) -> Optional[str]:
+    """Класс существительного для сочетаемости.
+
+    Порядок важен и записан в самой таблице (`_poryadok`). Одушевлённость
+    идёт ПЕРВОЙ: это признак слова, размеченный руками, а категория —
+    признак темы. Иначе «животные/части» отдаст ЛАПУ в живое — ровно та
+    ловушка, на которой родился закон №7."""
+    table = load_combinability()["noun_classes"]
+    # ⚠ Считаем is_animate(), а НЕ поле row["animate"]: в блок [4] запись
+    # приходит урезанной (там нет ни animate, ни subject_class), и проверка
+    # поля молча выбрасывала всё живое — щенка, щуку, рака. Поймано 08-08.
+    # У факта один дом — таблица ANIMATE_CATEGORIES, как и написано у неё.
+    if is_animate(row):
+        return table["animate_class"]
+    cat = row.get("semantic_category", "")
+    if cat in table["abstract_categories"]:
+        return None
+    explicit = table["explicit_categories"].get(cat)
+    if explicit:
+        return explicit
+    top = cat.split("/")[0]
+    for rule in table["part_rules"]:
+        if top in rule["tops"] and any(cat.endswith(s) for s in rule["suffixes"]):
+            return rule["class"]
+    # Категория говорит «существо», а разметка одушевлённости — «нет». Значит
+    # это не существо (лапа, клетка, зелье, лыжник в «спорт/люди») и без явной
+    # строки выше мы не знаем, что это. Молчать безопаснее, чем угадывать.
+    # Смотрим ВСЕ части категории, а не только верхнюю: «спорт/люди» — тоже про
+    # человека, хоть верхняя часть у неё «спорт».
+    if set(cat.split("/")) & set(table["drop_if_not_animate"]):
+        return None
+    return table["top_to_class"].get(top)
+
+
+_ADJ_ENDINGS = ("ый", "ий", "ой", "ая", "яя", "ое", "ее", "ые", "ие")
+
+
+def _same_root(adj: str, noun: str) -> bool:
+    """«Солёная соль», «зимняя зима» — тавтология, а не словосочетание.
+
+    Признак: одна основа целиком лежит в начале другой. Именно так, а не по
+    длине общего начала: у «красный» и «кран» общих букв три, но ни одна
+    основа не является началом другой, и пара законная.
+
+    Фильтр только УБИРАЕТ пары: его ошибка стоит одной потерянной строки,
+    а не брака на бумаге. Поэтому здесь правило допустимо."""
+    a = adj.lower().replace("ё", "е")
+    n = noun.lower().replace("ё", "е")
+    for end in _ADJ_ENDINGS:
+        if a.endswith(end):
+            a = a[:-len(end)]
+            break
+    n = n.rstrip("аеиоуыьъюя")
+    if len(a) < 3 or len(n) < 3:
+        return False
+    return a.startswith(n) or n.startswith(a)
+
+
+def _agreed_form(adj: Dict[str, Any], gender: str) -> Optional[str]:
+    """Прилагательное в роде существительного. Формы взяты из словаря, а не
+    выведены из окончания: закон №7."""
+    if gender == "m":
+        return adj["word"]
+    if gender == "f":
+        return adj.get("form_f") or None
+    if gender == "n":
+        return adj.get("form_n") or None
+    return None
+
+
+def build_phrases(nouns: Sequence[Dict[str, Any]], sound: str,
+                  banned: FrozenSet[str], rnd: random.Random,
+                  n_phrases: int, warnings: List[str],
+                  ) -> Optional[Dict[str, Any]]:
+    adjectives = load_adjectives(sound)
+    if not adjectives:
+        warnings.append(
+            f"словосочетаний нет: прилагательных на [{sound}] с классом "
+            f"сочетаемости в словаре не нашлось")
+        return None
+
+    nouns = list(nouns)
+    rnd.shuffle(nouns)
+
+    pairs: List[Dict[str, Any]] = []
+    used_adj: Dict[str, int] = {}
+    no_class = 0
+    drop = frozenset(load_combinability()["noun_classes"]["noun_drop"]["words"])
+    for noun in nouns:
+        if noun["word"] in drop:
+            continue                      # хор, счёт — выглядят вещью, но не вещь
+        gender = noun.get("gender") or ""
+        if gender not in ("m", "f", "n"):
+            continue                      # ворота, сани — рода нет, согласовать нечем
+        ncls = noun_class(noun)
+        if ncls is None:
+            no_class += 1
+            continue
+        # у некоторых слов признак задан ими самими: соль солёная, мёд сладкий
+        forbidden = frozenset(
+            load_combinability()["noun_exceptions"].get(noun["word"], ()))
+        cands = [a for a in adjectives
+                 if ncls in a["fits"] and a["comb_class"] not in forbidden
+                 and used_adj.get(a["word"], 0) < 2]
+        rnd.shuffle(cands)
+        subj_cls = subject_class(noun)
+        for adj in cands:
+            if adj["subject_classes"] and subj_cls not in adj["subject_classes"]:
+                continue
+            form = _agreed_form(adj, gender)
+            if not form:
+                continue
+            if _same_root(form, noun["word"]):
+                continue
+            # фильтр чистоты — прилагательное такой же речевой материал, как всё
+            # остальное на листе; ударение берём из словаря, не угадываем
+            if not is_clean(form, banned, adj.get("stress_syllable")):
+                continue
+            pairs.append({
+                "adj": form,
+                "adj_lemma": adj["word"],
+                "noun": noun["word"],
+                "text": f"{form} {noun['word']}",
+                "comb_class": adj["comb_class"],
+                "noun_class": ncls,
+            })
+            used_adj[adj["word"]] = used_adj.get(adj["word"], 0) + 1
+            break
+        if len(pairs) >= n_phrases:
+            break
+
+    if len(pairs) < 4:
+        warnings.append(
+            f"словосочетаний собрано {len(pairs)} — меньше четырёх, материал не "
+            f"строится (существительных с классом сочетаемости: "
+            f"{len(nouns) - no_class} из {len(nouns)})")
+        return None
+    if len(pairs) < n_phrases:
+        warnings.append(
+            f"словосочетаний {len(pairs)} вместо {n_phrases}: к остальным "
+            f"существительным чистого по профилю прилагательного не нашлось")
+    return {
+        "title": "Словосочетания",
+        "instruction": "Повтори словосочетания.",
+        "items": pairs,
+        "n": len(pairs),
+        "adjectives": sorted({p["adj"] for p in pairs}),
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════

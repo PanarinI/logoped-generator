@@ -176,6 +176,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
            padding: 6px 0; border-radius: 5px;
            transition: background .12s, color .12s; }
 .seg-btn:hover { background: #ece8e0; }
+/* Фонов пять, а не два — сетка «1fr 1fr» рвала их на неровные ряды. */
+#scene-pick { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 560px) { #scene-pick { grid-template-columns: repeat(3, 1fr); } }
 .seg-btn.is-on { background: var(--card); color: var(--ink); }
 
 /* пометка на вкладке лабиринта: картинки чужие, выкладывать нельзя */
