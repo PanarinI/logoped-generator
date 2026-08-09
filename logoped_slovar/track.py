@@ -66,6 +66,22 @@ COLS = 5           # кружков в ряду
 ROWS_DEFAULT = 6   # рядов на А4
 
 
+def _safe_last_phoneme(syllable: str) -> str:
+    """Последняя фонема печатной записи — для ЧЕЛОВЕЧЕСКОГО объяснения отказа.
+
+    Разбор многосложной единицы требует ударение; без него он падает. Падать
+    внутри текста ошибки нельзя: логопед получил бы трейсбек вместо фразы.
+    """
+    for stress in (None, 1, 2, 3):
+        try:
+            a = (_P.analyze(syllable) if stress is None
+                 else _P.analyze(syllable, stress))
+        except Exception:
+            continue
+        return a.transcription[-1]
+    return syllable[-1]
+
+
 def build_track(sound: str = "р",
                 syl_type: str = "direct",
                 rows: int = ROWS_DEFAULT,
@@ -110,7 +126,7 @@ def build_track(sound: str = "р",
         raise TrackError(
             f"обратного слога у звука [{_P.sound_label(sound)}] не бывает: "
             f"звонкий согласный в конце слова оглушается, «{probe}» звучит "
-            f"как [{_P.sound_label(_P.analyze(probe).transcription[-1])}]. "
+            f"как [{_P.sound_label(_safe_last_phoneme(probe))}]. "
             f"Такая дорожка учила бы ребёнка не тому звуку. Возьмите прямой слог.")
 
     cells: List[Dict[str, Any]] = []

@@ -15,6 +15,7 @@ const S = {
   syllable: '',    // слог, который РЕАЛЬНО на текущем листе
   prev: null,      // прошлые числа рва — чтобы подсветить, что изменилось
   audience: 'home', // куда лист: домой (с шапкой и подвалом) или на занятие
+  game: 'one_many',   // умолчание — «Один — много» (решение автора 08-10)
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
   propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
 };
@@ -177,6 +178,8 @@ function renderTabs() {
   // Ступень «только звук / звук + слог» есть лишь у звуковой дорожки.
   $('stage-step').hidden = (S.tab !== 'propisi');
   $('scene-card').hidden = (S.tab !== 'track');
+  $('game-card').hidden = (S.tab !== 'sheet');
+  if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'propisi') renderPropisiMode();
   renderCrumbs();
@@ -200,6 +203,39 @@ function renderAudience() {
     : 'Без шапки и подсказок взрослому — логопед рядом.';
 }
 
+function renderGamePick() {
+  const box = $('game-pick');
+  if (box.dataset.built !== '1') {
+    box.innerHTML = '';
+    (S.cfg.games || []).forEach((g) => {
+      const b = el('button', 'seg-btn', g.label);
+      b.dataset.game = g.key;
+      if (!g.ready) {
+        // Не прячем: логопед должен видеть, что игра есть в замысле, но пока
+        // не собирается — и почему. Молчаливое отсутствие врёт не меньше.
+        b.disabled = true;
+        b.title = g.why || '';
+        b.classList.add('is-off');
+      } else {
+        b.addEventListener('click', () => {
+          if (S.game === g.key) return;
+          S.game = g.key;
+          renderGamePick();
+          load();
+        });
+      }
+      box.appendChild(b);
+    });
+    box.dataset.built = '1';
+  }
+  box.querySelectorAll('.seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', b.dataset.game === S.game);
+  });
+  const off = (S.cfg.games || []).find((g) => !g.ready);
+  $('game-hint').textContent = off ? ('«' + off.label + '» пока не собирается: ' + off.why) : '';
+}
+
+
 function renderScenePick() {
   const box = $('scene-pick');
   if (box.dataset.built !== '1') {
@@ -211,7 +247,7 @@ function renderScenePick() {
         if (S.scene === sc.key) return;
         S.scene = sc.key;
         renderScenePick();
-        request();
+        load();
       });
       box.appendChild(b);
     });
@@ -228,7 +264,7 @@ function renderPropisiMode() {
     b.classList.toggle('is-on', b.dataset.mode === S.propisiMode);
   });
   $('propisi-mode-hint').textContent = S.propisiMode === 'isolated'
-    ? 'Гласной в конце нет: ребёнок тянет один звук. Это ступень до слога.'
+    ? 'Гласной в конце нет: ребёнок тянет один звук.'
     : 'В конце линии гласная — собирается слог.';
 }
 
@@ -275,7 +311,7 @@ async function load() {
     } else {
       res = await post('/api/sheet',
         { sound: S.sound, typ: S.typ, profile: profile, sheet_no: S.sheetNo,
-          audience: S.audience });
+          audience: S.audience, game: S.game });
     }
   } catch (e) {
     if (my !== TICKET) return;
@@ -495,7 +531,7 @@ function renderMoat(st) {
 
   if (!S.profile.size) {
     const p = el('p', 'hint',
-      'Отметьте ниже, чего у ребёнка ещё нет — запас пересоберётся.');
+      '');
     p.style.margin = '10px 0 0';
     box.appendChild(p);
   }
@@ -657,37 +693,43 @@ function closeMethod() {
 const TIER_CLASS = { '✅': 't-book', '🔶': '', '⚠': 't-ours', '❓': 't-open' };
 
 function renderMethod() {
+  // Справка СВОЯ на каждой вкладке: лист объясняет лист, дорожка — дорожку.
+  // Показывать логопеду устройство листа, когда он смотрит дорожку, — то же
+  // самое, что не показывать ничего.
+  const pack = (METHOD.by_tab || {})[S.tab] || (METHOD.by_tab || {}).sheet || {};
+
   const legend = $('method-legend');
   legend.innerHTML = '';
-  const c = METHOD.counts || {};
-  METHOD.tiers.forEach((t) => {
-    const s = el('span');
-    s.appendChild(el('b', null, t.tier + ' ' + t.label));
-    const n = c[t.tier];
-    if (n != null) s.append(` — ${n}`);
-    legend.appendChild(s);
+  // Счётчиков «✅ 24 · ⚠ 14» здесь нет намеренно: логопеду нужна пометка у
+  // конкретной строки, а не арифметика по всей справке.
+  (METHOD.tiers || []).forEach((t) => {
+    legend.appendChild(el('span', null, t.tier + ' ' + t.label));
   });
+
+  const title = $('method-title');
+  if (title) title.textContent = pack.title || 'Как это устроено';
 
   const body = $('method-body');
   body.innerHTML = '';
-  METHOD.sections.forEach((sec) => {
-    const s = el('section', 'method-sec');
+  (pack.sections || []).forEach((sec) => {
+    const s2 = el('section', 'method-sec');
     const h = el('h3');
     if (sec.num) h.appendChild(el('span', 'n', sec.num));
     h.append(sec.title);
-    s.appendChild(h);
+    s2.appendChild(h);
     sec.rules.forEach((r) => {
       const d = el('div', 'method-rule ' + (TIER_CLASS[r.tier] || ''));
       const p = el('div', 'txt');
       p.appendChild(el('span', 'tag', r.tier));
       p.append(r.text);
       d.appendChild(p);
-      if (r.source) d.appendChild(el('span', 'src', 'источник: ' + r.source));
-      s.appendChild(d);
+      if (r.source) d.appendChild(el('span', 'src', r.source));
+      s2.appendChild(d);
     });
-    body.appendChild(s);
+    body.appendChild(s2);
   });
 }
+
 
 function bindActions() {
   $('method-open').onclick = openMethod;

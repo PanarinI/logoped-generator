@@ -366,16 +366,18 @@ def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
 
     art = content.get("articulation")
     if art:
+        hint_mm = 0.0
         if art.get("hints"):
-            # С подсказками каждое упражнение занимает свою строку — но длинная
-            # подсказка переносится, и это надо считать, а не надеяться.
-            rows = 0
+            # Подсказки идут ОДНОЙ строкой под названиями (см. _b1_articulation),
+            # поэтому считаем их как обычный переносимый абзац мелким кеглем,
+            # а не как отдельную строку на каждое упражнение.
             hs = art["hints"]
-            for i, x in enumerate(art.get("items", [])):
-                hint = hs[i] if i < len(hs) else ""
-                mm = (len(str(x)) * METRICS["fs_body"]
-                      + (len(str(hint)) + 3) * METRICS["fs_adult"]) * CHAR_W * PT_MM + 5.8
-                rows += max(1, math.ceil(mm / CONTENT_W))
+            joined = " · ".join(f"{x} — {hs[i]}"
+                                for i, x in enumerate(art.get("items", []))
+                                if i < len(hs) and hs[i])
+            hint_mm = _wrap(joined, METRICS["fs_adult"]) * _adult_line() + 0.6
+        if False:
+            pass
         else:
             # поток с переносом: считаем реальные ширины имён + галочка + зазор
             box_mm = 4.2 + 1.6 + 7.0                          # квадрат + отступ + gap
@@ -387,6 +389,7 @@ def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
                 else:
                     line += w
         h["articulation"] = (_head_line(art, "Разминка") + rows * _body_line()
+                             + hint_mm
                              + _wrap(art.get("adult"), METRICS["fs_adult"]) * _adult_line()
                              + g)
 
@@ -465,17 +468,19 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     if total_height(c) <= budget_mm:
         return c, warns
 
-    # −1) подсказки «как делать» в разминке — снимаются ПЕРВЫМИ.
-    # Они полезны родителю, но это не речевой материал. Лучше родитель без
-    # подсказки, чем ребёнок без ступени: без этого шага четыре строки
-    # разминки выдавливали с плотного листа целый блок [6] (замер 08-06).
-    art = c.get("articulation") or {}
-    if art.get("hints"):
-        art.pop("hints")
-        if total_height(c) <= budget_mm:
-            warns.append("не влезало: в разминке оставлены только названия "
-                         "упражнений — подсказки «как делать» сняты")
-            return c, warns
+    # −0.6) подсказки «как делать» в разминке — теперь снимаются ПОЗЖЕ
+    # «вставь слог», а не первыми. Пересмотрено 2026-08-10 после замера:
+    #   • раньше подсказка занимала СВОЮ строку на каждое упражнение — 20 мм,
+    #     и снимать их первыми было правильно;
+    #   • после уплотнения (одна строка под названиями) они стоят 14 мм, и
+    #     спорят уже не с блоком [6], а с «вставь слог»;
+    #   • спор решается тем, КОМУ лист. Подсказки печатаются только на
+    #     ДОМАШНЕМ листе, где ведёт родитель: без них «Лошадка» ему ничего
+    #     не говорит и разминку он просто не проведёт. «Вставь слог» —
+    #     надстройка над словами, лист без неё остаётся полным.
+    # Замер до пересмотра: и подсказки, и «вставь слог» доживали до бумаги
+    # на 2 листах из 19 — они делили одни и те же последние миллиметры.
+    art_late = c.get("articulation") or {}
 
     # −0.5) «вставь слог» — снимается раньше речевых блоков ядра.
     # Блок канонный, но он НАДСТРОЙКА над словами: без него лист остаётся
@@ -485,6 +490,13 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
         if total_height(c) <= budget_mm:
             warns.append("не влезало: снят блок «вставь слог» — он надстройка "
                          "над словами, а лестница ступеней важнее")
+            return c, warns
+
+    if art_late.get("hints"):
+        art_late.pop("hints")
+        if total_height(c) <= budget_mm:
+            warns.append("не влезало: в разминке оставлены только названия "
+                         "упражнений — подсказки «как делать» сняты")
             return c, warns
 
     # 0) предложения — до канонного минимума 6
@@ -803,6 +815,8 @@ html, body {{
 .artic-list .arow {{ white-space: normal; }}
 .artic-list .ahint {{ font-size: {METRICS['fs_adult']}pt; color: #444; }}
 .artic-list .ahint::before {{ content: " — "; }}
+.ahints {{ font-size: {METRICS['fs_adult']}pt; color:#333; line-height:1.3;
+        margin: 0.6mm 0 0; }}
 .box {{
   display: inline-block; width: 4.2mm; height: 4.2mm;
   border: var(--hair); margin-right: 1.6mm; vertical-align: -0.4mm;
@@ -950,13 +964,20 @@ def _b1_articulation(b: Dict[str, Any], with_hints: bool = True) -> str:
     names = b.get("items", [])
     hints = b.get("hints") or []
     if with_hints and any(hints):
-        rows = []
-        for i, x in enumerate(names):
-            h = hints[i] if i < len(hints) else ""
-            tail = f'<span class="ahint">{_e(h)}</span>' if h else ""
-            rows.append(f'<div class="arow"><span class="box"></span>'
-                        f'<b>{_e(x)}</b>{tail}</div>')
-        body = f'<div class="artic-list">{"".join(rows)}</div>'
+        # ⚠ 2026-08-10. Раньше каждое упражнение занимало СВОЮ строку вместе с
+        # подсказкой, и разминка вырастала с 20 до 40 мм. Лист от этого
+        # переставал влезать, лестница снимала подсказки первыми — и они
+        # доживали до бумаги на 2 листах из 19. То есть подсказки формально
+        # были, а родитель их почти никогда не видел.
+        # Теперь названия идут прежним компактным рядом с квадратиками, а
+        # подсказки — ОДНОЙ строкой под ними, мелким кеглем взрослого.
+        # Та же информация, вчетверо меньше высоты.
+        row = "".join(f'<div><span class="box"></span>{_e(x)}</div>' for x in names)
+        pairs = " · ".join(f"<b>{_e(x)}</b> — {_e(hints[i])}"
+                           for i, x in enumerate(names)
+                           if i < len(hints) and hints[i])
+        body = (f'<div class="artic">{row}</div>'
+                f'<div class="ahints">{pairs}</div>')
     else:
         body = ('<div class="artic">'
                 + "".join(f'<div><span class="box"></span>{_e(x)}</div>'
@@ -1255,8 +1276,9 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
             "type_label": syl.get("type_label", ""),
             "instruction": syl.get("instruction", ""),
             "rows": rows,
-            "adult": "Один тип слога на лист; каждая строка кончается словом — "
-                     "слог не остаётся сам по себе.",
+            # Пояснение снято 08-09 по слову автора: правило соблюдается
+            # КОДОМ (один тип слога на лист, каждая строка кончается словом),
+            # печатать его на бумаге незачем — оно не даёт взрослому действия.
         }
 
     words = c.get("words") or {}
@@ -1266,8 +1288,12 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
         # ТЗ: «ярусы а) короткие частотные / б) длинные». Движок ставит в ярус б
         # ещё и РЕДКИЕ короткие слова (familiarity < 3) — подпись это отражает,
         # иначе «б) пар» выглядит ошибкой.
-        for tag, label in (("а", "а) короткие частотные"),
-                           ("б", "б) длиннее или реже")):
+        # Подписи ярусов сняты 08-09. Смысл РАЗДЕЛЕНИЯ остаётся и он канонный:
+        # порядок «короткие частотные → длиннее и реже» — это лестница ТЗ и
+        # слоговая структура по Марковой («не выше освоенного типа»). Но сама
+        # подпись ребёнку не нужна, а взрослому — не здесь. Порядок цел,
+        # подписи нет.
+        for tag, label in (("а", None), ("б", None)):
             groups = []
             for g in words["groups"]:
                 items = [w(it["word"]) for it in g.get("items", [])
@@ -1614,8 +1640,9 @@ def build_content(sound: str = "р", typ: str = "direct", profile: str = "",
             "type_label": TYPE_LABEL[typ],
             "instruction": "Повтори, прочитай и назови слово:",
             "rows": rows,
-            "adult": "Один тип слога на лист; каждая строка кончается словом — "
-                     "слог не остаётся сам по себе.",
+            # Пояснение снято 08-09 по слову автора: правило соблюдается
+            # КОДОМ (один тип слога на лист, каждая строка кончается словом),
+            # печатать его на бумаге незачем — оно не даёт взрослому действия.
         },
         # подпись яруса нужна только когда ярусов действительно два
         "words": {

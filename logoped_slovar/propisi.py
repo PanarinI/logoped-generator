@@ -401,6 +401,20 @@ def render_propisi(p: Dict[str, Any]) -> str:
     utter = m["utterance"] or f"{m['sound']}-{m['sound']}-{m['sound']}"
     isolated = m.get("mode") == "isolated"
 
+    # Инструкция обязана описывать ТО, что напечатано. На обратном слоге
+    # порядок зеркальный (гласная первой), значит и фраза другая: иначе лист
+    # просит тянуть звук до гласной, которая уже сказана.
+    _tail = "Три дорожки — три разных задания: смотри, что просит линия.</p>"
+    if isolated:
+        task_html = ('<p class="task">Веди пальцем по дорожке и тяни звук '
+                     + "<b>[" + _e(label) + "]</b>. " + _tail)
+    elif m["syl_type"] == "reverse":
+        task_html = ('<p class="task">Скажи гласную, а потом веди пальцем и '
+                     "тяни звук: <b>" + _e(syll) + "</b>. " + _tail)
+    else:
+        task_html = ('<p class="task">Веди пальцем по дорожке и тяни звук, а в '
+                     "конце скажи слог целиком: <b>" + _e(syll) + "</b>. " + _tail)
+
     rows: List[str] = []
     for i, ln in enumerate(p["lines"], 1):
         # Длина у всех строк одна: она больше ничего не кодирует. Нарастает
@@ -409,12 +423,22 @@ def render_propisi(p: Dict[str, Any]) -> str:
         d = ln["_fn"](w, ROW_H - 8.0)
         # Прерывистой печатается ТОЛЬКО та строка, где инструкция — «отрывисто».
         dash = ' stroke-dasharray="4.2 2.6"' if ln["dashed"] else ''
+        # ПОРЯДОК СЛЕВА НАПРАВО = ПОРЯДОК ЗВУЧАНИЯ. Поймано автором 08-09:
+        # на обратном слоге лист печатал персонажа слева и «А» справа, то есть
+        # ребёнок вёл палец от [л] к [а] и читал «ЛА» вместо «АЛ» — материал
+        # на обратный слог учил прямому. Прямой слог: тянем звук → приходим к
+        # гласной. Обратный: сказали гласную → тянем звук до персонажа.
+        # У изолированной ступени порядка нет: гласной там не существует.
+        _hero_html = ('<div class="hero"><div class="hero-box">'
+                      + (CH.character_svg(m["image_name"], 30.0, 2.4)
+                         or "<span>" + _e(m["image_name"] or label) + "</span>")
+                      + "</div></div>")
+        _vowel_html = ("" if isolated
+                       else '<div class="finish">' + _e(vowel.upper()) + "</div>")
+        _reverse = (m.get("syl_type") == "reverse") and not isolated
         rows.append(f"""
   <div class="row">
-    <div class="hero">
-      <div class="hero-box">{CH.character_svg(m['image_name'], 30.0, 2.4)
-        or f'<span>{_e(m["image_name"] or label)}</span>'}</div>
-    </div>
+    {_vowel_html if _reverse else _hero_html}
     <div class="track-wrap">
       <div class="utter">{_e(utter)}</div>
       <div class="track-row">
@@ -427,7 +451,7 @@ def render_propisi(p: Dict[str, Any]) -> str:
           {f'<circle cx="{w - 1.2:.1f}" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>'
            if isolated else ''}
         </svg>
-        {'' if isolated else f'<div class="finish">{_e(vowel.upper())}</div>'}
+        {_hero_html if _reverse else _vowel_html}
       </div>
       <div class="hint">{i}. <b>{_e(ln['task_label'])}</b> — {_e(ln['hint'])}</div>
     </div>
@@ -483,10 +507,7 @@ h1 b {{ font-size:20pt; }}
 
 {f'<h1>Звуковая дорожка · звук <b>[{_e(label)}]</b></h1>' if isolated
  else f'<h1>Звуковая дорожка · слог <b>{_e(syll.upper())}</b></h1>'}
-{f'''<p class="task">Веди пальцем по дорожке и тяни звук <b>[{_e(label)}]</b>.
-   Три дорожки — три разных задания: смотри, что просит линия.</p>'''
- if isolated else f'''<p class="task">Веди пальцем по дорожке и тяни звук, а в конце скажи
-   слог целиком: <b>{_e(syll)}</b>. Три дорожки — три разных задания: смотри, что просит линия.</p>'''}
+{task_html}
 {''.join(rows)}
 
 <div class="adult">

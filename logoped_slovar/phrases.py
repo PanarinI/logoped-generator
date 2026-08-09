@@ -64,6 +64,7 @@ from typing import Any, Dict, List, Optional
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import characters as CH      # noqa: E402
 import content as C          # noqa: E402
 import phonetics as _P       # noqa: E402
 
@@ -137,9 +138,20 @@ def build_phrases_sheet(sound: str = "р",
             "child": child_name,
             "n": len(built["items"]),
             "instruction": built["instruction"],
+            "image": PR_image(sound),
             "source": "Спивак Е.Н., ГНОМ — «Повтори словосочетания»",
         },
     }
+
+
+def PR_image(sound: str) -> str:
+    """Канонный образ звука — тот же, что у дорожек и в блоке [2] листа.
+
+    Ребёнок встречает одно существо во всех материалах: это связность, а не
+    украшение. Называть его не просят — рисунок стоит в ШАПКЕ, рядом со
+    звуком, а не в поле задания. Речевой материал листа — только пары слов."""
+    import propisi as _PR
+    return (_PR.image_for(sound).get("name") or "").strip()
 
 
 def _e(s: Any) -> str:
@@ -173,7 +185,8 @@ body {{ background:#f2f2f2; padding:10px; }}
    font-size:10.5pt; padding-bottom:1.5mm; border-bottom:0.4pt solid #000; }}
 .badge {{ border:0.8pt solid #000; padding:0.4mm 1.6mm; font-weight:700; }}
 .fill {{ display:inline-block; min-width:34mm; border-bottom:0.4pt solid #000; }}
-h1 {{ font-size:14pt; margin:5mm 0 1mm; font-weight:700; }}
+.head {{ display:flex; align-items:center; gap:5mm; margin:5mm 0 1mm; }}
+h1 {{ font-size:14pt; margin:0; font-weight:700; }}
 h1 b {{ font-size:20pt; }}
 .task {{ font-size:12pt; margin:0 0 10mm; }}
 /* Кегль и воздух — вёрстка, а не доза. Доза канонная (9-12 пар, замер по
@@ -194,7 +207,10 @@ h1 b {{ font-size:20pt; }}
   <span>Дата <span class="fill" style="min-width:24mm"></span></span>
 </div>
 
-<h1>Словосочетания · звук <b>[{_e(label)}]</b></h1>
+<div class="head">
+  {CH.character_svg(m.get("image", ""), 24.0, 2.4) or ""}
+  <h1>Словосочетания · звук <b>[{_e(label)}]</b></h1>
+</div>
 <p class="task">{_e(m['instruction'])}</p>
 
 <div class="grid">{cells}</div>

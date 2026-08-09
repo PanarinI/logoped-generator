@@ -152,7 +152,7 @@ def words_on_sheet(content: Dict[str, Any]) -> List[str]:
 
 def build_sheet(sound: str, typ: str, prof: str,
                 sheet_no: int = 1, seed: int = 0,
-                audience: str = "home") -> Dict[str, Any]:
+                audience: str = "home", game: str = "") -> Dict[str, Any]:
     """Канонный путь сборки листа. Возвращает готовый ответ для браузера.
 
     ВАЖНО про порядок. `render_sheet_ex` внутри себя зовёт `fit()`, а `fit`
@@ -162,7 +162,8 @@ def build_sheet(sound: str, typ: str, prof: str,
     Поэтому ужимаем сами, один раз, и дальше всё — и счёт, и канон-линтер, и
     рендер — идёт по ОДНОМУ И ТОМУ ЖЕ свёрстанному листу.
     """
-    content, report = S.compose(sound, typ, prof, sheet_no=sheet_no, seed=seed)
+    content, report = S.compose(sound, typ, prof, sheet_no=sheet_no, seed=seed,
+                                game_kind=game)
     meta = {
         "sound": sound,
         "sheet_no": sheet_no,
@@ -299,6 +300,15 @@ def config() -> Dict[str, Any]:
             # Фоны слоговой дорожки — строка запроса Ольги «менять фон».
             # Умолчание считает сервер по персонажу звука, логопед меняет.
             "scenes": [{"key": k, "label": v} for k, v in SCN.SCENE_LABELS.items()],
+            # Игры блока [5] — все три канонные (ТЗ, ЯРУС А) и все три живые.
+            # «Посчитай 1-5» ожила 2026-08-10: формы родительного падежа были
+            # выверены у 23 слов из 1760, теперь у 590/595, и игра собирается
+            # на 28 листах из 29.
+            "games": [
+                {"key": "one_many", "label": "Один — много", "ready": True},
+                {"key": "diminutive", "label": "Назови ласково", "ready": True},
+                {"key": "count_1_5", "label": "Посчитай 1-5", "ready": True},
+            ],
         })
     return CONFIG_CACHE
 
@@ -373,9 +383,9 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/config":
             self._json(config())
         elif path == "/api/method":
-            payload = method.as_json()
-            payload["counts"] = method.counts()
-            self._json(payload)
+            # Счётчики тиров сняты 2026-08-10: логопеду нужна пометка у
+            # конкретной строки, а не арифметика по всей справке.
+            self._json(method.as_json())
         else:
             self._send(404, b"not found", "text/plain; charset=utf-8")
 
@@ -410,6 +420,7 @@ class Handler(BaseHTTPRequestHandler):
                     sheet_no=as_int(data.get("sheet_no"), 1, low=1),
                     seed=as_int(data.get("seed"), 0),
                     audience=aud,
+                    game=str(data.get("game") or ""),
                 ))
 
             elif path == "/api/track":
@@ -501,7 +512,7 @@ class Handler(BaseHTTPRequestHandler):
                     typ = "direct"
                 if mode == "isolated":
                     notes.append(
-                        "Это ступень до слога: ребёнок тянет один звук, гласной "
+                        "Ребёнок тянет один звук, гласной "
                         "в конце нет. Тип слога здесь ни на что не влияет.")
                 p = PR.build_propisi(sound, typ,
                                      vowel=data.get("vowel") or None,

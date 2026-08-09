@@ -15,7 +15,8 @@ body { background:#f2f2f2; padding:10px; }
    font-size:10.5pt; padding-bottom:1.5mm; border-bottom:0.4pt solid #000; }
 .badge { border:0.8pt solid #000; padding:0.4mm 1.6mm; font-weight:700; }
 .fill { display:inline-block; min-width:34mm; border-bottom:0.4pt solid #000; }
-h1 { font-size:14pt; margin:5mm 0 1mm; font-weight:700; }
+.head { display:flex; align-items:center; gap:5mm; margin:5mm 0 1mm; }
+h1 { font-size:14pt; margin:0; font-weight:700; }
 h1 b { font-size:20pt; }
 .task { font-size:12pt; margin:0 0 10mm; }
 /* Кегль и воздух — вёрстка, а не доза. Доза канонная (9-12 пар, замер по
@@ -36,8 +37,25 @@ h1 b { font-size:20pt; }
   <span>Дата <span class="fill" style="min-width:24mm"></span></span>
 </div>
 
-<h1>Словосочетания · звук <b>[Р]</b></h1>
-<p class="task">Повтори словосочетания.</p>
+<div class="head">
+  <svg class="chr" viewBox="0 0 100 70" width="24.0mm" height="16.8mm" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 44 L18 44 L21 33 Q22 30 26 30 L37 30 L45 19
+               Q47 17 51 17 L66 17 Q70 17 72 20 L78 30 L84 31
+               Q88 32 88 37 L88 44 L84 44" />
+      <path d="M35 44 L60 44" />
+      <path d="M40 30 L40 19" />
+      <path d="M47 19 L47 30 L64 30 L64 18" />
+      <circle cx="28" cy="47" r="8" />
+      <circle cx="28" cy="47" r="3" />
+      <circle cx="72" cy="47" r="8" />
+      <circle cx="72" cy="47" r="3" />
+      <path d="M88 40 L93 40" />
+      <circle cx="8" cy="41" r="3.5" />
+      <circle cx="2.5" cy="36" r="2.2" />
+    </svg>
+  <h1>Словосочетания · звук <b>[Р]</b></h1>
+</div>
+<p class="task">Повтори, прочитай словосочетания.</p>
 
 <div class="grid"><div class="pair">огромная трава</div><div class="pair">короткий трамвай</div><div class="pair">чёрная марка</div><div class="pair">огромный таракан</div><div class="pair">добрый муравей</div><div class="pair">старая ракета</div><div class="pair">твёрдый карандаш</div><div class="pair">пёстрый горшок</div><div class="pair">громкий дракон</div><div class="pair">чёрный паровоз</div><div class="pair">красивый ромб</div><div class="pair">пёстрая сорока</div></div>
 

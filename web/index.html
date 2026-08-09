@@ -86,13 +86,13 @@
 
         <div class="actions">
           <button class="btn primary" id="print">Печать</button>
-          <button class="btn" id="reroll">Другие слова</button>
+          <button class="btn" id="reroll">Собрать другой набор слов</button>
         </div>
 
         <!-- 1. ЗВУКИ РЕБЁНКА — главный инструмент панели -->
         <div class="card ask" id="ask" hidden>
           <h2>Какие ещё звуки у ребёнка не получаются?</h2>
-          <p class="hint">Слова с ними уберём. Не обязательно — лист уже готов.</p>
+          <p class="hint">Слова с ними уберём.</p>
           <div class="chips" id="chips"></div>
           <p class="hint chips-note" id="chips-note" hidden></p>
         </div>
@@ -109,14 +109,19 @@
           <p class="hint" id="audience-hint">С шапкой на неделю и подписью родителя.</p>
         </div>
 
+        <!-- Игра блока [5]. Все канонные; выбор логопеда, а не сида. -->
+        <div class="card where" id="game-card" hidden>
+          <h2>Какая игра?</h2>
+          <div class="seg" id="game-pick"></div>
+          <p class="hint" id="game-hint"></p>
+        </div>
+
         <!-- Фон слоговой дорожки — строка запроса Ольги «менять фон».
              Ребёнок сцену не называет, поэтому фильтр чистоты её не касается. -->
         <div class="card where" id="scene-card" hidden>
           <h2>Какой фон?</h2>
           <div class="seg" id="scene-pick"></div>
-          <p class="hint" id="scene-hint">Ребёнок фон не называет — он в нём
-            находится, поэтому фильтр по профилю сюда не применяется. По
-            умолчанию фон подобран под героя звука.</p>
+
         </div>
 
         <!-- Ступень звуковой дорожки. Изолированный звук идёт ДО слога:
@@ -139,8 +144,8 @@
         </details>
 
         <button class="btn method-open" id="method-open">
-          Показать методику
-          <span class="method-sub">откуда взялся каждый блок — с источниками</span>
+          Как это устроено
+          <span class="method-sub">откуда что взялось — с источниками</span>
         </button>
 
       </aside>
@@ -152,9 +157,9 @@
   <aside class="method-drawer" id="method-drawer" hidden aria-label="методика листа">
     <div class="method-head">
       <div>
-        <h2>Как собран этот лист</h2>
-        <p class="hint">Каждое решение — с источником. Там, где решение наше, а не
-           канонное, так и написано: это не реклама, это чтобы вы могли проверить.</p>
+        <h2 id="method-title">Как это устроено</h2>
+        <p class="hint">У каждой строки видно, из пособия она или придумана нами.
+           Там, где мы отступили от канона или гадали, ваше слово весит больше.</p>
       </div>
       <button class="btn ghost method-close" id="method-close">Закрыть</button>
     </div>
