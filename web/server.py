@@ -48,6 +48,7 @@ ENGINE = os.path.join(PROJECT, "logoped_slovar")
 sys.path.insert(0, ENGINE)
 
 import content as C          # noqa: E402
+import capabilities as CAP   # noqa: E402  — что какой материал умеет
 import sheet as S            # noqa: E402
 import maze as M             # noqa: E402
 import track as T            # noqa: E402
@@ -90,6 +91,9 @@ POSITION_LABEL = {
     "final": "в конце слова",
 }
 
+# Канон блока [4]. Для стечений минимум ниже — так в источнике: у Спивак
+# (ГНОМ, 2007) на стечении стоит строка из СЕМИ слов, а не двенадцати.
+# Считает движок: C.canon_min_words(тип слога).
 MIN_WORDS_CANON = 12          # канон блока [4]: 12-24 слова
 
 
@@ -150,6 +154,47 @@ def words_on_sheet(content: Dict[str, Any]) -> List[str]:
     return out
 
 
+GAME_LABEL = {
+    "one_many": "Один — много",
+    "diminutive": "Назови ласково",
+    "count_1_5": "Посчитай 1-5",
+}
+
+
+def games_state(content: Dict[str, Any], fitted: Dict[str, Any],
+                want: str) -> Dict[str, Any]:
+    """Состояние трёх игр блока [5] для экрана: живая · почему нет · что на листе.
+
+    `content` — до вёрстки (там движок сказал, какие игры набрались),
+    `fitted` — после: игра могла не поместиться на А4 и быть снятой. Разница
+    между ними — это разница между «игры нет в словаре» и «игра не влезла»,
+    и логопеду это две разные новости.
+    """
+    offer = content.get("games_offer") or {}
+    printed = (fitted.get("game") or {}).get("kind", "")
+    built = (content.get("game") or {}).get("kind", "")
+    items = []
+    for key in C.GAME_KINDS:
+        state = offer.get(key) or {}
+        ok = bool(state.get("ok"))
+        items.append({
+            "key": key,
+            "label": GAME_LABEL.get(key, key),
+            "ready": ok,
+            "why": "" if ok else human.why_game(int(state.get("found", 0)),
+                                                int(state.get("need", 4)),
+                                                str(state.get("reason", ""))),
+        })
+    return {
+        "items": items,
+        "printed": printed,
+        # Игра собралась, но на бумагу не попала — это про место, не про слова.
+        "dropped": human.GAME_DROPPED if (built and not printed) else "",
+        # Логопед просил одну, движок отдал другую — молчать об этом нельзя.
+        "fallback": bool(want and printed and want != printed),
+    }
+
+
 def build_sheet(sound: str, typ: str, prof: str,
                 sheet_no: int = 1, seed: int = 0,
                 audience: str = "home", game: str = "") -> Dict[str, Any]:
@@ -177,7 +222,11 @@ def build_sheet(sound: str, typ: str, prof: str,
             S.TYPE_ALIASES.get(typ, typ), ""),
     }
 
-    fitted, fit_warns = S.fit(content, S.CONTENT_H)
+    # Ужимаем ПО СВОЕМУ адресату: у листа логопеда нет шапки, подвала и
+    # подсказок, и резать его по домашней мерке — значит отнимать место,
+    # которого он не занимает (поймано 08-12: 18 листов из 23 резались зря).
+    fitted, fit_warns = S.fit(S.for_audience(content, audience),
+                              S.CONTENT_H, audience)
     html, _ = S.render_sheet_ex(
         fitted, meta,
         options={"stress": "non_obvious", "show_warnings": False,
@@ -192,9 +241,10 @@ def build_sheet(sound: str, typ: str, prof: str,
     # ([Ш] + обратные слоги: 15 слов, линтер молчит, а печать блокировалась).
     blocking = list(S.lint(fitted, meta))
     notes = list(fitted.get("notes") or []) + list(fit_warns)
-    if len(words) < MIN_WORDS_CANON and not blocking:
+    min_words = C.canon_min_words(S.TYPE_ALIASES.get(typ, typ))
+    if len(words) < min_words and not blocking:
         blocking = [f"слов на листе {len(words)} — меньше канонического "
-                    f"минимума {MIN_WORDS_CANON} (блок [4])"]
+                    f"минимума {min_words} (блок [4])"]
 
     stats = pool_stats(sound, prof)
     stats["on_sheet"] = len(words)
@@ -206,6 +256,10 @@ def build_sheet(sound: str, typ: str, prof: str,
         "ok": True,
         "html": html,
         "stats": stats,
+        # Какие игры живут на СЛОВАХ ЭТОГО листа. Раньше экран считал живыми
+        # все три всегда, и на листе, где выбранная игра не набирает четырёх
+        # примеров, логопед жал кнопку, а печаталась прежняя игра — молча.
+        "games": games_state(content, fitted, game),
         # Наружу идут ТОЛЬКО человеческие тексты. Машинные — в raw, для нас.
         "warnings": human.split(blocking, notes),
         "syllable": syllable,
@@ -257,24 +311,102 @@ def syllable_buttons() -> Dict[str, List[Dict[str, str]]]:
     кнопке стоит ровно тот слог, который окажется на листе. Считается один раз
     при старте, на пустом профиле.
     """
-    out: Dict[str, List[Dict[str, str]]] = {}
+    out: Dict[str, List[Dict[str, Any]]] = {}
     for snd in C.WORDS_BY_SOUND:
-        items: List[Dict[str, str]] = []
+        items: List[Dict[str, Any]] = []
         for typ in C.SYL_TYPES:
+            row: List[str] = []
+            n_words = 0
             try:
                 content, _ = S.compose(snd, typ, "", sheet_no=1, seed=0)
                 rows = content.get("syllables", {}).get("rows", []) or []
-                syl = (rows[0].get("units") or [""])[0] if rows else ""
-                items.append({
-                    "typ": typ,
-                    "syllable": syl.upper(),
-                    "label": C.SYL_TYPE_LABEL.get(typ, typ),
-                    "available": bool(syl),
-                })
+                units = (rows[0].get("units") or []) if rows else []
+                row = [u.upper() for u in units]
+                syl = units[0] if units else ""
+                n_words = len((content.get("vocabulary") or {}).get("block4", []))
             except BaseException:
-                items.append({"typ": typ, "syllable": "—",
-                              "label": C.SYL_TYPE_LABEL.get(typ, typ),
-                              "available": False})
+                syl = ""
+            label = syl.upper() if syl else "—"
+            # Для объяснения берём настоящий слог, даже если лист на нём не
+            # собрался: «АЖ читается как АШ» понятнее, чем «такой слог».
+            said = label if label != "—" else CAP.probe_syllable(snd, typ)
+            # Лист: сначала запрет устройства или языка (его можно объяснить
+            # словами), и только если такого запрета нет — «слов не набралось».
+            sheet_reason = CAP.block_reason("sheet", snd, typ)
+            if not sheet_reason and not syl:
+                sheet_reason = "no_words"
+            mats: Dict[str, Dict[str, Any]] = {}
+            for mat in ("sheet", "track", "propisi"):
+                reason = (sheet_reason if mat == "sheet"
+                          else CAP.block_reason(mat, snd, typ))
+                mats[mat] = {"ok": not reason,
+                             "why": human.why_syllable(reason, said, mat)}
+            items.append({
+                "typ": typ,
+                # На погашенной кнопке стоит сам слог, а не прочерк: «АЖ» с
+                # объяснением понятнее, чем немое «—». Прочерк остаётся там,
+                # где слога и правда нет (у стечений он берётся из слов).
+                "syllable": label if label != "—" else (said or "—"),
+                # ВЕСЬ ряд слогов этого типа. На кнопке стояла одна «ЛА», и она
+                # читалась как обещание листа только на А — хотя гласная тут
+                # пример, а на бумаге будет ЛА · ЛО · ЛУ · ЛЫ (автор 08-11).
+                "row": row,
+                # Слов на таком листе. Меньше 12 — канон блока [4] не выполнен,
+                # и кнопка обязана это сказать заранее, а не после сборки.
+                "words": n_words,
+                "thin": bool(row) and 0 < n_words < C.canon_min_words(typ),
+                "need": C.canon_min_words(typ),
+                "label": C.SYL_TYPE_LABEL.get(typ, typ),
+                "available": bool(syl) and not sheet_reason,
+                # Что на этом слоге умеет КАЖДЫЙ материал. До 08-10 экран знал
+                # только про лист, а дорожки узнавали о несовпадении отказом
+                # уже после нажатия — машинным «cluster_onset» или молчаливой
+                # подменой слога на прямой.
+                "materials": mats,
+            })
+        out[snd] = items
+    return out
+
+
+def scene_buttons() -> Dict[str, List[Dict[str, Any]]]:
+    """Фоны слоговой дорожки — по звуку, через его героя.
+
+    Логопед видит не общий список, а миры ЭТОГО героя плюс «без фона»: комарику
+    предлагаются лес и пруд, мотору — дорога и город. Список не режется
+    запретом, он собирается из подходящего (решение автора 08-10).
+    """
+    out: Dict[str, List[Dict[str, Any]]] = {}
+    for snd in C.WORDS_BY_SOUND:
+        hero = (PR.image_for(snd).get("name") or "").strip()
+        items = [{"key": "", "label": SCN.SCENE_LABELS[""], "hero": hero}]
+        for key in SCN.worlds_for(hero):
+            items.append({"key": key,
+                          "label": SCN.SCENE_LABELS.get(key, key),
+                          "hero": hero})
+        out[snd] = items
+    return out
+
+
+def position_buttons() -> Dict[str, List[Dict[str, Any]]]:
+    """Позиции звука для лабиринта — по каждому звуку своя правда.
+
+    Язык (оглушение) знает `capabilities`, картотеку — только сборка, поэтому
+    здесь пробуем собрать. Все 33 лабиринта считаются за полсекунды, один раз
+    при старте — как и подписи слогов.
+    """
+    out: Dict[str, List[Dict[str, Any]]] = {}
+    for snd in C.WORDS_BY_SOUND:
+        items: List[Dict[str, Any]] = []
+        for pos, label in POSITION_LABEL.items():
+            reason = CAP.position_reason(snd, pos)
+            if not reason:
+                try:
+                    M.build_maze(sound=snd, position=pos, profile="")
+                except BaseException:
+                    reason = "no_words"
+            items.append({"key": pos, "label": label,
+                          "ok": not reason,
+                          "why": human.why_position(reason, pos)})
         out[snd] = items
     return out
 
@@ -297,20 +429,52 @@ def config() -> Dict[str, Any]:
             "syllables": syllable_buttons(),
             "profile_options": [{"key": k, "label": v} for k, v in PROFILE_OPTIONS],
             "positions": [{"key": k, "label": v} for k, v in POSITION_LABEL.items()],
+            # Позиции звука — свои у каждого звука. Кнопка «в конце слова»
+            # горела у [З], [Ж], [Щ], а лабиринт на ней отказывался: у звонких
+            # такого слова нет в языке, у [Сь] и [Щ] не хватает картинок.
+            "positions_by_sound": position_buttons(),
             # Фоны слоговой дорожки — строка запроса Ольги «менять фон».
-            # Умолчание считает сервер по персонажу звука, логопед меняет.
+            # Список НЕ общий: фон это контекст героя, и у каждого героя свои
+            # миры (08-10). Общий список остаётся для совместимости ответа,
+            # экран берёт `scenes_by_sound`.
             "scenes": [{"key": k, "label": v} for k, v in SCN.SCENE_LABELS.items()],
-            # Игры блока [5] — все три канонные (ТЗ, ЯРУС А) и все три живые.
-            # «Посчитай 1-5» ожила 2026-08-10: формы родительного падежа были
-            # выверены у 23 слов из 1760, теперь у 590/595, и игра собирается
-            # на 28 листах из 29.
-            "games": [
-                {"key": "one_many", "label": "Один — много", "ready": True},
-                {"key": "diminutive", "label": "Назови ласково", "ready": True},
-                {"key": "count_1_5", "label": "Посчитай 1-5", "ready": True},
-            ],
+            "scenes_by_sound": scene_buttons(),
+            # Игры блока [5] — все три канонные (ТЗ, ЯРУС А). Здесь только
+            # ключ и подпись: живая игра или нет — свойство КОНКРЕТНОГО листа
+            # (слова у каждого свои), и это приходит вместе с листом. Раньше
+            # тут стояло ready:True на все три навсегда, и кнопки врали.
+            "games": [{"key": k, "label": GAME_LABEL[k]} for k in C.GAME_KINDS],
         })
     return CONFIG_CACHE
+
+
+def unsupported(material: str, sound: str, typ: str) -> Dict[str, Any]:
+    """«Этот материал на таком слоге не делается» — с причиной и выходом.
+
+    Пустой словарь = материал слог умеет. Раньше этой развилки не было вовсе:
+    слоговая дорожка падала машинной фразой, звуковая молча меняла слог. Теперь
+    ответ один на оба и всегда несёт список слогов, которые материал умеет, —
+    логопеду есть куда нажать, а не только что прочитать.
+    """
+    reason = CAP.block_reason(material, sound, typ)
+    if not reason:
+        return {}
+    items = config()["syllables"].get(sound, [])
+    label = next((i["syllable"] for i in items if i["typ"] == typ), "")
+    if label in ("", "—"):
+        # Лист на этом слоге не собрался, подписи кнопки нет — но объяснять
+        # отказ безымянным «таким слогом» нельзя, показываем сам слог.
+        label = CAP.probe_syllable(sound, typ)
+    options = [{"typ": i["typ"], "syllable": i["syllable"], "label": i["label"]}
+               for i in items
+               if ((i.get("materials") or {}).get(material) or {}).get("ok")]
+    return {
+        "ok": False,
+        "kind": "unsupported",
+        "material": material,
+        "message": human.why_syllable(reason, label, material),
+        "options": options,
+    }
 
 
 def as_int(value: Any, default: int, low: int = 0) -> int:
@@ -430,6 +594,10 @@ class Handler(BaseHTTPRequestHandler):
                     self._json({"ok": False, "kind": "input",
                                 "message": f"звука [{sound}] в генераторе нет"}, 400)
                     return
+                bad = unsupported("track", sound, typ)
+                if bad:
+                    self._json(bad, 200)
+                    return
                 scene = data.get("scene")
                 if scene is not None:
                     scene = str(scene)
@@ -489,31 +657,29 @@ class Handler(BaseHTTPRequestHandler):
                                 "message": f"звука [{C.ph.sound_label(sound)}] "
                                            f"в генераторе нет"}, 400)
                     return
-                # Прописи строятся только на чистых слогах: в стечении второй
-                # согласный, его чистоту без словаря не проверить. Тип со
-                # стечением молча подменяем на прямой и говорим об этом.
                 notes: List[str] = []
                 mode = str(data.get("mode") or "syllable")
                 if mode not in PR.MODES:
                     mode = "syllable"
-                if typ not in PR.PROPISI_TYPES:
-                    # Причины разные, и врать одной на все нельзя: у стечения
-                    # второй согласный, у интервокального — гласная с обеих
-                    # сторон линии. Раньше здесь стояло «в стечении есть второй
-                    # согласный» и на выбор «АРА» — это была неправда.
-                    notes.append(
-                        "Для звуковой дорожки взят прямой слог: в стечении есть "
-                        "второй согласный, и генератор не может проверить, "
-                        "поставлен ли он у ребёнка."
-                        if typ in ("cluster_onset", "cluster_coda") else
-                        "Для звуковой дорожки взят прямой слог: у слога между "
-                        "гласными гласная стоит с обеих сторон линии, а линия "
-                        "ведёт от звука к одной гласной.")
-                    typ = "direct"
+                # Раньше несовместимый тип слога здесь МОЛЧА подменялся на
+                # прямой: логопед выбирал АЛА, получал ЛА и узнавал об этом
+                # мелкой строкой под листом. Подмена снята 08-10 — материал не
+                # решает за логопеда, а показывает, что умеет. На ступени
+                # «только звук» слога нет вовсе, и запрет там ни при чём.
+                if mode != "isolated":
+                    bad = unsupported("propisi", sound, typ)
+                    if bad:
+                        self._json(bad, 200)
+                        return
                 if mode == "isolated":
                     notes.append(
                         "Ребёнок тянет один звук, гласной "
                         "в конце нет. Тип слога здесь ни на что не влияет.")
+                    # Слога на этой ступени нет вовсе — движку всё равно нужен
+                    # какой-то тип, берём прямой. Это не подмена выбора:
+                    # на бумаге типа слога не видно.
+                    if typ not in PR.PROPISI_TYPES:
+                        typ = "direct"
                 p = PR.build_propisi(sound, typ,
                                      vowel=data.get("vowel") or None,
                                      seed=as_int(data.get("seed"), 0),

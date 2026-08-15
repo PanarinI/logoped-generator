@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 480" width="1160" height="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif">
+<!-- Пересобрано 2026-08-13 по правилам схем хаба: показывает графика, текст только
+     называет части. Сплошное — то, что идёт на лист; пунктир — то, что отброшено. -->
+<style>
+  .name{font-size:15px;font-weight:700;fill:#14110E}
+  .sub{font-size:12.5px;fill:#6B635A}
+  .cap{font-size:11px;fill:#6B635A;letter-spacing:.1em;font-weight:600}
+  .w{fill:#14110E}
+  .wout{fill:none;stroke:#B8AFA0;stroke-width:1.4;stroke-dasharray:4 3}
+  .box{fill:none;stroke:#14110E;stroke-width:2.5}
+</style>
+<rect fill="#F7F4EE" width="1160" height="480"/>
+
+<!-- 1. картотека -->
+<text class="cap" x="40" y="42">WORD BANK</text>
+<g>
+  <!-- 6 рядов по 7 слов -->
+  <g>
+    <rect class="w" x="40" y="60" width="46" height="12"/><rect class="w" x="94" y="60" width="34" height="12"/><rect class="w" x="136" y="60" width="52" height="12"/><rect class="w" x="196" y="60" width="30" height="12"/>
+    <rect class="w" x="40" y="80" width="34" height="12"/><rect class="w" x="82" y="80" width="52" height="12"/><rect class="w" x="142" y="80" width="40" height="12"/><rect class="w" x="190" y="80" width="36" height="12"/>
+    <rect class="w" x="40" y="100" width="52" height="12"/><rect class="w" x="100" y="100" width="38" height="12"/><rect class="w" x="146" y="100" width="30" height="12"/><rect class="w" x="184" y="100" width="42" height="12"/>
+    <rect class="w" x="40" y="120" width="40" height="12"/><rect class="w" x="88" y="120" width="46" height="12"/><rect class="w" x="142" y="120" width="34" height="12"/><rect class="w" x="184" y="120" width="42" height="12"/>
+    <rect class="w" x="40" y="140" width="30" height="12"/><rect class="w" x="78" y="140" width="52" height="12"/><rect class="w" x="138" y="140" width="44" height="12"/><rect class="w" x="190" y="140" width="36" height="12"/>
+    <rect class="w" x="40" y="160" width="46" height="12"/><rect class="w" x="94" y="160" width="36" height="12"/><rect class="w" x="138" y="160" width="50" height="12"/><rect class="w" x="196" y="160" width="30" height="12"/>
+  </g>
+</g>
+<text class="name" x="40" y="204">2207 words</text>
+<text class="sub" x="40" y="226">for eleven sounds, each one</text>
+<text class="sub" x="40" y="244">described by how it is said</text>
+
+<path d="M244 116 H304" stroke="#14110E" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
+<text class="sub" x="248" y="104">the child's</text>
+<text class="sub" x="248" y="150">sounds</text>
+
+<!-- 2. после фильтра -->
+<text class="cap" x="330" y="42">AFTER THE FILTER</text>
+<g>
+  <rect class="w" x="330" y="60" width="46" height="12"/><rect class="wout" x="384" y="60" width="34" height="12"/><rect class="w" x="426" y="60" width="52" height="12"/><rect class="wout" x="486" y="60" width="30" height="12"/>
+  <rect class="w" x="330" y="80" width="34" height="12"/><rect class="w" x="372" y="80" width="52" height="12"/><rect class="wout" x="432" y="80" width="40" height="12"/><rect class="w" x="480" y="80" width="36" height="12"/>
+  <rect class="wout" x="330" y="100" width="52" height="12"/><rect class="w" x="390" y="100" width="38" height="12"/><rect class="w" x="436" y="100" width="30" height="12"/><rect class="wout" x="474" y="100" width="42" height="12"/>
+  <rect class="w" x="330" y="120" width="40" height="12"/><rect class="wout" x="378" y="120" width="46" height="12"/><rect class="w" x="432" y="120" width="34" height="12"/><rect class="w" x="474" y="120" width="42" height="12"/>
+  <rect class="wout" x="330" y="140" width="30" height="12"/><rect class="w" x="368" y="140" width="52" height="12"/><rect class="w" x="428" y="140" width="44" height="12"/><rect class="wout" x="480" y="140" width="36" height="12"/>
+  <rect class="w" x="330" y="160" width="46" height="12"/><rect class="wout" x="384" y="160" width="36" height="12"/><rect class="w" x="428" y="160" width="50" height="12"/><rect class="w" x="486" y="160" width="30" height="12"/>
+</g>
+<text class="name" x="330" y="204">what this child can say</text>
+<text class="sub" x="330" y="226">dashed = holds a sound the child</text>
+<text class="sub" x="330" y="244">has not learnt yet, so it is dropped</text>
+
+<path d="M534 116 H594" stroke="#14110E" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
+<text class="sub" x="538" y="104">assemble</text>
+
+<!-- 3. лист -->
+<text class="cap" x="620" y="42">ONE A4 SHEET</text>
+<rect class="box" x="620" y="56" width="200" height="272"/>
+<g>
+  <rect class="w" x="640" y="76" width="120" height="10"/>
+  <rect class="w" x="640" y="98" width="160" height="8"/><rect class="w" x="640" y="112" width="140" height="8"/>
+  <rect class="w" x="640" y="134" width="160" height="8"/><rect class="w" x="640" y="148" width="150" height="8"/>
+  <rect class="w" x="640" y="170" width="120" height="8"/><rect class="w" x="640" y="184" width="160" height="8"/>
+  <rect class="w" x="640" y="206" width="140" height="8"/>
+  <rect class="w" x="640" y="228" width="160" height="8"/>
+  <rect class="w" x="640" y="252" width="160" height="8"/>
+  <rect class="w" x="640" y="268" width="130" height="8"/>
+</g>
+
+<text class="name" x="850" y="86">ten blocks</text>
+<text class="sub" x="850" y="110">warm-up · the sound alone ·</text>
+<text class="sub" x="850" y="128">syllables · words · a grammar</text>
+<text class="sub" x="850" y="146">game · sentences · a tongue-twister</text>
+
+<line x1="40" y1="374" x2="1120" y2="374" stroke="#DBD4C7" stroke-width="2"/>
+<text class="cap" x="40" y="406">FROM THE SAME BANK</text>
+<text class="sub" x="40" y="430">Practice sheet · maze · syllable tracks · word pairs — five kinds of material, all built on the</text>
+<text class="sub" x="40" y="448">one word bank and the same filter. Picture tasks are still ahead.</text>
+
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0 0 L10 5 L0 10 z" fill="#14110E"/>
+  </marker>
+</defs>
+</svg>

@@ -120,6 +120,14 @@ def main() -> int:
     cases.append(("перегруз", over, {}))
     cases.append(("перегруз-БЕЗ-fit", over, {"no_fit": True}))
 
+    # Лист логопеда — ОТДЕЛЬНЫЙ лист, а не тот же самый: у него нет шапки,
+    # подвала и подсказок разминки. Раз обвязка другая, доказывать «один А4»
+    # для него надо своим прогоном (08-12: до этого его резали по домашней
+    # мерке, и он терял материал там, где место было).
+    for name, content, opt in list(cases):
+        if not opt.get("no_fit"):
+            cases.append((f"{name}·логопед", content, {"audience": "lesson"}))
+
     if not CHROME:
         print("Chrome не найден — только модель, без печати в PDF")
 
@@ -127,8 +135,10 @@ def main() -> int:
     print(f"{'случай':26} {'модель, мм':>11} {'страниц':>8}")
     for name, content, opt in cases:
         doc, warns = sheet.render_sheet_ex(content, meta, options=opt)
-        fitted = content if opt.get("no_fit") else sheet.fit(content)[0]
-        est = sheet.total_height(fitted)
+        who = opt.get("audience", "home")
+        shaped = sheet.for_audience(content, who)
+        fitted = shaped if opt.get("no_fit") else sheet.fit(shaped, sheet.CONTENT_H, who)[0]
+        est = sheet.total_height(fitted, who)
         pages = print_pages(name, doc) if CHROME else 0
         expect = 2 if name.endswith("БЕЗ-fit") else 1
         ok = (pages == expect) if CHROME else (est <= sheet.CONTENT_H or opt.get("no_fit"))
@@ -138,21 +148,25 @@ def main() -> int:
             if w.startswith(("НЕ ВЛЕЗ", "не влезало")):
                 print(f"      ↳ {w}")
 
-    # калибровка модели по факту
+    # калибровка модели по факту — по КАЖДОМУ адресату отдельно: у листа
+    # логопеда своя обвязка, и модель должна попадать в неё, а не в домашнюю
     if CHROME:
-        print("\nкалибровка (модель против рендера), мм:")
-        c, _ = sheet.compose("р", "direct", "л,ш,ж", n_words=16)
-        doc, _ = sheet.render_sheet_ex(c, meta, options={"no_fit": True,
-                                                        "show_warnings": False})
-        fact, model = measure_blocks(doc), sheet.estimate_heights(c)
-        for k in ["_header", "articulation", "isolated", "syllables", "words",
-                  "game", "sentences", "chant", "_footer"]:
-            if k in model or k in fact:
-                d = fact.get(k, 0) - model.get(k, 0)
-                flag = "" if abs(d) <= 3 else "  ← расхождение > 3 мм"
-                bad += abs(d) > 3
-                print(f"  {k:14} модель {model.get(k, 0):6.1f}  факт "
-                      f"{fact.get(k, 0):6.1f}  дельта {d:+5.1f}{flag}")
+        for who in ("home", "lesson"):
+            print(f"\nкалибровка, адресат «{who}» (модель против рендера), мм:")
+            c, _ = sheet.compose("р", "direct", "л,ш,ж", n_words=16)
+            doc, _ = sheet.render_sheet_ex(c, meta, options={"no_fit": True,
+                                                            "show_warnings": False,
+                                                            "audience": who})
+            fact = measure_blocks(doc)
+            model = sheet.estimate_heights(sheet.for_audience(c, who), who)
+            for k in ["_header", "articulation", "isolated", "syllables", "words",
+                      "game", "sentences", "chant", "_footer"]:
+                if k in model or k in fact:
+                    d = fact.get(k, 0) - model.get(k, 0)
+                    flag = "" if abs(d) <= 3 else "  ← расхождение > 3 мм"
+                    bad += abs(d) > 3
+                    print(f"  {k:14} модель {model.get(k, 0):6.1f}  факт "
+                          f"{fact.get(k, 0):6.1f}  дельта {d:+5.1f}{flag}")
 
     print(f"\nитог: провалов {bad}" + ("" if bad else "  — ВСЁ ЗЕЛЁНОЕ"))
     return 1 if bad else 0

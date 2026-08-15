@@ -937,15 +937,20 @@ def test_characters_are_drawn_not_written():
 
 
 def test_scene_is_chosen_and_never_absurd():
-    """Фон — строка запроса Ольги «менять фон». Проверяем три вещи:
-    выбор работает, умолчание подобрано под героя, и чужой фон не молчит."""
+    """Фон — строка запроса Ольги «менять фон».
+
+    С 08-10 фон это КОНТЕКСТ ГЕРОЯ, а не общий список: у каждого героя два своих
+    мира, и чужой мир движок не принимает. Проверяем: умолчание — первый мир
+    героя, свой мир принимается, «без фона» законно, чужой и несуществующий —
+    отказ вслух.
+    """
     import scenes as SC
     import track as TR
-    for sound, expect in (("р", "дорога"), ("л", "небо"), ("ш", "лес")):
+    for sound, expect in (("р", "дорога"), ("л", "небо"), ("ш", "трава")):
         t = TR.build_track(sound, "direct")
         check(f"[{sound}] фон по умолчанию", t["meta"]["scene"], expect)
-    t = TR.build_track("р", "direct", scene="море")
-    check("логопед переопределяет умолчание", t["meta"]["scene"], "море")
+    t = TR.build_track("р", "direct", scene="город")
+    check("логопед переопределяет умолчание", t["meta"]["scene"], "город")
     t0 = TR.build_track("р", "direct", scene="")
     check("«без фона» — законный выбор, а не сбой", t0["meta"]["scene"], "")
     try:
@@ -953,12 +958,21 @@ def test_scene_is_chosen_and_never_absurd():
         check("несуществующий фон отвергнут вслух", False, True)
     except TR.TrackError:
         check("несуществующий фон отвергнут вслух", True, True)
+    try:
+        # «море» существует, но это мир самолёта: мотор под водой — та самая
+        # нелепица, ради которой миры и заведены.
+        TR.build_track("р", "direct", scene="море")
+        check("чужой мир отвергнут вслух", False, True)
+    except TR.TrackError:
+        check("чужой мир отвергнут вслух", True, True)
     # Сцена не должна перекрывать слоги: внутри SVG МАРШРУТА она обязана идти
     # первым слоем. Считаем позиции только внутри маршрута — иначе первым
     # <circle> в документе оказывается глаз змеи в рисунке персонажа.
     html = TR.render_track(TR.build_track("ш", "direct"))
     route = html[html.find('class="route"'):]
-    i_scene, i_circle = route.find('opacity="0.3'), route.find('fill="#fff"')
+    # Ищем слой сцены по его подписи, а не по конкретной прозрачности: она
+    # менялась (0.30 → 0.42 в 08-10, чтобы сцены читались) и будет меняться.
+    i_scene, i_circle = route.find('opacity="0.'), route.find('fill="#fff"')
     truthy("сцена нарисована ДО кружков (иначе закроет слоги)",
            0 <= i_scene < i_circle)
 

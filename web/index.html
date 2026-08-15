@@ -32,6 +32,21 @@
              нарисованы. Печатать себе можно, выкладывать нельзя, и логопед
              должен это видеть, а не узнать потом. -->
         <button class="tab" data-tab="maze">Лабиринт<span class="tab-flag">черновик</span></button>
+        <!-- ВИТРИНА (решение автора 08-06). Материалы, которых ещё нет, стоят
+             здесь неактивными: логопед должен видеть замысел целиком, а не
+             гадать, всё ли это. Не путать с правилом 08-10 «нет на этом слоге
+             — вкладки нет»: там материал СУЩЕСТВУЕТ и просто не делает такой
+             слог, здесь его нет вовсе. Нажатие открывает честное объяснение,
+             чего материал ждёт, — погашенная кнопка без причины врёт тише,
+             но врёт (локальный закон 11). -->
+        <button class="tab is-soon" data-tab="soon-odd"
+                data-soon="1">Четвёртый лишний<span class="tab-flag">готовится</span></button>
+        <button class="tab is-soon" data-tab="soon-noise"
+                data-soon="1">Зашумлённые<span class="tab-flag">готовится</span></button>
+        <button class="tab is-soon" data-tab="soon-trace"
+                data-soon="1">Обводка<span class="tab-flag">готовится</span></button>
+        <button class="tab is-soon" data-tab="soon-story"
+                data-soon="1">Рассказы<span class="tab-flag">готовится</span></button>
       </div>
       <div class="tab-extra" id="tab-extra" hidden>
         <span class="positions" id="positions"></span>
@@ -50,7 +65,7 @@
   <!-- ШАГ 2 — слог -->
   <section class="step" id="step-syl" hidden>
     <h1>Что берём на лист?</h1>
-    <p class="sub">На кнопке — тот самый слог, который окажется на бумаге.</p>
+    <p class="sub">На кнопке — слоги, которые окажутся на бумаге: гласная меняется, звук держится.</p>
     <div class="syls" id="syls"></div>
     <!-- Здесь стоял абзац про спор источников о порядке ступеней для [Р].
          Снят 2026-08-06 решением автора: логопед выбирает слог и всё, читать
@@ -69,6 +84,8 @@
           не прочитать, и подставлять непроверенный рисунок хуже, чем оставить
           пустое место.
         </p>
+        <!-- Позиции, которых у ЭТОГО звука не бывает: пишется из app.js. -->
+        <p class="note maze-note" id="maze-limits" hidden></p>
         <div class="stage" id="stage">
           <div class="scaler" id="scaler">
             <iframe id="frame" title="материал для печати"></iframe>
@@ -121,7 +138,8 @@
         <div class="card where" id="scene-card" hidden>
           <h2>Какой фон?</h2>
           <div class="seg" id="scene-pick"></div>
-
+          <!-- Чьи это миры: фон подбирается под героя звука. -->
+          <p class="hint" id="scene-hint"></p>
         </div>
 
         <!-- Ступень звуковой дорожки. Изолированный звук идёт ДО слога:

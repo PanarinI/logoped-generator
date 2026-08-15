@@ -16,11 +16,22 @@ const S = {
   prev: null,      // прошлые числа рва — чтобы подсветить, что изменилось
   audience: 'home', // куда лист: домой (с шапкой и подвалом) или на занятие
   game: 'one_many',   // умолчание — «Один — много» (решение автора 08-10)
+  games: null,     // какие игры живы на ТЕКУЩЕМ листе — приходит с листом
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
+  sceneUsed: null, // какой фон реально встал на лист — приходит с материалом
   propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
 };
 
 const $ = (id) => document.getElementById(id);
+
+/* Слог, который сейчас выбран, — подписью для человека («КЛА»). */
+function curSyllable() {
+  if (S.syllable) return S.syllable.toUpperCase();
+  const t = ((S.cfg && S.cfg.syllables[S.sound]) || [])
+    .find((x) => x.typ === S.typ);
+  return t ? t.syllable : '';
+}
+
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -87,20 +98,65 @@ const SHORT_LABEL = {
   cluster_coda: 'стечение после гласной',
 };
 
+/* Материалы, у которых слог свой, — их имена для подписи под кнопкой. */
+const MATERIAL_TITLE = { track: 'слоговая дорожка', propisi: 'звуковая дорожка' };
+
+/* Умеет ли материал ТЕКУЩИЙ слог. Правду про это знает движок
+   (logoped_slovar/capabilities.py) и присылает её вместе с конфигом. */
+function materialOk(tab, typ) {
+  if (tab !== 'track' && tab !== 'propisi') return true;
+  // На ступени «только звук» слога на бумаге нет вовсе — запрет ни при чём.
+  if (tab === 'propisi' && S.propisiMode === 'isolated') return true;
+  const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === typ);
+  const m = t && t.materials && t.materials[tab];
+  return !m || m.ok;
+}
+
+function materialWhy(tab, typ) {
+  const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === typ);
+  const m = t && t.materials && t.materials[tab];
+  return (m && m.why) || '';
+}
+
 function renderSyls() {
   const box = $('syls');
   box.innerHTML = '';
   (S.cfg.syllables[S.sound] || []).forEach((t) => {
+    const mats = t.materials || {};
+    const sheet = mats.sheet || { ok: t.available, why: '' };
     const b = el('button', 'syl');
-    b.disabled = !t.available;
-    b.appendChild(el('div', 'glyph', t.syllable));
+    b.disabled = !sheet.ok;
+    // Гласная на кнопке — ПРИМЕР, а не обещание: на листе будет весь ряд
+    // (ЛА · ЛО · ЛУ · ЛЫ). Поэтому первый слог крупно, остальные — мельче
+    // рядом: видно и звук, и то, что гласная меняется (автор 08-11).
+    const glyph = el('div', 'glyph', t.syllable);
+    const rest = (t.row || []).slice(1);
+    if (rest.length) glyph.appendChild(el('span', 'rest', rest.join(' ')));
+    b.appendChild(glyph);
     b.appendChild(el('div', 'meta', SHORT_LABEL[t.typ] || t.label));
+    // Слов меньше канонных 12 — лист соберётся, но будет бедным. Логопед
+    // должен узнать это ДО нажатия, а не из предупреждения после.
+    if (sheet.ok && t.thin) {
+      b.classList.add('is-thin');
+      b.appendChild(el('div', 'why',
+        'Слов в картотеке мало: ' + t.words + ' из 12 канонных — лист выйдет бедным.'));
+    }
+    // Погашенная кнопка обязана сказать, ПОЧЕМУ она погашена: молчаливая
+    // серость читается как поломка. А вот про дорожки здесь молчим: приписка
+    // «на этом слоге не собирается: слоговая дорожка» превращала выбор слога в
+    // сводку по всем материалам (снято по слову автора 08-10). Логопед видит
+    // это там, где выбирает материал: вкладки нет — материала нет.
+    if (!sheet.ok) {
+      b.appendChild(el('div', 'why', sheet.why));
+      b.title = sheet.why;
+    }
     b.onclick = () => {
       S.typ = t.typ;
       S.sheetNo = 1;
       S.profile.clear();
       S.prev = null;
       S.syllable = t.syllable;
+      S.games = null;          // игры считаются заново на словах нового листа
       S.tab = 'sheet';
       $('ask').hidden = true;      // вопрос о профиле — после первого листа
       $('warn').hidden = true;
@@ -160,17 +216,51 @@ function renderCrumbs() {
 
 /* ── шаг 3: материал ─────────────────────────────────────── */
 
+/* Витрина: материалы, которых ещё нет. Текст — чего именно ждёт материал;
+   врать «скоро» нельзя, поэтому здесь стоит настоящая причина. */
+const SOON = {
+  'soon-odd': {
+    title: 'Четвёртый лишний',
+    what: 'Девять картинок, три со звуком и одна лишняя: ребёнок находит чужую и называет остальные.',
+    waits: 'Ждёт свой банк картинок. Те, что есть сейчас, — исследовательские стимулы, выкладывать их нельзя.',
+  },
+  'soon-noise': {
+    title: 'Зашумлённые картинки',
+    what: 'Предмет, перечёркнутый линиями: ребёнок узнаёт его и называет, звук повторяется на каждом узнавании.',
+    waits: 'Ждёт тот же банк картинок.',
+  },
+  'soon-trace': {
+    title: 'Обводка',
+    what: 'Контур предмета, который ребёнок обводит, произнося звук, — по канону Борисовой обводка несёт речевой материал, а не мелкую моторику.',
+    waits: 'Ждёт тот же банк картинок. Линия со слогом уже работает — она на вкладке «Звуковая дорожка».',
+  },
+  'soon-story': {
+    title: 'Рассказы',
+    what: 'Короткий текст, насыщенный звуком: взрослый читает, ребёнок пересказывает.',
+    waits: 'Картинок не ждёт: 356 глаголов собраны, не хватает самого блока. Ближайший к готовности.',
+  },
+};
+
 function renderTabs() {
   document.querySelectorAll('.tab').forEach((b) => {
     b.classList.toggle('is-on', b.dataset.tab === S.tab);
+    // Витрина видна всегда: она говорит не про слог, а про весь замысел.
+    if (b.dataset.soon) { b.hidden = false; return; }
+    // Материала на этом слоге нет — вкладки нет. Сначала она была серой с
+    // объяснением, но автор 08-10: «раз её нет, не надо и показывать» —
+    // погашенная вкладка заставляет разбираться там, где разбираться не в чем.
+    b.hidden = !materialOk(b.dataset.tab, S.typ);
   });
-  $('tab-extra').hidden = (S.tab !== 'maze');
+  // На витринной вкладке настраивать нечего: материала ещё нет.
+  const soon = !!SOON[S.tab];
+  $('tab-extra').hidden = soon || (S.tab !== 'maze');
   $('maze-note').hidden = (S.tab !== 'maze');
+  if (S.tab !== 'maze') $('maze-limits').hidden = true;
   if (S.tab === 'maze') renderPositions();
   $('reroll').hidden = (S.tab !== 'sheet');
   // Профиль ребёнка меняет лист и лабиринт, но не дорожку и не прописи:
   // там нет слов, а слог по построению чист (целевой звук + гласная).
-  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi')
+  $('ask').hidden = soon || (S.tab === 'track') || (S.tab === 'propisi')
     || (S.tab === 'phrases') || !S.syllable;
   // «Домой / на занятие» — свойство ЛИСТА: шапка-документ и подвал взрослому
   // есть только у него. У дорожки и лабиринта их нет, переключать нечего.
@@ -179,6 +269,7 @@ function renderTabs() {
   $('stage-step').hidden = (S.tab !== 'propisi');
   $('scene-card').hidden = (S.tab !== 'track');
   $('game-card').hidden = (S.tab !== 'sheet');
+  $('moat-box').hidden = soon;          // рва у ненаписанного материала нет
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'propisi') renderPropisiMode();
@@ -203,59 +294,89 @@ function renderAudience() {
     : 'Без шапки и подсказок взрослому — логопед рядом.';
 }
 
+/* Живая игра или нет — свойство КОНКРЕТНОГО листа: игры собираются из его же
+   слов. Поэтому кнопки рисуются по ответу листа (`res.games`), а не по конфигу.
+   Раньше все три кнопки были активны всегда: на листе, где выбранная игра не
+   набирает четырёх примеров, движок молча откатывался к другой, логопед жал
+   «Назови ласково» и видел прежнюю игру без единого слова объяснения (08-10). */
 function renderGamePick() {
   const box = $('game-pick');
-  if (box.dataset.built !== '1') {
-    box.innerHTML = '';
-    (S.cfg.games || []).forEach((g) => {
-      const b = el('button', 'seg-btn', g.label);
-      b.dataset.game = g.key;
-      if (!g.ready) {
-        // Не прячем: логопед должен видеть, что игра есть в замысле, но пока
-        // не собирается — и почему. Молчаливое отсутствие врёт не меньше.
-        b.disabled = true;
-        b.title = g.why || '';
-        b.classList.add('is-off');
-      } else {
-        b.addEventListener('click', () => {
-          if (S.game === g.key) return;
-          S.game = g.key;
-          renderGamePick();
-          load();
-        });
-      }
-      box.appendChild(b);
-    });
-    box.dataset.built = '1';
-  }
-  box.querySelectorAll('.seg-btn').forEach((b) => {
-    b.classList.toggle('is-on', b.dataset.game === S.game);
+  const state = S.games;
+  const items = (state && state.items) || (S.cfg.games || [])
+    .map((g) => ({ key: g.key, label: g.label, ready: true, why: '' }));
+  box.innerHTML = '';
+  items.forEach((g) => {
+    const b = el('button', 'seg-btn', g.label);
+    b.dataset.game = g.key;
+    if (!g.ready) {
+      // Не прячем: логопед должен видеть, что игра есть в замысле, но на
+      // ЭТОМ листе не собирается — и почему. Молчаливое отсутствие врёт.
+      b.disabled = true;
+      b.title = g.why || '';
+      b.classList.add('is-off');
+    } else {
+      b.addEventListener('click', () => {
+        if (S.game === g.key) return;
+        S.game = g.key;
+        load();
+      });
+    }
+    box.appendChild(b);
   });
-  const off = (S.cfg.games || []).find((g) => !g.ready);
-  $('game-hint').textContent = off ? ('«' + off.label + '» пока не собирается: ' + off.why) : '';
+  // Горит та игра, которая РЕАЛЬНО напечатана на листе, а не та, которую
+  // выбрали: если движок отдал другую, кнопка обязана это показать.
+  const on = (state && state.printed) || S.game;
+  box.querySelectorAll('.seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', b.dataset.game === on);
+  });
+
+  const off = items.filter((g) => !g.ready);
+  let hint = off.map((g) => '«' + g.label + '» на этом листе не собирается: '
+                            + g.why + '.').join(' ');
+  if (state && state.dropped) hint = state.dropped;
+  else if (state && state.fallback) {
+    const lab = (items.find((g) => g.key === state.printed) || {}).label || '';
+    hint = 'На листе стоит «' + lab + '»: выбранная игра на его словах не '
+         + 'набралась. ' + hint;
+  }
+  $('game-hint').textContent = hint;
 }
 
 
+/* Фон — контекст ГЕРОЯ, а не общий список: у комарика лес и пруд, у мотора
+   дорога и город (08-10). Поэтому кнопки перестраиваются при смене звука, а
+   выбранный фон чужого героя сбрасывается — он относился к прошлому герою. */
+function sceneList() {
+  return (S.cfg.scenes_by_sound && S.cfg.scenes_by_sound[S.sound])
+    || S.cfg.scenes || [];
+}
+
 function renderScenePick() {
   const box = $('scene-pick');
-  if (box.dataset.built !== '1') {
-    box.innerHTML = '';
-    (S.cfg.scenes || []).forEach((sc) => {
-      const b = el('button', 'seg-btn', sc.label);
-      b.dataset.scene = sc.key;
-      b.addEventListener('click', () => {
-        if (S.scene === sc.key) return;
-        S.scene = sc.key;
-        renderScenePick();
-        load();
-      });
-      box.appendChild(b);
+  const list = sceneList();
+  if (S.scene !== null && !list.some((sc) => sc.key === S.scene)) S.scene = null;
+  box.innerHTML = '';
+  list.forEach((sc) => {
+    const b = el('button', 'seg-btn', sc.label);
+    b.dataset.scene = sc.key;
+    b.addEventListener('click', () => {
+      if (S.scene === sc.key) return;
+      S.scene = sc.key;
+      renderScenePick();
+      load();
     });
-    box.dataset.built = '1';
-  }
-  box.querySelectorAll('.seg-btn').forEach((b) => {
-    b.classList.toggle('is-on', S.scene !== null && b.dataset.scene === S.scene);
+    box.appendChild(b);
   });
+  // Горит тот фон, который РЕАЛЬНО на листе. Пока логопед не выбирал, лист
+  // печатается с умолчанием героя — и раньше при этом не горело ничего:
+  // фон на бумаге есть, а какой именно, экран не говорил.
+  const on = (S.scene !== null) ? S.scene : S.sceneUsed;
+  box.querySelectorAll('.seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', on != null && b.dataset.scene === on);
+  });
+  // Подписи под кнопками фона нет намеренно: смена фона видна на листе сразу,
+  // и объяснять очевидное — только занимать внимание (слово автора 08-10).
+  $('scene-hint').textContent = '';
 }
 
 
@@ -268,14 +389,43 @@ function renderPropisiMode() {
     : 'В конце линии гласная — собирается слог.';
 }
 
+function positionList() {
+  return (S.cfg.positions_by_sound && S.cfg.positions_by_sound[S.sound])
+    || S.cfg.positions.map((p) => ({ key: p.key, label: p.label, ok: true, why: '' }));
+}
+
+/* Звук сменили, а выбранная позиция у нового звука не бывает — берём первую,
+   которая бывает. Это не подмена выбора: выбор относился к прошлому звуку. */
+function ensurePosition() {
+  const list = positionList();
+  if (list.some((p) => p.key === S.position && p.ok)) return;
+  const first = list.find((p) => p.ok);
+  if (first) S.position = first.key;
+}
+
 function renderPositions() {
   const box = $('positions');
   box.innerHTML = '';
-  S.cfg.positions.forEach((p) => {
+  ensurePosition();
+  // Позиции у каждого звука свои: у звонких слова на [З] в конце нет в языке,
+  // у [Сь] и [Щ] не набирается девяти картинок. Кнопка, которая этого не
+  // знает, обещает лабиринт и получает отказ (08-10, та же болезнь, что у
+  // слогов и игр).
+  const list = positionList();
+  list.forEach((p) => {
     const b = el('button', 'pos' + (p.key === S.position ? ' is-on' : ''), p.label);
-    b.onclick = () => { S.position = p.key; renderPositions(); load(); };
+    if (!p.ok) {
+      b.disabled = true;
+      b.classList.add('is-off');
+      b.title = p.why || '';
+    } else {
+      b.onclick = () => { S.position = p.key; renderPositions(); load(); };
+    }
     box.appendChild(b);
   });
+  const off = list.filter((p) => !p.ok);
+  $('maze-limits').textContent = off.map((p) => '«' + p.label + '»: ' + p.why).join(' ');
+  $('maze-limits').hidden = !off.length;
 }
 
 /* Каждому запросу — свой номер. Отвечает медленный сервер или логопед быстро
@@ -284,7 +434,26 @@ function renderPositions() {
    второй клик: чип горел, а лист оставался от прошлого профиля. */
 let TICKET = 0;
 
+/* Витрина: материала нет — движок не зовём, показываем, чего он ждёт. */
+function showSoon(key) {
+  const s = SOON[key];
+  const box = $('stage-msg');
+  box.innerHTML = '';
+  $('stage').classList.remove('is-busy');
+  $('stage').classList.add('is-msg');
+  $('frame').style.visibility = 'hidden';
+  $('print').disabled = true;
+  const wrap = el('div', 'engine-error calm');
+  wrap.appendChild(el('h3', null, `${s.title} — готовится`));
+  wrap.appendChild(el('p', null, s.what));
+  wrap.appendChild(el('p', 'why', s.waits));
+  box.appendChild(wrap);
+  box.hidden = false;
+  renderTabs();
+}
+
 async function load() {
+  if (SOON[S.tab]) { showSoon(S.tab); return; }
   const my = ++TICKET;
   $('stage').classList.add('is-busy');
   $('print').disabled = true;          // пока летит — печатать нечего
@@ -306,6 +475,7 @@ async function load() {
       // и на прилагательное. Тип слога на словосочетания не влияет.
       res = await post('/api/phrases', { sound: S.sound, profile: profile });
     } else if (S.tab === 'maze') {
+      ensurePosition();
       res = await post('/api/maze',
         { sound: S.sound, position: S.position, profile: profile });
     } else {
@@ -328,8 +498,20 @@ async function load() {
   if (!res.ok) { showError(res); return; }
 
   $('stage-msg').hidden = true;
+  $('stage').classList.remove('is-msg');
   $('frame').style.visibility = 'visible';
   if (res.syllable) { S.syllable = res.syllable; renderCrumbs(); }
+  // Состояние игр приходит вместе с листом — это его свойство, а не настройка.
+  // Выбор логопеда подтягиваем к напечатанному: иначе на кнопке остаётся игра,
+  // которой на бумаге нет, и повторное нажатие по ней не делает ничего.
+  if (S.tab === 'sheet') {
+    S.games = res.games || null;
+    if (res.games && res.games.printed) S.game = res.games.printed;
+  }
+  if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
+  // Карточки настроек и ров прячет экран отказа — материал собрался, вернуть.
+  $('moat-box').hidden = false;
+  renderTabs();
   writeFrame(res.html);
   renderMoat(res.stats);
   renderWarnings(res.warnings);   // она же решает, можно ли печатать
@@ -342,18 +524,41 @@ async function load() {
 function showError(res) {
   const box = $('stage-msg');
   box.innerHTML = '';
-  const THING = { maze: 'лабиринт', track: 'дорожка',
+  const THING = { maze: 'лабиринт', track: 'слоговая дорожка',
                   propisi: 'звуковая дорожка',
                   phrases: 'словосочетания' }[S.tab] || 'лист';
-  const VIN = { лабиринт: 'лабиринт', дорожка: 'дорожку',
+  const VIN = { лабиринт: 'лабиринт', 'слоговая дорожка': 'слоговую дорожку',
                 'звуковая дорожка': 'звуковую дорожку', лист: 'лист' }[THING];
   const title = { internal: `Не удалось собрать ${VIN}`,
                   network: 'Нет связи с генератором' }[res.kind]
                 || `Такой ${THING} не собирается`;
-  const wrap = el('div', 'engine-error');
-  wrap.appendChild(el('h3', null, title));
+  $('stage').classList.add('is-msg');
+  const wrap = el('div', 'engine-error' + (res.kind === 'unsupported' ? ' calm' : ''));
+  wrap.appendChild(el('h3', null,
+    res.kind === 'unsupported'
+      ? `${THING[0].toUpperCase()}${THING.slice(1)} на слоге ${curSyllable()} не делается`
+      : title));
   // Текст уже переведён на человеческий на сервере — показываем как есть.
   wrap.appendChild(el('p', 'way-out', res.message));
+  // Отказ по устройству материала — не тупик: рядом стоят слоги, на которых
+  // этот материал собирается, и логопед переходит к ним одним нажатием.
+  if (res.kind === 'unsupported' && (res.options || []).length) {
+    wrap.appendChild(el('p', 'engine-said', 'Этот материал собирается так:'));
+    const row = el('div', 'options');
+    res.options.forEach((o) => {
+      const b = el('button', 'seg-btn', o.syllable);
+      b.title = o.label;
+      b.addEventListener('click', () => {
+        S.typ = o.typ;
+        S.syllable = o.syllable;
+        renderCrumbs();
+        renderTabs();
+        load();
+      });
+      row.appendChild(b);
+    });
+    wrap.appendChild(row);
+  }
   if (res.kind === 'engine') {
     wrap.appendChild(el('p', 'engine-said', S.tab === 'maze'
       ? 'Смените позицию звука кнопками сверху или снимите один звук справа.'
@@ -366,6 +571,11 @@ function showError(res) {
   // Всё, что относилось к ПРОШЛОМУ листу, обязано уйти вместе с ним:
   // иначе на экране отказа остаются чужие числа рва и живая кнопка
   // «всё равно распечатать», которая печатает невидимый прошлый лист.
+  // Настройки несобранного материала — из той же породы: выбирать фон у
+  // дорожки, которой нет, логопеду нечего.
+  $('moat-box').hidden = true;
+  $('scene-card').hidden = true;
+  $('game-card').hidden = true;
   $('frame').style.visibility = 'hidden';
   $('frame').srcdoc = '';
   $('print').disabled = true;

@@ -151,17 +151,105 @@ def is_soft_target(sound: str) -> bool:
     return sound.endswith("'") or sound in ph.ALWAYS_SOFT
 
 
-def vowels_for(sound: str) -> Tuple[str, ...]:
+# ── ОБРАТНЫЙ СЛОГ У МЯГКОЙ ЦЕЛИ: РЯД СЧИТАЕТСЯ ПО КАРТОТЕКЕ ────────────
+# Ряды выше описывают ПРЯМОЙ слог: гласная идёт ПОСЛЕ согласного и создаёт его
+# мягкость, поэтому «сы» невозможно, а «си» обязательно. В ОБРАТНОМ слоге
+# гласная стоит ПЕРЕД согласным и его мягкость не задаёт: «ры́сь», «пы́ль»,
+# «пузы́рь» — законные слова, и звук в них мягкий.
+#
+# Пока ряд был один на оба типа слога, «ы» не существовало ни в одной колонке,
+# и слова с ней просто не доходили до листа. Поймано автором 08-10 на вопросе
+# «почему на [Сь] + обратный слог не собирается ни одна игра»: на листе было
+# три слова (карась · лось · гусь) при нужных четырёх, а «рысь» отсекалась.
+#
+# Прописать ряд руками нельзя — он у каждого звука свой: у [Щ] это «и», «а»,
+# «э», у [Сь] — «а», «и», «о», «у», «ы». Это тот случай, когда правило врёт, а
+# таблица работает (локальный закон 7), только таблицу тут не пишут руками —
+# её ЧИТАЮТ ПО КАРТОТЕКЕ: считаем, какая гласная реально стоит перед целью,
+# когда та закрывает слог, и берём пятёрку самых частых.
+_REVERSE_VOWELS_N = 5
+
+
+@lru_cache(maxsize=32)
+def reverse_vowels_for(sound: str) -> Tuple[str, ...]:
+    """Гласные обратного слога — по словарю ЭТОГО звука, а не по правилу."""
+    try:
+        rows = load_words(_words_path(sound, None))
+    except BaseException:
+        return VOWELS_SOFT if is_soft_target(sound) else VOWELS
+    banned = banned_phonemes(sound, frozenset())
+    count: Dict[str, int] = {}
+    for row in rows:
+        word = row["word"]
+        if not is_clean(word, banned, row.get("stress_syllable")):
+            continue
+        try:
+            tr = ph.analyze(word, row.get("stress_syllable")).transcription
+        except BaseException:
+            continue
+        start = 0
+        while True:
+            i = tr.find(sound, start)
+            if i < 0:
+                break
+            start = i + len(sound)
+            after = tr[start:start + 1]
+            # цель закрывает слог: дальше согласный или конец слова
+            if after and after in "аоуыэи":
+                continue
+            before = tr[i - 1:i] if i > 0 else ""
+            if before in "аоуыэи":
+                count[before] = count.get(before, 0) + 1
+            break
+    if not count:
+        return VOWELS_SOFT if is_soft_target(sound) else VOWELS
+    top = sorted(count, key=lambda v: (-count[v], v))[:_REVERSE_VOWELS_N]
+    # Порядок на листе — канонный (а · о · у · ы · и · э), а не по частоте:
+    # колонки должны идти одинаково от листа к листу.
+    order = ("а", "о", "у", "ы", "и", "э")
+    return tuple(v for v in order if v in top)
+
+
+def vowels_for(sound: str, syl_type: str = "") -> Tuple[str, ...]:
     """Гласные КОЛОНОК СЛОВ (блок [4]) для этой цели."""
+    if syl_type == "reverse" and is_soft_target(sound):
+        return reverse_vowels_for(sound)
     return VOWELS_SOFT if is_soft_target(sound) else VOWELS
 
 
-def syl_vowels_for(sound: str) -> Tuple[str, ...]:
+def syl_vowels_for(sound: str, syl_type: str = "") -> Tuple[str, ...]:
     """Гласные СЛОГОВОГО РЯДА (блок [3]) для этой цели."""
+    if syl_type == "reverse" and is_soft_target(sound):
+        # Слоговой ряд обязан совпадать с колонками слов: иначе на листе будет
+        # слог «ись», а слово к нему — «рысь».
+        return reverse_vowels_for(sound)[:len(SYL_VOWELS_SOFT)]
     return SYL_VOWELS_SOFT if is_soft_target(sound) else SYL_VOWELS
 # А вот на ЗВУКОВОЙ ДОРОЖКЕ (track.py) Э законна: там слоги живут без слов,
 # правило 11 не применяется, и на образце логопеда Ольги стоит ровно РЭ.
 SYL_VOWELS_TRACK: Tuple[str, ...] = ("а", "о", "у", "ы", "э")
+
+# ── СКОЛЬКО СЛОВ КАНОН ТРЕБУЕТ НА ЭТОЙ СТУПЕНИ ────────────────────────
+# 12-24 слова — из нашего ТЗ 08-01, собранного по пяти пособиям. Для стечений
+# эта планка оказалась завышенной, и это ВИДНО В ИСТОЧНИКЕ. Спивак Е.Н. «Звуки
+# Ш, Ж, Ч, Щ» (ГНОМ, 2007), звук Ш — после слоговых рядов идут слова по
+# позициям, и стечение стоит там ОТДЕЛЬНОЙ СТРОКОЙ, дословно:
+#
+#     «Стечение согласных: штанга, шкаф, швы, швея, шпагат, швед, шпага.»
+#
+# Семь слов, а не двенадцать. То есть на ступени стечения канон сам даёт
+# меньше — материала в языке столько и есть. Требовать от неё столько же,
+# сколько от прямого слога, — наша ошибка, а не бедность картотеки
+# (разведка 08-11, см. DECISIONS).
+CANON_MIN_WORDS: int = 12
+CANON_MIN_WORDS_CLUSTER: int = 7
+
+
+def canon_min_words(syl_type: str = "") -> int:
+    """Канонный минимум слов блока [4] для этого типа слога."""
+    return (CANON_MIN_WORDS_CLUSTER
+            if syl_type in ("cluster_onset", "cluster_coda")
+            else CANON_MIN_WORDS)
+
 
 SYL_TYPES: Tuple[str, ...] = (
     "direct",         # РА  — прямой (открытый) слог
@@ -1648,13 +1736,29 @@ def _n_consonants(frame: str) -> int:
     return sum(1 for ch in frame if ch != "'" and ch not in "аоуыэи")
 
 
+ALL_VOWELS: Tuple[str, ...] = tuple(dict.fromkeys(VOWELS + VOWELS_SOFT))
+
+
 def occurrence_kind(occ: Dict[str, Any],
-                    vowels: Sequence[str] = VOWELS) -> Set[str]:
+                    vowels: Sequence[str] = ALL_VOWELS) -> Set[str]:
     """Каким типам слога отвечает данное вхождение целевого звука.
 
-    `vowels` — ряд ЭТОЙ цели: у твёрдой а-о-у-ы, у мягкой а-о-у-и-э. Без него
-    мягкая цель не находила ни одного вхождения: после [л'] стоит «и», а её
-    в твёрдом ряду нет.
+    `vowels` — ПОЛНЫЙ набор гласных языка, а НЕ ряд листа. Здесь решается один
+    вопрос — структурный: стоит ли рядом со звуком гласная вообще. Какая из
+    гласных годится этому листу, решает `_group_vowel` по ряду цели, и это
+    отдельная работа.
+
+    ПОЧЕМУ ЭТО НАПИСАНО ОТДЕЛЬНО (08-12). Сюда передавали ряд КОЛОНОК. У мягкой
+    цели на обратном слоге ряд короткий — а·ы·и·э, без о и у, потому что «орь» и
+    «урь» в конце слова почти не встречаются. И тогда у «берёзы» проверка
+    «есть ли гласная ПОСЛЕ [р']» проваливалась: после стоит [о], а [о] в
+    коротком ряду нет. Слово падало в ветку обратного слога и печаталось в
+    колонке «Ирь:» — слога, которого в нём нет ни в каком чтении. На листе [Рь]
+    так стояло 6 слов из 16, на [Сь] — 5 из 9.
+
+    Тот же корень был у прежней жалобы «мягкая цель не находит ни одного
+    вхождения»: тогда сюда передавали ТВЁРДЫЙ ряд, и в нём не было «и». Лечили
+    подстановкой другого ряда — то есть той же ошибкой с другой стороны.
     """
     kinds: Set[str] = set()
     v_after, v_before = occ["vowel_after"], occ["vowel_before"]
@@ -1820,7 +1924,9 @@ def _select_words(sound: str, syl_type: str, banned: FrozenSet[str],
     """Возвращает (сгруппированные колонки, счётчики отсева по воротам)."""
     rejected: Dict[str, int] = {"наличие": 0, "позиция": 0, "структура": 0,
                                 "чистота": 0, "частотность": 0, "лексика": 0}
-    vowels = vowels_for(sound)          # ряд ЭТОЙ цели: твёрдой или мягкой
+    # Ряд ЭТОЙ цели. Для обратного слога у мягкой цели он считается по
+    # картотеке: гласная стоит ПЕРЕД согласным и мягкость не задаёт (08-10).
+    vowels = vowels_for(sound, syl_type)
     pool: Dict[str, List[Dict[str, Any]]] = {v: [] for v in vowels}
 
     for row in rows:
@@ -1832,9 +1938,10 @@ def _select_words(sound: str, syl_type: str, banned: FrozenSet[str],
         if sound not in a.phoneme_keys:
             rejected["наличие"] += 1
             continue
+        # позиция звука — вопрос структуры слова, ряд листа сюда не подставляем
         occs = [o for o in a.sound_occurrences
                 if o["phoneme"] == sound
-                and syl_type in occurrence_kind(o, vowels)]
+                and syl_type in occurrence_kind(o)]
         if not occs:
             rejected["позиция"] += 1
             continue
@@ -2164,13 +2271,13 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
                 f"тип слога {syl_type!r}: в отобранных словах нет стечений — "
                 f"связку «слог — слово» построить не из чего"
             )
-        syl_vowels = syl_vowels_for(sound)
+        syl_vowels = syl_vowels_for(sound, syl_type)
         for frame in frames:
             units = [_syllable_text(sound, v, syl_type, frame)
                      for v in syl_vowels]
             rows.append({"units": units})
     else:
-        syl_vowels = syl_vowels_for(sound)
+        syl_vowels = syl_vowels_for(sound, syl_type)
         for i in range(n_rows):
             order = [syl_vowels[(i + k) % len(syl_vowels)]
                      for k in range(len(syl_vowels))]
@@ -2248,7 +2355,8 @@ def _countable(item: Dict[str, Any]) -> bool:
 
 
 def _game_one_many(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
-                   derived: Dict[str, str]) -> Optional[Dict[str, Any]]:
+                   derived: Dict[str, str],
+                   stat: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     pairs: List[Dict[str, str]] = []
     for it in items:
         if not _countable(it):
@@ -2257,6 +2365,8 @@ def _game_one_many(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
         if not is_clean(pl, banned):
             continue
         pairs.append({"prompt": it["word"], "answer": pl})
+    if stat is not None:
+        stat["found"] = len(pairs)
     if len(pairs) < 4:
         return None
     for p in pairs:
@@ -2272,7 +2382,8 @@ def _game_one_many(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
 
 def _game_diminutive(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                      derived: Dict[str, str], notes: List[str],
-                     allow_rule: bool) -> Optional[Dict[str, Any]]:
+                     allow_rule: bool,
+                     stat: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     pairs: List[Dict[str, Any]] = []
     blocked: List[str] = []
     for it in items:
@@ -2292,6 +2403,8 @@ def _game_diminutive(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
         pairs.append({"prompt": w, "answer": form, "source": source})
     if blocked:
         notes.append("деминутив невозможен/не задан: " + ", ".join(blocked))
+    if stat is not None:
+        stat["found"] = len(pairs)
     if len(pairs) < 4:
         return None
     for p in pairs:
@@ -2307,10 +2420,13 @@ def _game_diminutive(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
 
 def _game_count(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                 derived: Dict[str, str],
-                service: Dict[str, int]) -> Optional[Dict[str, Any]]:
+                service: Dict[str, int],
+                stat: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     # числительные — тоже речевой материал: если хоть одно не прошло фильтр
     # профиля, игру не строим (лучше другая игра, чем грязная строка)
     if not {"один", "одна", "одно", "два", "две", "пять"} <= set(service):
+        if stat is not None:
+            stat["reason"] = "numerals"
         return None
     rows: List[Dict[str, Any]] = []
     for it in items:
@@ -2329,6 +2445,8 @@ def _game_count(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
             "forms": [f"{one} {w}", f"{two} {gs}", f"пять {gp}"],
             "answer": f"{one} {w} — {two} {gs} — пять {gp}",
         })
+    if stat is not None:
+        stat["found"] = len(rows)
     if len(rows) < 4:
         return None
     for r in rows:
@@ -2348,7 +2466,9 @@ def _build_game(groups: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                 warnings: List[str], allow_rule_diminutive: bool,
                 service: Dict[str, int],
                 n_items: int = 6,
-                want: str = "") -> Optional[Dict[str, Any]]:
+                want: str = "",
+                offer: Optional[Dict[str, Dict[str, Any]]] = None,
+                ) -> Optional[Dict[str, Any]]:
     """Грамматическая игра блока [5].
 
     Все три игры канонные — ТЗ, ЯРУС А: «один-много» · «назови ласково» ·
@@ -2356,23 +2476,47 @@ def _build_game(groups: Sequence[Dict[str, Any]], banned: FrozenSet[str],
     с 2026-08-09 он может назвать игру (`want`), а движок честно откатится к
     другой, если на словаре ЭТОГО листа выбранная не набирает четырёх примеров,
     и скажет об этом вслух. Молча подменять выбор логопеда нельзя.
+
+    2026-08-10. Пробуем ВСЕ три, а не до первой удачной, и складываем итог в
+    `offer`. Причина не в движке, а на экране: кнопки игр там были активны
+    всегда, и на листе, где выбранная игра не набирается, логопед жал «Назови
+    ласково» и получал молча ту же «Один — много». Экран не может показать
+    честные кнопки, пока движок не скажет, какие игры на ЭТОМ словаре живые.
+    Перебор дешёвый: игры собираются из уже отобранных слов блока [4].
     """
     items = [it for g in groups for it in g["items"]]
+    built: Dict[str, Optional[Dict[str, Any]]] = {}
+    made: Dict[str, Dict[str, Any]] = {}     # kind → {derived, notes, stat}
+    for kind in GAME_KINDS:
+        local_derived: Dict[str, str] = {}
+        local_notes: List[str] = []
+        stat: Dict[str, Any] = {}
+        if kind == "one_many":
+            game = _game_one_many(items, banned, local_derived, stat)
+        elif kind == "diminutive":
+            game = _game_diminutive(items, banned, local_derived, local_notes,
+                                    allow_rule_diminutive, stat)
+        else:
+            game = _game_count(items, banned, local_derived, service, stat)
+        built[kind] = game
+        made[kind] = {"derived": local_derived, "notes": local_notes,
+                      "stat": stat}
+        if offer is not None:
+            # Наружу идут ФАКТЫ, а не готовая фраза: человеческий текст —
+            # дом web/human.py (локальный закон 3), здесь он был бы вторым
+            # источником правды для одного и того же.
+            offer[kind] = {"ok": game is not None,
+                           "found": int(stat.get("found", 0)),
+                           "need": 4,
+                           "reason": str(stat.get("reason", ""))}
+
     order = [GAME_KINDS[(seed + sheet_no - 1 + i) % len(GAME_KINDS)]
              for i in range(len(GAME_KINDS))]
     if want in GAME_KINDS:
         order = [want] + [k for k in order if k != want]
-    notes: List[str] = []
     tried: List[str] = []
     for kind in order:
-        local_derived: Dict[str, str] = {}
-        if kind == "one_many":
-            game = _game_one_many(items, banned, local_derived)
-        elif kind == "diminutive":
-            game = _game_diminutive(items, banned, local_derived, notes,
-                                    allow_rule_diminutive)
-        else:
-            game = _game_count(items, banned, local_derived, service)
+        game = built[kind]
         if game is not None:
             if tried:
                 why = ("выбранная логопедом игра" if want and tried[0] == want
@@ -2383,13 +2527,14 @@ def _build_game(groups: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                 )
             game["items"] = game["items"][:n_items]
             keep = {i["answer"] for i in game["items"]}
-            for form, lemma in local_derived.items():
+            for form, lemma in made[kind]["derived"].items():
                 if any(form in a for a in keep):
                     derived[form] = lemma
             game["items_to_do"] = game["items"][1:]
-            game["notes"] = notes
+            game["notes"] = made[kind]["notes"]
             return game
         tried.append(kind)
+    notes = [n for k in GAME_KINDS for n in made[k]["notes"]]
     warnings.append(
         "блок [5] пуст: ни одна из трёх грамматических игр не набрала 4 примера "
         f"на словаре этого листа ({len(items)} слов). Проверены: "
@@ -3248,9 +3393,11 @@ def build_content(sound: str = "р",
     if found < n_words:
         warnings.append(_shortfall_message(found, n_words, rejected,
                                            markova_max, min_familiarity))
-    if found < 12:
-        warnings.append(f"слов {found} — меньше канонического минимума 12 (блок [4])")
-    empty = [v for v in vowels_for(sound)
+    _min_words = canon_min_words(syl_type)
+    if found < _min_words:
+        warnings.append(f"слов {found} — меньше канонического минимума "
+                        f"{_min_words} (блок [4])")
+    empty = [v for v in vowels_for(sound, syl_type)
              if v not in {g["vowel"] for g in groups}]
     for v in empty:
         warnings.append(
@@ -3268,8 +3415,10 @@ def build_content(sound: str = "р",
                  for u in r.get("units_phon", r.get("units", []))]
     if _row_syls:
         _ensure_rhyme(groups, leftovers, _row_syls, banned, warnings)
+    games_offer: Dict[str, Dict[str, Any]] = {}
     game = _build_game(groups, banned, seed, sheet_no, derived, warnings,
-                       allow_rule_diminutive, service, n_game_items, game_kind)
+                       allow_rule_diminutive, service, n_game_items, game_kind,
+                       offer=games_offer)
     sentences = _build_sentences(groups, sound, banned, service, rnd,
                                  n_sentences, warnings)
     # ⚠ Рифму НЕЛЬЗЯ искать по всему словарю: правило 13 «сквозной словарь»
@@ -3339,6 +3488,10 @@ def build_content(sound: str = "р",
             "tier_note": "а) короткие частотные · б) длиннее и со стечениями",
         },
         "game": game,                    # [5]
+        # Какие из трёх игр на словаре ЭТОГО листа вообще собираются. Нужно
+        # экрану: кнопка недоступной игры должна быть погашена ДО нажатия,
+        # а не молча подменять выбор логопеда (08-10, по разбору автора).
+        "games_offer": games_offer,
         "sentences": sentences,          # [6]
         "fill_syllable": fill,           # [4б] «вставь слог»
         "chistogovorka": chisto,         # [7]

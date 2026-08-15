@@ -104,7 +104,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 __all__ = [
     "render_sheet", "render_sheet_ex", "fit", "lint", "put_stress",
-    "estimate_heights", "compose", "from_content", "build_content",
+    "estimate_heights", "for_audience", "compose", "from_content", "build_content",
     "A4", "METRICS", "CONTENT_H",
 ]
 
@@ -355,14 +355,48 @@ def _words_body_height(words: Dict[str, Any]) -> float:
     return _seg_lines(segs, ncol) * _speech_line()
 
 
-def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
-    """Оценка высоты каждого блока в мм. Ключи — как в content + '_header'/'_footer'."""
+def for_audience(content: Dict[str, Any], audience: str = "home") -> Dict[str, Any]:
+    """Content таким, каким его НАПЕЧАТАЕТ этот адресат.
+
+    Один дом правды на вопрос «что у этого листа есть, а чего нет»: у листа
+    логопеда нет подсказок «как делать» — он методику знает. Снимать надо ДО
+    расчёта высоты, иначе движок бережёт место под строки, которых не будет.
+    Шапку, подвал и строку «поиграйте» здесь не трогаем: их дописывает сам
+    рендер домашнего листа, и считает их `estimate_heights` по адресату.
+
+    Домашняя выдача — ОДИН лист. Разделение на «лист ребёнку + страница
+    взрослому» пробовали 08-12 (так помещался кегль 20 pt) и откатили по
+    слову автора: вторая страница несла почти неизменный текст и печаталась
+    принудительно. Постоянный взрослый текст — это методичка, которая
+    печатается один раз, а не приложение к каждому листу.
+    """
+    if audience == "home" or not (content.get("articulation") or {}).get("hints"):
+        return content
+    c = dict(content)
+    c["articulation"] = {k: v for k, v in c["articulation"].items() if k != "hints"}
+    return c
+
+
+def estimate_heights(content: Dict[str, Any],
+                     audience: str = "home") -> Dict[str, float]:
+    """Оценка высоты каждого блока в мм. Ключи — как в content + '_header'/'_footer'.
+
+    ВЫСОТА СЧИТАЕТСЯ ПО АДРЕСАТУ. Домашний лист и лист логопеда — разные листы:
+    шапка-документ, подвал и строка «поиграйте» печатаются только дома. Пока
+    модель считала их обоим, лист логопеда резался под чужую обвязку — 47 мм,
+    которых на нём нет (замер 08-12: при 18 pt без сокращений влезали 18 листов
+    логопеда из 23, а лестница резала их все). Обратная половина той же
+    ошибки: строку «поиграйте» дописывал рендер, в content её не было, и
+    домашний лист уходил на вторую страницу на 14 конфигурациях из 25.
+    """
     g = METRICS["block_gap"]
+    home = audience == "home"
     h: Dict[str, float] = {}
 
-    # [0] шапка: строка полей + строка клеток отметок + линейка
-    h["_header"] = (_line(METRICS["fs_doc"], 1.35) + METRICS["tick_row"]
-                    + METRICS["rule_gap"] + g)
+    # [0] шапка: строка полей + строка клеток отметок + линейка — только дома
+    if home:
+        h["_header"] = (_line(METRICS["fs_doc"], 1.35) + METRICS["tick_row"]
+                        + METRICS["rule_gap"] + g)
 
     art = content.get("articulation")
     if art:
@@ -412,7 +446,12 @@ def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
 
     words = content.get("words")
     if words and _words_flat(words):
-        h["words"] = _head_line(words, "Слова") + g + _words_body_height(words)
+        # Строку взрослому под словами («исправь взрослого») дописывает РЕНДЕР
+        # домашнего листа — в content её нет, поэтому модель обязана знать про
+        # неё сама, иначе лестница остановится на 4 мм раньше, чем нужно.
+        play = words.get("play") or (CORRECT_ADULT if home else "")
+        h["words"] = (_head_line(words, "Слова") + g + _words_body_height(words)
+                      + _wrap(play, METRICS["fs_adult"]) * _adult_line())
 
     game = content.get("game")
     if game:
@@ -436,23 +475,23 @@ def estimate_heights(content: Dict[str, Any]) -> Dict[str, float]:
                       + 2.4 + g)                              # + рамка и поля
 
     foot = content.get("footer")
-    if foot:
+    if foot and home:                      # подвал печатается только дома
         h["_footer"] = (METRICS["rule_gap"] + 1.0
                         + sum(_wrap(x, METRICS["fs_adult"]) for x in foot[:3])
                         * _adult_line())
     return h
 
 
-def total_height(content: Dict[str, Any]) -> float:
-    return sum(estimate_heights(content).values())
+def total_height(content: Dict[str, Any], audience: str = "home") -> float:
+    return sum(estimate_heights(content, audience).values())
 
 
 # ═══════════════════════════════════════════════════════════════════════
 #  4. ЛЕСТНИЦА СОКРАЩЕНИЙ
 # ═══════════════════════════════════════════════════════════════════════
 
-def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
-        ) -> Tuple[Dict[str, Any], List[str]]:
+def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H,
+        audience: str = "home") -> Tuple[Dict[str, Any], List[str]]:
     """Ужимает content до одного А4, НЕ трогая кегль. Возвращает (content, warnings).
 
     ПОРЯДОК СОКРАЩЕНИЙ — наше решение, а не буква ТЗ (ТЗ лестницы не содержит,
@@ -465,8 +504,56 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     """
     c = json.loads(json.dumps(content, ensure_ascii=False))   # глубокая копия
     warns: List[str] = []
-    if total_height(c) <= budget_mm:
+
+    def _h() -> float:
+        """Высота листа ДЛЯ ЭТОГО адресата — режем по своей обвязке, не по чужой."""
+        return total_height(c, audience)
+
+    if _h() <= budget_mm:
         return c, warns
+
+    # ЖУРНАЛ СНЯТОГО — для возврата. Лестница идёт сверху вниз и снимает всё
+    # более крупные куски; когда доходит до целого блока, освобождается СРАЗУ
+    # много места, и снятое до него оказывается снятым зря. На листе [Л] при
+    # кегле 20 это стоило блока предложений И трети слов, а внизу оставалось
+    # 34 мм пустоты (поймано автором 08-11: «ничего не должен терять, у нас
+    # полно места»). Поэтому теперь после каждого крупного снятия работает
+    # ВОЗВРАТ: кладём назад в обратном порядке ценности, пока влезает.
+    taken_words: List[Tuple[Dict[str, Any], Dict[str, Any]]] = []
+    taken_hints: Optional[Any] = None
+    taken_fill: Optional[Any] = None
+
+    def _refill() -> None:
+        """Вернуть снятое, пока есть место. Молча: это не потеря, а подгонка."""
+        nonlocal taken_hints, taken_fill
+        # Пробуем КАЖДОЕ снятое слово, а не только последнее: высота блока слов
+        # = самая длинная колонка, поэтому слово в короткую колонку часто
+        # бесплатно, а в длинную — стоит целой строки. Перебор кладёт обратно
+        # ровно то, что помещается.
+        moved = True
+        while moved and taken_words:
+            moved = False
+            for idx in range(len(taken_words) - 1, -1, -1):
+                grp, item = taken_words[idx]
+                grp.setdefault("items", []).append(item)
+                if _h() > budget_mm:
+                    grp["items"].pop()
+                    continue
+                taken_words.pop(idx)
+                moved = True
+        if taken_hints is not None:
+            art = c.get("articulation") or {}
+            art["hints"] = taken_hints
+            if _h() > budget_mm:
+                art.pop("hints", None)
+            else:
+                taken_hints = None
+        if taken_fill is not None:
+            c["fill_syllable"] = taken_fill
+            if _h() > budget_mm:
+                c.pop("fill_syllable", None)
+            else:
+                taken_fill = None
 
     # −0.6) подсказки «как делать» в разминке — теперь снимаются ПОЗЖЕ
     # «вставь слог», а не первыми. Пересмотрено 2026-08-10 после замера:
@@ -486,15 +573,15 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     # Блок канонный, но он НАДСТРОЙКА над словами: без него лист остаётся
     # полным, а без предложений — теряет ступень.
     if c.get("fill_syllable"):
-        c.pop("fill_syllable")
-        if total_height(c) <= budget_mm:
+        taken_fill = c.pop("fill_syllable")
+        if _h() <= budget_mm:
             warns.append("не влезало: снят блок «вставь слог» — он надстройка "
                          "над словами, а лестница ступеней важнее")
             return c, warns
 
     if art_late.get("hints"):
-        art_late.pop("hints")
-        if total_height(c) <= budget_mm:
+        taken_hints = art_late.pop("hints")
+        if _h() <= budget_mm:
             warns.append("не влезало: в разминке оставлены только названия "
                          "упражнений — подсказки «как делать» сняты")
             return c, warns
@@ -503,7 +590,7 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     sent = c.get("sentences") or {}
     while len(sent.get("items", [])) > MIN_SENTENCES:
         sent["items"].pop()
-        if total_height(c) <= budget_mm:
+        if _h() <= budget_mm:
             warns.append(f"не влезало: предложений оставлено {len(sent['items'])} "
                          f"(канон 6-10)")
             return c, warns
@@ -514,8 +601,8 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     for tier in reversed(words.get("tiers", [])):
         for grp in reversed(tier.get("groups", [])):
             while grp.get("items") and len(_words_flat(words)) > MIN_WORDS:
-                grp["items"].pop()
-                if total_height(c) <= budget_mm:
+                taken_words.append((grp, grp["items"].pop()))
+                if _h() <= budget_mm:
                     _drop_empty(words)
                     warns.append(f"не влезало: слов оставлено "
                                  f"{len(_words_flat(words))} из {n0} (канон 12-24)")
@@ -526,7 +613,7 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
     syl = c.get("syllables") or {}
     while len(syl.get("rows", [])) > 1 and _syllable_units(syl) > MIN_SYLLABLE_UNITS:
         syl["rows"].pop()
-        if total_height(c) <= budget_mm:
+        if _h() <= budget_mm:
             warns.append(f"не влезало: слоговых строк оставлено "
                          f"{len(syl['rows'])} ({_syllable_units(syl)} единиц)")
             return c, warns
@@ -537,18 +624,20 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H
         warns.append("НЕ ВЛЕЗАЛО: снят блок [6] предложения — лист потерял ступень "
                      "«слово → фраза». Уберите материал на входе "
                      "(меньше слоговых строк или короче подвал).")
-        if total_height(c) <= budget_mm:
+        if _h() <= budget_mm:
+            _refill()          # место освободилось — вернуть слова и надстройки
             return c, warns
 
     # 4) снять блок [5] игра
     if c.get("game"):
         c.pop("game")
         warns.append("НЕ ВЛЕЗАЛО: снят блок [5] игра")
-        if total_height(c) <= budget_mm:
+        if _h() <= budget_mm:
+            _refill()
             return c, warns
 
     # 5) сдаться честно
-    warns.append(f"НЕ ВЛЕЗАЕТ: не хватает {total_height(c) - budget_mm:.0f} мм даже "
+    warns.append(f"НЕ ВЛЕЗАЕТ: не хватает {_h() - budget_mm:.0f} мм даже "
                  f"после всех сокращений. Кегль не уменьшаю (канон: ≥16/18 pt) — "
                  f"уберите материал на входе.")
     return c, warns
@@ -621,8 +710,10 @@ def lint(content: Dict[str, Any], meta: Dict[str, Any]) -> List[str]:
     words = content.get("words") or {}
     base = [_word_text(i) for i in _words_flat(words)]
 
-    if base and not (MIN_WORDS <= len(base) <= MAX_WORDS):
-        out.append(f"канон [4]: слов {len(base)}, норма {MIN_WORDS}-{MAX_WORDS}")
+    import content as _C
+    _min = _C.canon_min_words(str((content.get('meta') or {}).get('syl_type', '')))
+    if base and not (_min <= len(base) <= MAX_WORDS):
+        out.append(f"канон [4]: слов {len(base)}, норма {_min}-{MAX_WORDS}")
 
     syl = content.get("syllables") or {}
     if syl:
@@ -883,6 +974,7 @@ html, body {{
   font-size: var(--fs-adult); font-style: italic; color: #444;
   line-height: {m['lh_adult']};
 }}
+
 """
 
 
@@ -1134,8 +1226,8 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
 
     warns: List[str] = list(content.get("notes") or [])
 
-    # КУДА идёт лист — и КОМУ. Речевой материал одинаков, различается объём
-    # ОБЪЯСНЕНИЯ, потому что читатели разные:
+    # КУДА идёт лист — и КОМУ. И там и там ОДИН А4; речевой материал одинаков,
+    # различается объём ОБЪЯСНЕНИЯ, потому что читатели разные:
     #   home   — родителю: шапка-документ [0], подвал [9] и подсказки «как
     #            делать» в разминке. Родитель методики не знает.
     #   lesson — логопеду: обёрток нет, разминка голым чек-листом. Он знает.
@@ -1147,15 +1239,9 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
     if audience not in ("home", "lesson"):
         raise SystemExit("audience должен быть 'home' или 'lesson'")
 
-    c = content
-    if audience != "home" and (content.get("articulation") or {}).get("hints"):
-        # снимаем ДО расчёта высоты: иначе движок бережёт место под строки,
-        # которых на этом листе не будет
-        c = dict(content)
-        c["articulation"] = {k: v for k, v in c["articulation"].items()
-                             if k != "hints"}
+    c = for_audience(content, audience)
     if not opt.get("no_fit"):
-        c, fit_warns = fit(c, CONTENT_H)
+        c, fit_warns = fit(c, CONTENT_H, audience)
         warns.extend(fit_warns)
     warns.extend(lint(c, meta))
 
@@ -1186,7 +1272,7 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
     if c.get("footer") and audience == "home":
         parts.append(_b9_footer(c["footer"]))
 
-    est = total_height(c)
+    est = total_height(c, audience)
     warn_html = ""
     if warns and opt.get("show_warnings", True):
         li = "".join(f"<li>{_e(w)}</li>" for w in warns)
@@ -1308,11 +1394,18 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
     if game.get("items_to_do"):
         sample = str(game.get("sample", ""))
         out["game"] = {
+            # `kind` не печатается — по нему экран узнаёт, КАКАЯ из трёх игр
+            # реально попала на бумагу, и подсвечивает ту же кнопку.
+            "kind": game.get("kind", ""),
             "title": game.get("title", ""),
             "instruction": game.get("instruction", ""),
             "example": sample.split(":", 1)[-1].strip().rstrip("."),
             "items": [i["prompt"] for i in game["items_to_do"]],
         }
+    # Какие игры на словах этого листа вообще собираются — не для бумаги, для
+    # экрана: кнопка недоступной игры должна быть погашена до нажатия.
+    if c.get("games_offer"):
+        out["games_offer"] = c["games_offer"]
 
     sent = c.get("sentences") or {}
     if sent.get("items"):

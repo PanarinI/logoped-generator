@@ -67,6 +67,39 @@ sys.path.insert(0, HERE)
 import characters as CH      # noqa: E402
 import content as C          # noqa: E402
 import phonetics as _P       # noqa: E402
+import sheet as S            # noqa: E402  — ударение ставится тем же правилом,
+#                              что на листе слов: один продукт, один язык бумаги
+
+
+def _stress_index(sound: str) -> Dict[str, int]:
+    """Слово → номер ударного слога. Из тех же картотек, что и материал.
+
+    Прилагательные лежат отдельным файлом и склоняются по родам, поэтому в
+    указатель идут все три формы: «сладкий · сладкая · сладкое». Номер слога у
+    них совпадает — окончание ударение не двигает.
+    """
+    out: Dict[str, int] = {}
+    for row in C.load_words(C._words_path(sound, None)):
+        st = row.get("stress_syllable")
+        if st:
+            out[row["word"].lower()] = int(st)
+    name = C.ADJECTIVES_BY_SOUND.get(sound, "")
+    path = os.path.join(HERE, name) if name else ""
+    if path and os.path.isfile(path):
+        import json
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                row = json.loads(line)
+                st = row.get("stress_syllable")
+                if not st:
+                    continue
+                for key in ("word", "form_f", "form_n"):
+                    if row.get(key):
+                        out[str(row[key]).lower()] = int(st)
+    return out
 
 __all__ = ["build_phrases_sheet", "render_phrases", "PhrasesError",
            "MIN_PHRASES", "MAX_PHRASES"]
@@ -126,6 +159,17 @@ def build_phrases_sheet(sound: str = "р",
                 raise PhrasesError(
                     f"нарушен фильтр чистоты: «{it['text']}» — {tok!r} "
                     f"содержит {sorted(dirty)}")
+
+    # УДАРЕНИЕ. На листе слов оно стоит (политика «non_obvious»), а здесь его
+    # не было — один продукт говорил на бумаге двумя разными языками. Читает
+    # вслух ВЗРОСЛЫЙ, и «пастила» без знака читается как «пастИла» с той же
+    # вероятностью, что и на листе слов. Ставим по той же политике: только там,
+    # где ударение не читается само. Добавлено 08-10 по вопросу автора.
+    stress_by_word = _stress_index(sound)
+    for it in built["items"]:
+        it["text"] = " ".join(
+            S.put_stress(tok, stress_by_word.get(tok.lower()), "non_obvious")
+            for tok in it["text"].split())
 
     return {
         "items": built["items"],

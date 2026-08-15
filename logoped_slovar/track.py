@@ -65,6 +65,14 @@ TRACK_TYPES = ("direct", "reverse", "intervocal")
 COLS = 5           # кружков в ряду
 ROWS_DEFAULT = 6   # рядов на А4
 
+# Шрифт — тот же гротеск, что у листа и остальных материалов. Здесь стояла
+# Georgia, и слоговая дорожка оказалась единственной антиквой в наборе. Обе
+# найденные нормы для дошкольников (СанПиН 2.4.7.960-00 п. 4.2.1 · ОСТ 29.127-96
+# п. 5.1.2) требуют рубленых или новых малоконтрастных шрифтов, и практика
+# (BDA Style Guide 2023) говорит то же: у ребёнка, который только узнаёт букву,
+# засечки — лишняя деталь. Заменено 08-10 по решению автора.
+_FONT = "'PT Sans','Helvetica Neue',Arial,'Liberation Sans',sans-serif"
+
 
 def _safe_last_phoneme(syllable: str) -> str:
     """Последняя фонема печатной записи — для ЧЕЛОВЕЧЕСКОГО объяснения отказа.
@@ -99,10 +107,16 @@ def build_track(sound: str = "р",
             f"и его чистоту без словаря не проверить")
     if not (3 <= rows <= 8):
         raise TrackError("рядов на дорожке — от 3 до 8")
-    if scene is not None and scene and scene not in SC.SCENES:
+    # Персонаж нужен уже здесь: фон — это КОНТЕКСТ ГЕРОЯ, и годность сцены
+    # проверяется по нему, а не по общему списку (решение автора 08-10).
+    import propisi as _PR
+    hero = (_PR.image_for(sound).get("name") or "").strip()
+    if scene is not None and scene and not SC.fits(hero, scene):
+        worlds = SC.worlds_for(hero)
         raise TrackError(
-            f"фона «{scene}» нет; есть: "
-            + ", ".join(k for k in SC.SCENE_LABELS if k) + " (или без фона)")
+            f"фон «{scene}» не из мира этого героя; "
+            + (f"для «{hero}» есть: " + ", ".join(worlds) + " (или без фона)"
+               if worlds else "у этого героя миров не задано"))
 
     # Порядок слогов ПЕРЕМЕШИВАЕТСЯ по рядам. Строгий цикл РА-РО-РУ-РЫ-РЭ
     # ребёнок выучивает наизусть и перестаёт читать кружки — тренируется
@@ -144,20 +158,24 @@ def build_track(sound: str = "р",
         # «шы», и «ше», а не «шэ». Фонемную оставляем — по ней движок считает.
         cells.append({"syllable": C.ortho(syl), "syllable_phon": syl, "vowel": v})
 
-    # Персонаж маршрута — канонный образ ЭТОГО звука, тот же, что в блоке [2]
-    # листа и у старта звуковой дорожки. Ребёнок встречает одно существо во
-    # всех материалах: это не украшение, а связность.
-    import propisi as _PR
-    hero = (_PR.image_for(sound).get("name") or "").strip()
+    # Персонаж маршрута — канонный образ ЭТОГО звука (взят выше), тот же, что в
+    # блоке [2] листа и у старта звуковой дорожки. Ребёнок встречает одно
+    # существо во всех материалах: это не украшение, а связность.
     # Глагол не подбираем: мотор едет, комарик летит, водичка течёт — под
     # каждый образ пришлось бы вести таблицу спряжений. «Проведи по тропе»
     # верно для любого существа и ничего не обещает сверх того, что нарисовано.
     # scene=None — «реши сам»: берём умолчание по персонажу. Пустая строка —
     # осознанный выбор логопеда «без фона», и его мы не переопределяем.
     if scene is None:
-        scene = SC.DEFAULT_SCENE.get(hero, "")
-    task = (f"Проведи {hero} по тропе до финиша." if hero
-            else "Пройди тропу от старта до финиша.")
+        scene = SC.default_scene(hero)
+    # Как назвать путь. «Тропа» была одна на все листы, и «проведи щётку по
+    # тропе» звучало сюрреально (слово автора 08-10). Слово берётся от сцены:
+    # в лесу тропинка, на дороге дорога, в комнате дорожка. Таблица, а не
+    # правило: угадывать по имени сцены — тот же локальный закон 7.
+    path_word = SC.path_word(scene)
+    task = (f"Проведи {CH.accusative(hero)} по {path_word['dative']} до финиша."
+            if hero else
+            f"Пройди {path_word['accusative']} от старта до финиша.")
 
     return {
         "meta": {
@@ -174,8 +192,8 @@ def build_track(sound: str = "р",
         },
         "cells": cells,
         "instruction": task,
-        "lead": "Веди пальчиком по тропе от старта. На каждом кружке — шаг, "
-                "и на каждом шаге скажи слог вслух.",
+        "lead": f"Веди пальчиком по {path_word['dative']} от старта. На каждом "
+                f"кружке — шаг, и на каждом шаге скажи слог вслух.",
         "adult": "Идите вместе. Если звук «сорвался» — вернитесь на кружок назад "
                  "и скажите его медленно.",
     }
@@ -188,7 +206,7 @@ def build_track(sound: str = "р",
 _CSS = """
 @page { size: A4; margin: 12mm 12mm 12mm 16mm; }
 * { box-sizing: border-box; }
-html, body { margin:0; padding:0; font-family: Georgia, 'Times New Roman', serif; color:#000; }
+html, body { margin:0; padding:0; font-family: 'PT Sans','Helvetica Neue',Arial,'Liberation Sans',sans-serif; color:#000; }
 body { background:#f2f2f2; padding:10px; }
 .page { width:210mm; min-height:297mm; margin:0 auto; background:#fff;
         border:1px solid #bbb; padding:12mm 12mm 12mm 16mm; }
@@ -247,9 +265,46 @@ def _row_y(r: int) -> float:
     return _TOP + r * _ROW_H
 
 
-def _wave(x0: float, x1: float, y: float, t: float) -> tuple:
-    """Точка на волне ряда: доля пути t → (x, y)."""
-    return x0 + (x1 - x0) * t, y - _AMP * math.sin(2 * math.pi * 1.5 * t)
+# ФОРМА ПУТИ ЗАВИСИТ ОТ МИРА (решение автора 08-10: «нам важно разнообразие»).
+#
+# Раньше на всех листах шла одна волна. Но путь — это и есть сцена в действии:
+# по дороге и по взлётной полосе едут прямо и поворачивают под угол, в лесу и
+# в траве тропинка вьётся, в комнате дорожка идёт спокойно. Форма не украшение:
+# ребёнок ведёт по ней пальцем, и «улица» с прямыми углами читается иначе, чем
+# «тропинка». Речевой материал при этом НЕ меняется — кружки те же и на тех же
+# местах вдоль пути; меняется только линия между ними.
+#
+# ⚠ Чего здесь нельзя: делать путь настолько извилистым, что кружки начнут
+# налезать друг на друга. Отсюда амплитуды ниже подобраны глазами на 6 рядах.
+SHAPE_BY_SCENE: Dict[str, str] = {
+    "дорога": "straight", "город": "straight", "аэродром": "straight",
+    "лес": "winding", "трава": "winding", "камни": "winding", "пруд": "winding",
+    "море": "winding",
+    "двор": "wave", "гараж": "wave", "ванная": "wave", "прихожая": "wave",
+}
+SHAPE_DEFAULT = "wave"
+
+
+def shape_for(scene: str) -> str:
+    """Какой формы путь на этой сцене."""
+    return SHAPE_BY_SCENE.get(scene or "", SHAPE_DEFAULT)
+
+
+def _wave(x0: float, x1: float, y: float, t: float,
+          shape: str = SHAPE_DEFAULT) -> tuple:
+    """Точка на пути ряда: доля пути t → (x, y). Форма задаётся сценой."""
+    x = x0 + (x1 - x0) * t
+    if shape == "straight":
+        # Улица и полоса: ровный ход с одним мягким уступом посередине ряда —
+        # иначе ряд читается линейкой и лист снова становится таблицей.
+        y_off = -_AMP * 0.45 * (1.0 if t > 0.5 else -1.0)
+        edge = min(abs(t - 0.5) * 6.0, 1.0)      # сглаживание уступа
+        return x, y + y_off * edge
+    if shape == "winding":
+        # Тропинка: вьётся чаще и неровно — две гармоники вместо одной.
+        return x, y - _AMP * (0.75 * math.sin(2 * math.pi * 2.0 * t)
+                              + 0.35 * math.sin(2 * math.pi * 1.0 * t + 0.7))
+    return x, y - _AMP * math.sin(2 * math.pi * 1.5 * t)
 
 
 def _row_ends(r: int) -> tuple:
@@ -257,26 +312,58 @@ def _row_ends(r: int) -> tuple:
     return (right, left) if (r % 2 == 1) else (left, right)
 
 
-def _route_path(rows: int, cols: int) -> str:
-    """Непрерывная тропа змейкой: волна вдоль ряда + разворот петлёй на краю."""
+def _route_path(rows: int, cols: int, shape: str = SHAPE_DEFAULT) -> str:
+    """Непрерывный путь змейкой: ряд + разворот на краю. Форма ряда — от сцены."""
     d: List[str] = []
     for r in range(rows):
         y, (x0, x1) = _row_y(r), _row_ends(r)
         pts = [f"{px:.1f} {py:.1f}"
-               for px, py in (_wave(x0, x1, y, i / 60) for i in range(61))]
+               for px, py in (_wave(x0, x1, y, i / 60, shape) for i in range(61))]
         d.append(("M " if r == 0 else "L ") + " L ".join(pts))
         if r < rows - 1:
             out = _TURN if x1 > x0 else -_TURN
-            d.append(f"C {x1 + out:.1f} {y:.1f} "
-                     f"{x1 + out:.1f} {_row_y(r + 1):.1f} "
-                     f"{x1:.1f} {_row_y(r + 1):.1f}")
+            if shape == "straight":
+                # Улица поворачивает УГЛОМ, а не петлёй: два прямых отрезка.
+                d.append(f"L {x1 + out * 0.62:.1f} {y:.1f} "
+                         f"L {x1 + out * 0.62:.1f} {_row_y(r + 1):.1f} "
+                         f"L {x1:.1f} {_row_y(r + 1):.1f}")
+            else:
+                d.append(f"C {x1 + out:.1f} {y:.1f} "
+                         f"{x1 + out:.1f} {_row_y(r + 1):.1f} "
+                         f"{x1:.1f} {_row_y(r + 1):.1f}")
     return " ".join(d)
 
 
-def _cell_xy(r: int, i: int, cols: int) -> tuple:
+def _cell_xy(r: int, i: int, cols: int, shape: str = SHAPE_DEFAULT) -> tuple:
     x0, x1 = _row_ends(r)
     t = 0.0 if cols == 1 else i / (cols - 1)
-    return _wave(x0, x1, _row_y(r), t)
+    return _wave(x0, x1, _row_y(r), t, shape)
+
+
+def _occupied(rows: int, cols: int, n_cells: int,
+              shape: str = SHAPE_DEFAULT) -> List[tuple]:
+    """Круги, занятые материалом: кружки со слогами и коридор самой тропы.
+
+    Это карта для сцены — по ней она раскладывает свои предметы (см. `Canvas`
+    в scenes.py). Тропа считается не по её кривой Безье, а по точкам волны и
+    разворотам: для «занято/свободно» этого хватает, а кода вдвое меньше.
+    """
+    out: List[tuple] = []
+    for idx in range(n_cells):
+        r, i = divmod(idx, cols)
+        if r >= rows:
+            break
+        x, y = _cell_xy(r, i, cols, shape)
+        out.append((x, y, _R + 2.0))          # кружок со слогом + поле вокруг
+    for r in range(rows):
+        y, (x0, x1) = _row_y(r), _row_ends(r)
+        for k in range(25):                    # коридор вдоль ряда
+            px, py = _wave(x0, x1, y, k / 24, shape)
+            out.append((px, py, 3.4))
+        if r < rows - 1:                       # разворот на краю
+            out.append((x1 + (_TURN if x1 > x0 else -_TURN) * 0.7,
+                        (y + _row_y(r + 1)) / 2, 6.0))
+    return out
 
 
 def render_track(track: Dict[str, Any]) -> str:
@@ -292,24 +379,30 @@ def render_track(track: Dict[str, Any]) -> str:
     # она пропадала между кружками и лист снова читался как ряды.
     # Сцена идёт ПЕРВЫМ слоем: тропа и кружки ложатся поверх неё, а кружки
     # залиты белым — слоги «пробивают» фон насквозь, как на образце Ольги.
-    svg = [SC.scene_svg(m.get("scene", ""), _W, height)] if m.get("scene") else []
-    svg += [f'<path d="{_route_path(rows, cols)}" fill="none" stroke="#000" '
+    # Сцена должна знать, где идёт дорожка: иначе её предметы окажутся под
+    # кружками (поймано автором 08-10 — «фон рисуется без учёта кружков»).
+    # Отдаём ей занятые круги: сами кружки со слогами и коридор тропы.
+    shape = shape_for(m.get("scene", ""))
+    svg = [SC.scene_svg(m.get("scene", ""), _W, height,
+                        avoid=_occupied(rows, cols, len(cells), shape))] \
+        if m.get("scene") else []
+    svg += [f'<path d="{_route_path(rows, cols, shape)}" fill="none" stroke="#000" '
            f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']
     last = None
     for idx, c in enumerate(cells):
         r, i = divmod(idx, cols)
         if r >= rows:
             break
-        x, y = _cell_xy(r, i, cols)
+        x, y = _cell_xy(r, i, cols, shape)
         last = (x, y)
         svg.append(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{_R:.1f}" fill="#fff" '
             f'stroke="#000" stroke-width="0.9"/>'
             f'<text x="{x:.1f}" y="{y + 2.3:.1f}" text-anchor="middle" '
-            f'font-size="6.6" font-weight="700" font-family="Georgia,serif">'
+            f'font-size="6.6" font-weight="700" font-family="{_FONT}">'
             f'{e(c["syllable"].upper())}</text>')
     # старт и финиш — концы маршрута, а не украшения по краям листа
-    sx, sy = _cell_xy(0, 0, cols)
+    sx, sy = _cell_xy(0, 0, cols, shape)
     svg.insert(1,
         f'<path d="M {sx - _R - 8.0:.1f} {sy:.1f} L {sx - _R - 1.5:.1f} {sy:.1f} '
         f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
@@ -324,12 +417,18 @@ def render_track(track: Dict[str, Any]) -> str:
         last_row = (len(cells) - 1) // cols
         fwd = -1.0 if (last_row % 2 == 1) else 1.0
         px = fx + fwd * (_R + 2.5)
+        # Флажок и подпись обязаны остаться на бумаге. На обратном ряду цель
+        # уходит влево, и «финиш» вылезал за левый край — на листе читалось
+        # «иниш» (поймано автором 08-10). Держим оба в границах листа, подпись
+        # отдельно: она шире флажка.
+        px = max(_R * 0.9, min(_W - _R * 0.9, px))
+        tx = max(8.0, min(_W - 8.0, px))
         svg.append(
             f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
             f'L {px + fwd * 7.5:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
             f'fill="#000" stroke="#000" stroke-width="0.9" '
             f'stroke-linejoin="round"/>'
-            f'<text x="{px:.1f}" y="{fy + 9.5:.1f}" font-size="4.2" '
+            f'<text x="{tx:.1f}" y="{fy + 9.5:.1f}" font-size="4.2" '
             f'text-anchor="middle">финиш</text>')
 
     return f"""<!DOCTYPE html>
