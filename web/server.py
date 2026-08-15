@@ -55,6 +55,7 @@ import track as T            # noqa: E402
 import propisi as PR         # noqa: E402
 import scenes as SCN         # noqa: E402
 import phrases as PH         # noqa: E402
+import story as ST           # noqa: E402  — «сочини рассказ», лист взрослому
 import phonetics as ph       # noqa: E402
 
 sys.path.insert(0, HERE)
@@ -659,6 +660,40 @@ class Handler(BaseHTTPRequestHandler):
                     "stats": {"kind": "phrases",
                               "n": ph_sheet["meta"]["n"],
                               "items": [i["text"] for i in ph_sheet["items"]]},
+                })
+
+            elif path == "/api/story":
+                # «Сочини рассказ» — лист-СЦЕНАРИЙ взрослому: тема, опорные
+                # слова, глаголы. Готового текста здесь нет намеренно: движок
+                # умеет проверять чистоту только своих слов, а не связного
+                # текста (блокер записан 08-04). Слога у материала нет — он
+                # собирается из слов, как словосочетания и лабиринт.
+                sound = str(data.get("sound", "р"))
+                if sound not in C.WORDS_BY_SOUND:
+                    self._json({"ok": False, "kind": "input",
+                                "message": f"звука [{C.ph.sound_label(sound)}] "
+                                           f"в генераторе нет"}, 400)
+                    return
+                prof = S._expand_profile(",".join(data.get("profile") or []))
+                try:
+                    st = ST.build_story(
+                        sound=sound, profile=prof,
+                        theme=(str(data.get("theme")) if data.get("theme") else None),
+                        seed=as_int(data.get("seed"), 0))
+                except ST.StoryError as exc:
+                    self._json({"ok": False, "kind": "engine",
+                                "message": str(exc)}, 200)
+                    return
+                self._json({
+                    "ok": True,
+                    "html": ST.render_story(st),
+                    "warnings": human.split([], st["warnings"]),
+                    "stats": {"kind": "story",
+                              "theme": st["meta"]["theme"],
+                              "themes": st["meta"]["themes"],
+                              "n_nouns": st["meta"]["n_nouns"],
+                              "n_verbs": st["meta"]["n_verbs"],
+                              "items": st["nouns"]},
                 })
 
             elif path == "/api/propisi":

@@ -20,6 +20,7 @@ const S = {
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
   sceneUsed: null, // какой фон реально встал на лист — приходит с материалом
   propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
+  theme: null,     // тема листа «сочини рассказ»; null = движок берёт самую полную
 };
 
 const $ = (id) => document.getElementById(id);
@@ -203,7 +204,8 @@ function renderCrumbs() {
   // На изолированной ступени слога нет вовсе — крошка «слог РА» была бы
   // обещанием того, чего на листе не напечатано. У словосочетаний слога нет
   // тем более: они собираются из слов, а не из слогов.
-  const noSyllable = (S.tab === 'propisi' && S.propisiMode === 'isolated')
+  const noSyllable = (S.tab === 'story')
+    || (S.tab === 'propisi' && S.propisiMode === 'isolated')
     || (S.tab === 'phrases');
   if (S.typ && !noSyllable && !$('step-result').hidden) {
     // слог берём из ОТВЕТА (S.syllable), а не из подписи кнопки: подписи
@@ -234,11 +236,6 @@ const SOON = {
     what: 'Контур предмета, который ребёнок обводит, произнося звук, — по канону Борисовой обводка несёт речевой материал, а не мелкую моторику.',
     waits: 'Ждёт тот же банк картинок. Линия со слогом уже работает — она на вкладке «Звуковая дорожка».',
   },
-  'soon-story': {
-    title: 'Рассказы',
-    what: 'Короткий текст, насыщенный звуком: взрослый читает, ребёнок пересказывает.',
-    waits: 'Картинок не ждёт: 356 глаголов собраны, не хватает самого блока. Ближайший к готовности.',
-  },
 };
 
 function renderTabs() {
@@ -268,10 +265,12 @@ function renderTabs() {
   // Ступень «только звук / звук + слог» есть лишь у звуковой дорожки.
   $('stage-step').hidden = (S.tab !== 'propisi');
   $('scene-card').hidden = (S.tab !== 'track');
+  $('theme-card').hidden = (S.tab !== 'story');
   $('game-card').hidden = (S.tab !== 'sheet');
   $('moat-box').hidden = soon;          // рва у ненаписанного материала нет
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
+  if (S.tab === 'story') renderThemePick();
   if (S.tab === 'propisi') renderPropisiMode();
   renderCrumbs();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
@@ -282,6 +281,7 @@ function renderTabs() {
     propisi: 'Из чего собрана эта звуковая дорожка',
     phrases: 'Из чего собраны эти словосочетания',
     maze:    'Из чего собран этот лабиринт',
+    story:   'Из чего собран этот лист',
   }[S.tab] || 'Из чего это собрано';
 }
 
@@ -349,6 +349,28 @@ function renderGamePick() {
 function sceneList() {
   return (S.cfg.scenes_by_sound && S.cfg.scenes_by_sound[S.sound])
     || S.cfg.scenes || [];
+}
+
+/* Темы листа «сочини рассказ». Список приходит С ЛИСТОМ: он зависит от
+   профиля ребёнка, и показывать тему, в которой после чистки не осталось
+   шести слов, нельзя — кнопка обещала бы то, чего материал не сделает. */
+function renderThemePick() {
+  const box = $('theme-pick');
+  box.innerHTML = '';
+  const list = S.themes || [];
+  list.forEach((t) => {
+    const b = el('button', 'seg-btn', t);
+    b.classList.toggle('is-on', t === S.themeUsed);
+    b.addEventListener('click', () => {
+      if (t === S.themeUsed) return;
+      S.theme = t;
+      load();
+    });
+    box.appendChild(b);
+  });
+  $('theme-hint').textContent = list.length > 1
+    ? 'Слова одной темы — ребёнку есть за что зацепить историю.'
+    : 'На этом звуке набирается одна тема: в остальных меньше шести чистых слов.';
 }
 
 function renderScenePick() {
@@ -466,6 +488,12 @@ async function load() {
       // слог по построению чист (целевой звук + гласная).
       res = await post('/api/track',
         { sound: S.sound, typ: S.typ, ...(S.scene === null ? {} : { scene: S.scene }) });
+    } else if (S.tab === 'story') {
+      // «Сочини рассказ» — лист взрослому. Слога нет, тема есть; профиль
+      // работает: опорные слова обязаны быть чисты для ЭТОГО ребёнка.
+      res = await post('/api/story',
+        { sound: S.sound, profile: [...profile],
+          ...(S.theme ? { theme: S.theme } : {}), seed: S.sheetNo - 1 });
     } else if (S.tab === 'propisi') {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
       res = await post('/api/propisi',
@@ -509,6 +537,10 @@ async function load() {
     if (res.games && res.games.printed) S.game = res.games.printed;
   }
   if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
+  if (S.tab === 'story' && res.stats) {
+    S.themes = res.stats.themes || [];
+    S.themeUsed = res.stats.theme;
+  }
   // Карточки настроек и ров прячет экран отказа — материал собрался, вернуть.
   $('moat-box').hidden = false;
   renderTabs();
@@ -639,6 +671,20 @@ function renderMoat(st) {
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
 
   if (st.kind === 'maze') { renderMazeMoat(box, st, label); return; }
+  if (st.kind === 'story') {
+    box.appendChild(el('h2', null, 'Сочини рассказ'));
+    const p = el('p', 'hint',
+      `Тема «${st.theme}»: ${st.n_nouns} опорных слов и ${st.n_verbs} глаголов ` +
+      `на звук [${label}]. Все чисты для этого ребёнка.`);
+    p.style.margin = '0 0 10px';
+    box.appendChild(p);
+    box.appendChild(el('p', 'hint',
+      'Готового текста на листе нет намеренно. Рассказ сочиняет ребёнок, ' +
+      'а движок умеет ручаться за чистоту только своих слов — не за чистоту ' +
+      'связного текста, который он не разбирает.'));
+    S.prev = null;
+    return;
+  }
   if (st.kind === 'phrases') {
     box.appendChild(el('h2', null, 'Словосочетания'));
     const p = el('p', 'hint',

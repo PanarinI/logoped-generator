@@ -45,8 +45,10 @@
                 data-soon="1">Зашумлённые<span class="tab-flag">готовится</span></button>
         <button class="tab is-soon" data-tab="soon-trace"
                 data-soon="1">Обводка<span class="tab-flag">готовится</span></button>
-        <button class="tab is-soon" data-tab="soon-story"
-                data-soon="1">Рассказы<span class="tab-flag">готовится</span></button>
+        <!-- «Сочини рассказ» — лист-сценарий ВЗРОСЛОМУ (Комарова: текст читает
+             он, не ребёнок). Готового текста нет намеренно: движок проверяет
+             чистоту только своих слов, а не связного текста. -->
+        <button class="tab" data-tab="story">Сочини рассказ</button>
       </div>
       <div class="tab-extra" id="tab-extra" hidden>
         <span class="positions" id="positions"></span>
@@ -140,6 +142,15 @@
           <div class="seg" id="scene-pick"></div>
           <!-- Чьи это миры: фон подбирается под героя звука. -->
           <p class="hint" id="scene-hint"></p>
+        </div>
+
+        <!-- Тема листа «сочини рассказ». Темы приходят С ЛИСТОМ, а не из
+             конфига: набор зависит от профиля ребёнка — когда убраны ещё
+             звуки, богатая тема может обеднеть ниже шести слов. -->
+        <div class="card where" id="theme-card" hidden>
+          <h2>Про что сочиняем?</h2>
+          <div class="seg" id="theme-pick"></div>
+          <p class="hint" id="theme-hint"></p>
         </div>
 
         <!-- Ступень звуковой дорожки. Изолированный звук идёт ДО слога:
