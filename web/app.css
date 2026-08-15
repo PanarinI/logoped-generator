@@ -47,7 +47,13 @@ button { font: inherit; color: inherit; }
   min-height: 34px; margin: 0 0 var(--s3);
 }
 
-.tools { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+/* min-width: 0 — чтобы флекс-контейнер имел право стать уже своего содержимого.
+   Без него полоса вкладок распирала шапку до 1356 px на экране 375 px, и вбок
+   ехала ВСЯ страница: прокрутка внутри полосы не помогала, потому что её
+   ширину задавал родитель (замер 08-12). */
+.tools { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap;
+         min-width: 0; max-width: 100%; }
+.tools > * { min-width: 0; }
 .tools[hidden] { display: none; }
 
 .crumbs { display: flex; align-items: center; gap: var(--s1);
@@ -118,11 +124,25 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 
 .paper { min-width: 0; }
 
-/* переключатель материалов — маленький и тихий */
-.tabs { display: inline-flex; gap: 2px; padding: 2px;
-        background: #ece8e0; border-radius: var(--r-sm); }
+/* переключатель материалов — маленький и тихий.
+   Полоса ПРОКРУЧИВАЕТСЯ вбок сама, а не тащит за собой страницу: материалов
+   девять, на телефоне они в строку не влезают, и без этого пять последних
+   (в том числе вся витрина «готовится») уезжали за край недостижимыми, а вся
+   страница ездила вбок. Поймано 08-12 замером на 375 px. */
+.tabs { display: flex; gap: 2px; padding: 2px;
+        background: #ece8e0; border-radius: var(--r-sm);
+        max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+        scrollbar-width: none; -ms-overflow-style: none; }
+.tabs::-webkit-scrollbar { display: none; }
+/* На широком экране прятать вкладку за прокруткой незачем: девять материалов
+   переносятся во вторую строку и видны все сразу. Прокрутка остаётся телефону,
+   где переносить некуда. */
+@media (min-width: 900px) {
+  .tabs { flex-wrap: wrap; overflow-x: visible; }
+}
 .tab { border: 0; background: none; cursor: pointer; font-size: 13px;
        color: var(--ink-2); padding: 4px 12px; border-radius: 6px;
+       flex: 0 0 auto; white-space: nowrap;
        transition: background .12s, color .12s; }
 .tab:hover { color: var(--ink); }
 .tab.is-on { background: var(--card); color: var(--ink); font-weight: 600; }
