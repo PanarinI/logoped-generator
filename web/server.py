@@ -511,7 +511,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
-        self.wfile.write(body)
+        # На HEAD тело не отправляется — так велит HTTP. Заголовки при этом те
+        # же, что у GET, поэтому один код обслуживает оба метода.
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _json(self, payload: Dict[str, Any], code: int = 200) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -552,6 +555,15 @@ class Handler(BaseHTTPRequestHandler):
             self._json(method.as_json())
         else:
             self._send(404, b"not found", "text/plain; charset=utf-8")
+
+    def do_HEAD(self) -> None:           # noqa: N802
+        """То же, что GET, но без тела.
+
+        Раньше отвечали 501. Этим методом стучатся превью-боты мессенджеров и
+        мониторинги доступности, а ссылку логопеды получат в Telegram — карточка
+        ссылки не должна ломаться на ровном месте (08-12, живой замер на Railway).
+        """
+        self.do_GET()
 
     def do_POST(self) -> None:           # noqa: N802
         path = self.path.split("?")[0]
