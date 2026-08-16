@@ -63,13 +63,44 @@ import sheet as S            # noqa: E402
 __all__ = ["build_story", "render_story", "StoryError",
            "MIN_NOUNS", "MAX_NOUNS", "MIN_VERBS", "MAX_VERBS"]
 
-# Сколько опорных слов даём. Канонной нормы на «сочини рассказ» в открытых
-# источниках нет — числа наши: меньше шести не за что зацепиться, больше
-# девяти ребёнок не удержит в голове, пока сочиняет. Помечено 🔶 в справке.
-MIN_NOUNS = 6
-MAX_NOUNS = 9
-MIN_VERBS = 3
-MAX_VERBS = 6
+# ✅ СКОЛЬКО СЛОВ В НАБОРЕ — норма найдена, и она 3-4.
+#   Глухов В.П. «Комплексный подход к формированию связной речи…», 2-е изд.,
+#   М.: В. Секачёв, 2014, с. 72: «Составление рассказа по опорным словам (в
+#   работе со старшими дошкольниками) рекомендуется в целом ряде исследований.
+#   Детям предлагаются 3-4 слова, СВЯЗАННЫЕ ПО СМЫСЛУ, по которым они
+#   составляют свои рассказы».
+#   Канонные наборы у него — тройки: «мальчик — удочка — река», «ребята — лес
+#   — ёжик». «Связанные по смыслу» у нас держится темой.
+# ⛔ Здесь стояло 6-9 слов со ссылкой на «шкалу Ефименковой: больше слов =
+#   легче». Проверка 08-12 эту шкалу опровергла: у Ефименковой 1985 слов
+#   «опорные слова» нет вовсе (0 вхождений в полном тексте), а формула «по
+#   опорным словам» есть в другой её книге — для ПЕРВОКЛАССНИКОВ. Атрибуция
+#   пришла из анонимного студенческого файла. Ровно тот случай, о котором
+#   говорит локальный закон 10: чужая уверенная фраза — не источник.
+MIN_SET = 3
+MAX_SET = 4
+
+# ✅ НЕСКОЛЬКО НАБОРОВ НА ВЫБОР — А. П. Усова (цит. по Глухову, там же):
+#   вначале всей группе дают одни и те же опорные слова, «затем — несколько
+#   вариантов слов на выбор. В дальнейшем дети сами подбирают опорные слова».
+#   Отсюда на листе не один набор, а три: логопед даёт один, или ребёнок
+#   выбирает. Лист при этом остаётся набором по 3-4 слова, а не списком из 12.
+N_SETS = 3
+
+# ✅ ПЛАН ИЗ ВОПРОСОВ — Алексеева М.М., Яшина В.И. «Методика развития речи и
+#   обучения родному языку дошкольников», гл. VII: «План рассказа — это 2-3
+#   вопроса, определяющие его содержание и последовательность» (с. 291);
+#   «Для плана целесообразно использовать 3-4 вопроса, большее их количество
+#   ведёт к излишней детализации действий и описания, что может тормозить
+#   самостоятельность детского замысла» (с. 341).
+#   Сама тройка — Л. А. Пеньевской (цит. там же, с. 291), и у каждого вопроса
+#   названа СВОЯ работа. Формулировки обобщены с её примера «Как мальчик нашёл
+#   щенка» до любой темы; функции сохранены дословно.
+PLAN = (
+    ("Где и когда это было?", "обстоятельство места и времени"),
+    ("Какой он был?", "описание"),
+    ("Что было дальше?", "развитие сюжетной линии"),
+)
 
 
 class StoryError(Exception):
@@ -104,7 +135,7 @@ def themes_for(sound: str, profile: Any = (), min_familiarity: int = 1
         t = _theme_of(r)
         if t:
             by[t] += 1
-    return sorted(((t, n) for t, n in by.items() if n >= MIN_NOUNS),
+    return sorted(((t, n) for t, n in by.items() if n >= MIN_SET),
                   key=lambda x: (-x[1], x[0]))
 
 
@@ -143,33 +174,31 @@ def build_story(sound: str = "р",
     rnd.shuffle(rows)
     # Знакомое вперёд: ребёнок сочиняет вслух, и опора должна быть опорой.
     rows.sort(key=lambda r: -(r.get("familiarity") or 0))
-    nouns = rows[:MAX_NOUNS]
-    if len(nouns) < MIN_NOUNS:
+    if len(rows) < MIN_SET:
         raise StoryError(
-            f"в теме «{theme}» чистых слов {len(nouns)}, нужно {MIN_NOUNS}")
-
-    verbs_all = [v for v in C.load_verbs(sound)
-                 if not v.get("sensitive")
-                 and v.get("familiarity", 3) >= min_familiarity
-                 and C.is_clean(v["word"], banned, v.get("stress_syllable"))]
-    rnd.shuffle(verbs_all)
-    verbs_all.sort(key=lambda v: -(v.get("familiarity") or 0))
-    verbs = verbs_all[:MAX_VERBS]
-
-    warnings: List[str] = []
-    if len(verbs) < MIN_VERBS:
-        # Не отказ: без глаголов лист беднее, но работает — опорой служат слова.
-        warnings.append(
-            f"глаголов с этим звуком набралось {len(verbs)} — лист выйдет "
-            f"беднее: ребёнку не за что зацепить действие")
+            f"в теме «{theme}» чистых слов {len(rows)}, на набор нужно {MIN_SET}")
 
     def _mark(word: str, stress: Optional[int]) -> str:
         return S.put_stress(word, stress, "non_obvious")
 
+    # Наборы по 3-4 слова (Глухов), несколько на выбор (Усова). Слово не
+    # повторяется между наборами: иначе «выбор» окажется мнимым.
+    sets: List[List[str]] = []
+    pos = 0
+    while len(sets) < N_SETS and len(rows) - pos >= MIN_SET:
+        size = MAX_SET if len(rows) - pos >= MAX_SET else MIN_SET
+        sets.append([_mark(r["word"], r.get("stress_syllable"))
+                     for r in rows[pos:pos + size]])
+        pos += size
+
+    warnings: List[str] = []
+    if len(sets) < N_SETS:
+        warnings.append(
+            f"в теме «{theme}» хватило слов на {len(sets)} набор(а) вместо "
+            f"{N_SETS} — выбора у ребёнка будет меньше")
+
     # Последняя проверка — по тому, что реально попадёт на бумагу.
-    printed = [_mark(r["word"], r.get("stress_syllable")) for r in nouns] + \
-              [_mark(v["word"], v.get("stress_syllable")) for v in verbs]
-    for word in printed:
+    for word in [w for s_ in sets for w in s_]:
         bare = word.replace("́", "")
         dirty = C.corrigible_of(bare) & banned
         if dirty:
@@ -177,8 +206,8 @@ def build_story(sound: str = "р",
                 f"нарушен фильтр чистоты: «{bare}» содержит {sorted(dirty)}")
 
     return {
-        "nouns": [_mark(r["word"], r.get("stress_syllable")) for r in nouns],
-        "verbs": [_mark(v["word"], v.get("stress_syllable")) for v in verbs],
+        "sets": sets,
+        "plan": [q for q, _ in PLAN],
         "warnings": warnings,
         "meta": {
             "sound": sound,
@@ -188,8 +217,8 @@ def build_story(sound: str = "р",
             "profile": sorted(profile),
             "banned": sorted(banned),
             "child": child_name,
-            "n_nouns": len(nouns),
-            "n_verbs": len(verbs),
+            "n_sets": len(sets),
+            "n_words": sum(len(x) for x in sets),
             # Канонный образ звука — тот же, что у дорожек, листа и
             # словосочетаний: ребёнок встречает одно существо во всех
             # материалах. Один дом у этого знания — propisi.image_for.
@@ -207,10 +236,15 @@ def _e(s: Any) -> str:
 # Инструкция ВЗРОСЛОМУ — не ребёнку: этот лист адресован ведущему, и обращаться
 # он обязан к нему. Глаголы обращения к ребёнку («повтори», «назови») здесь
 # были бы ложью о том, кто читает.
+#
+# Шаг с ОБРАЗЦОМ — не наша выдумка. Глухов: «При обучении составлению рассказа
+# по данным словам БЕЗ ОПОРЫ НА КАРТИНКИ такой образец рассказа используется,
+# как правило, постоянно». Картинок у нас нет, значит образец обязателен.
 ADULT_STEPS = (
-    "Назовите тему и прочитайте опорные слова вслух — по одному, не торопясь.",
-    "Попросите ребёнка придумать историю, где эти слова встретятся. "
-    "Порядок любой, все слова использовать не обязательно.",
+    "Выберите один набор и назовите слова вслух — по одному, не торопясь.",
+    "Начните сами: скажите первую фразу истории с этими словами. "
+    "Без картинок образец начала нужен каждый раз.",
+    "Дальше ведите вопросами из плана — по одному, дожидаясь ответа.",
     "Слушайте звук. Сбился — не поправляйте посреди фразы: дайте договорить, "
     "потом повторите слово вместе, медленно.",
 )
@@ -219,18 +253,16 @@ ADULT_STEPS = (
 def render_story(s: Dict[str, Any]) -> str:
     """Печатный лист А4. Взрослому — крупно то, что он произносит вслух."""
     m = s["meta"]
-    nouns = "".join(f'<div class="w">{_e(w)}</div>' for w in s["nouns"])
-    verbs = "".join(f'<div class="w v">{_e(w)}</div>' for w in s["verbs"])
     steps = "".join(f"<li>{_e(x)}</li>" for x in ADULT_STEPS)
-    # Глаголы отобраны по ЗВУКУ, а не по теме: подсказывать обратное нельзя —
-    # у глаголов в картотеке поле «класс подлежащего» почти везде пустое, и
-    # признака «подходит теме» у нас ДАННЫМИ нет (локальный закон 7).
-    verbs_block = (f'<section class="block"><div class="bhead">'
-                   f'<span class="btitle">Действия</span>'
-                   f'<span class="task">Тоже с этим звуком, но не про тему — '
-                   f'подскажите, если история встанет.</span>'
-                   f'</div><div class="cols">{verbs}</div></section>'
-                   if s["verbs"] else "")
+    sets = "".join(
+        f'<div class="set"><div class="set-no">{i + 1}</div>'
+        + "".join(f'<span class="w">{_e(w)}</span>' for w in words)
+        + "</div>"
+        for i, words in enumerate(s["sets"]))
+    # У каждого вопроса своя работа — она названа у Пеньевской, и взрослому
+    # полезно её видеть: иначе план читается как три случайных вопроса.
+    plan = "".join(f'<li>{_e(q)} <span class="fn">— {_e(fn)}</span></li>'
+                   for q, fn in PLAN)
     child = _e(m.get("child") or "")
     return f"""<!DOCTYPE html>
 <html lang="ru">
@@ -265,10 +297,16 @@ h1 b {{ font-size:20pt; }}
 .bhead {{ display:flex; align-items:baseline; gap:2mm; margin-bottom:1.5mm; }}
 .btitle {{ font-size:12pt; font-weight:700; }}
 .task {{ font-size:10pt; color:#444; font-style:italic; }}
-.cols {{ display:grid; grid-template-columns:repeat(3,1fr); gap:1mm 4mm; }}
-.w {{ font-size:20pt; line-height:1.25; white-space:nowrap; }}
-.w.v {{ font-size:17pt; }}
+.set {{ display:flex; align-items:baseline; gap:6mm; padding:1.6mm 0;
+        border-bottom:0.4pt solid #ccc; }}
+.set:last-child {{ border-bottom:0; }}
+.set-no {{ flex:0 0 auto; width:5mm; height:5mm; line-height:4.7mm;
+           border:0.4pt solid #000; border-radius:50%; text-align:center;
+           font-size:8.5pt; font-weight:700; }}
+.w {{ font-size:20pt; line-height:1.3; white-space:nowrap; }}
 ol {{ font-size:10.5pt; line-height:1.5; margin:0; padding-left:5mm; }}
+ol.plan {{ font-size:13pt; line-height:1.45; }}
+ol.plan .fn {{ font-size:9.5pt; color:#666; font-style:italic; }}
 .foot {{ margin-top:6mm; border-top:0.4pt solid #000; padding-top:1.2mm;
          font-size:9.5pt; font-style:italic; color:#444; line-height:1.45; }}
 .hero {{ margin-left:auto; }}
@@ -288,11 +326,15 @@ ol {{ font-size:10.5pt; line-height:1.5; margin:0; padding-left:5mm; }}
 
   <section class="block">
     <div class="bhead"><span class="btitle">Опорные слова</span>
-      <span class="task">Прочитайте вслух, по одному.</span></div>
-    <div class="cols">{nouns}</div>
+      <span class="task">Три набора на выбор — берите ОДИН, не все сразу.</span></div>
+    {sets}
   </section>
 
-  {verbs_block}
+  <section class="block">
+    <div class="bhead"><span class="btitle">План — три вопроса</span>
+      <span class="task">По одному, дожидаясь ответа.</span></div>
+    <ol class="plan">{plan}</ol>
+  </section>
 
   <section class="block">
     <div class="bhead"><span class="btitle">Как вести</span></div>
@@ -302,7 +344,9 @@ ol {{ font-size:10.5pt; line-height:1.5; margin:0; padding-left:5mm; }}
   <div class="foot">
     Готового текста здесь нет намеренно: рассказ сочиняет ребёнок, а лист даёт
     ему опору и держит звук. Слова отобраны так, чтобы в них не было звуков,
-    которые у ребёнка сейчас не получаются.
+    которые у ребёнка сейчас не получаются. Три-четыре слова в наборе и три
+    вопроса в плане — не наши числа: так их задают Глухов и Пеньевская.
+    Больше вопросов, по Пеньевской, начинает мешать замыслу ребёнка.
   </div>
 </div>
 </body>

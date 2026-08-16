@@ -59,14 +59,18 @@ for sound in sorted(C.WORDS_BY_SOUND):
             continue
 
         banned = C.banned_phonemes(sound, frozenset(profile))
-        printed = s["nouns"] + s["verbs"]
+        printed = [w for group in s["sets"] for w in group]
 
-        check(len(s["nouns"]) >= ST.MIN_NOUNS,
-              f"{tag}: опорных слов {len(s['nouns'])}, канон дома {ST.MIN_NOUNS}")
-        check(len(s["nouns"]) <= ST.MAX_NOUNS,
-              f"{tag}: опорных слов больше {ST.MAX_NOUNS}")
+        check(1 <= len(s["sets"]) <= ST.N_SETS,
+              f"{tag}: наборов {len(s['sets'])}, канон до {ST.N_SETS}")
+        for group in s["sets"]:
+            # ✅ Глухов, 2014, с. 72: «Детям предлагаются 3-4 слова».
+            check(ST.MIN_SET <= len(group) <= ST.MAX_SET,
+                  f"{tag}: в наборе {len(group)} слов, канон {ST.MIN_SET}-{ST.MAX_SET}")
         check(len(set(printed)) == len(printed),
-              f"{tag}: слово повторяется на листе")
+              f"{tag}: слово повторяется между наборами — выбор мнимый")
+        # ✅ Пеньевская (цит. Алексеева/Яшина, с. 291) — план из трёх вопросов.
+        check(len(s["plan"]) == 3, f"{tag}: в плане {len(s['plan'])} вопросов, канон 3")
 
         # ГЛАВНОЕ: ни одного запрещённого звука в том, что читают вслух.
         for w in printed:
@@ -75,7 +79,7 @@ for sound in sorted(C.WORDS_BY_SOUND):
 
         # Целевой звук обязан быть в каждом опорном слове — иначе это опора
         # не на звук, а просто слово по теме.
-        for w in s["nouns"]:
+        for w in printed:
             check(sound in C.corrigible_of(bare(w)),
                   f"{tag}: в опорном слове «{bare(w)}» нет целевого звука")
 
@@ -87,7 +91,7 @@ for sound in sorted(C.WORDS_BY_SOUND):
         # Тот же вход — тот же лист. Иначе логопед не может вернуться к тому,
         # что уже распечатал.
         again = ST.build_story(sound, profile=profile)
-        check(again["nouns"] == s["nouns"] and again["verbs"] == s["verbs"],
+        check(again["sets"] == s["sets"],
               f"{tag}: два одинаковых запроса дали разные листы")
 
 # Отказ на несуществующей теме — словами, а не исключением движка.

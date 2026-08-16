@@ -691,9 +691,9 @@ class Handler(BaseHTTPRequestHandler):
                     "stats": {"kind": "story",
                               "theme": st["meta"]["theme"],
                               "themes": st["meta"]["themes"],
-                              "n_nouns": st["meta"]["n_nouns"],
-                              "n_verbs": st["meta"]["n_verbs"],
-                              "items": st["nouns"]},
+                              "n_sets": st["meta"]["n_sets"],
+                              "n_words": st["meta"]["n_words"],
+                              "items": [w for g in st["sets"] for w in g]},
                 })
 
             elif path == "/api/propisi":
