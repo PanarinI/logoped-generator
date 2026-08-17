@@ -56,6 +56,7 @@ import propisi as PR         # noqa: E402
 import scenes as SCN         # noqa: E402
 import phrases as PH         # noqa: E402
 import story as ST           # noqa: E402  — «сочини рассказ», лист взрослому
+import rasskaz as RZ         # noqa: E402  — готовый рассказ для пересказа
 import phonetics as ph       # noqa: E402
 
 sys.path.insert(0, HERE)
@@ -660,6 +661,38 @@ class Handler(BaseHTTPRequestHandler):
                     "stats": {"kind": "phrases",
                               "n": ph_sheet["meta"]["n"],
                               "items": [i["text"] for i in ph_sheet["items"]]},
+                })
+
+            elif path == "/api/rasskaz":
+                # Готовый рассказ для пересказа — то, о чём дословно просила
+                # логопед («генерация рассказов»). Текст из текстотеки, каждый
+                # проверен валидатором норм; для профиля ребёнка отдаются
+                # только чистые — иначе кнопка обещала бы то, чего нет.
+                sound = str(data.get("sound", "р"))
+                if sound not in C.WORDS_BY_SOUND:
+                    self._json({"ok": False, "kind": "input",
+                                "message": f"звука [{C.ph.sound_label(sound)}] "
+                                           f"в генераторе нет"}, 400)
+                    return
+                prof = S._expand_profile(",".join(data.get("profile") or []))
+                try:
+                    rz = RZ.build_rasskaz(sound=sound, profile=prof,
+                                          text_id=(str(data.get("text")) if data.get("text") else None))
+                except RZ.RasskazError as exc:
+                    self._json({"ok": False, "kind": "engine",
+                                "message": str(exc)}, 200)
+                    return
+                self._json({
+                    "ok": True,
+                    "html": RZ.render_rasskaz(rz),
+                    "warnings": [],
+                    "stats": {"kind": "rasskaz",
+                              "text": rz["text"]["id"],
+                              "title": rz["text"]["title"],
+                              "options": rz["options"],
+                              "sentences": rz["stat"]["sentences"],
+                              "words": rz["stat"]["words"],
+                              "share": rz["stat"]["share_target"]},
                 })
 
             elif path == "/api/story":

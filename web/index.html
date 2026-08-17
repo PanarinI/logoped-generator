@@ -48,7 +48,7 @@
         <!-- «Сочини рассказ» — лист-сценарий ВЗРОСЛОМУ (Комарова: текст читает
              он, не ребёнок). Готового текста нет намеренно: движок проверяет
              чистоту только своих слов, а не связного текста. -->
-        <button class="tab" data-tab="story">Сочини рассказ</button>
+        <button class="tab" data-tab="story">Рассказы</button>
       </div>
       <div class="tab-extra" id="tab-extra" hidden>
         <span class="positions" id="positions"></span>
@@ -142,6 +142,26 @@
           <div class="seg" id="scene-pick"></div>
           <!-- Чьи это миры: фон подбирается под героя звука. -->
           <p class="hint" id="scene-hint"></p>
+        </div>
+
+        <!-- Рассказы — два режима одного материала. Пересказ ГОТОВОГО текста
+             (просьба Ольги дословно: «генерация рассказов») и «сочини сам» по
+             опорным словам (Глухов). Пересказ по канону идёт РАНЬШЕ: Фомичёва
+             с. 40 — взрослый читает → вопросы → пересказ → потом самостоятельно. -->
+        <div class="card where" id="story-mode-card" hidden>
+          <h2>Какой рассказ?</h2>
+          <div class="seg" id="story-mode">
+            <button class="seg-btn is-on" data-smode="retell">Пересказ</button>
+            <button class="seg-btn" data-smode="compose">Сочини сам</button>
+          </div>
+          <p class="hint" id="story-mode-hint">Готовый текст: взрослый читает, ребёнок отвечает и пересказывает.</p>
+        </div>
+
+        <!-- Выбор текста в режиме пересказа: только чистые для этого профиля. -->
+        <div class="card where" id="text-card" hidden>
+          <h2>Какой текст?</h2>
+          <div class="seg" id="text-pick"></div>
+          <p class="hint" id="text-hint"></p>
         </div>
 
         <!-- Тема листа «сочини рассказ». Темы приходят С ЛИСТОМ, а не из

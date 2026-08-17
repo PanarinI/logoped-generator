@@ -21,6 +21,8 @@ const S = {
   sceneUsed: null, // какой фон реально встал на лист — приходит с материалом
   propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
   theme: null,     // тема листа «сочини рассказ»; null = движок берёт самую полную
+  storyMode: 'retell', // рассказы: пересказ готового текста | сочини сам
+  textId: null,    // выбранный текст пересказа; null = первый чистый
 };
 
 const $ = (id) => document.getElementById(id);
@@ -31,6 +33,15 @@ function curSyllable() {
   const t = ((S.cfg && S.cfg.syllables[S.sound]) || [])
     .find((x) => x.typ === S.typ);
   return t ? t.syllable : '';
+}
+
+/* Русское склонение числительных: «21 слово», а не «21 слов». */
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  if (b === 1) return one;
+  return many;
 }
 
 const el = (tag, cls, text) => {
@@ -265,12 +276,14 @@ function renderTabs() {
   // Ступень «только звук / звук + слог» есть лишь у звуковой дорожки.
   $('stage-step').hidden = (S.tab !== 'propisi');
   $('scene-card').hidden = (S.tab !== 'track');
-  $('theme-card').hidden = (S.tab !== 'story');
+  $('story-mode-card').hidden = (S.tab !== 'story');
+  $('theme-card').hidden = !(S.tab === 'story' && S.storyMode === 'compose');
+  $('text-card').hidden = !(S.tab === 'story' && S.storyMode === 'retell');
   $('game-card').hidden = (S.tab !== 'sheet');
   $('moat-box').hidden = soon;          // рва у ненаписанного материала нет
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
-  if (S.tab === 'story') renderThemePick();
+  if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
   if (S.tab === 'propisi') renderPropisiMode();
   renderCrumbs();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
@@ -281,7 +294,7 @@ function renderTabs() {
     propisi: 'Из чего собрана эта звуковая дорожка',
     phrases: 'Из чего собраны эти словосочетания',
     maze:    'Из чего собран этот лабиринт',
-    story:   'Из чего собран этот лист',
+    story:   'Из чего собран этот рассказ',
   }[S.tab] || 'Из чего это собрано';
 }
 
@@ -354,6 +367,35 @@ function sceneList() {
 /* Темы листа «сочини рассказ». Список приходит С ЛИСТОМ: он зависит от
    профиля ребёнка, и показывать тему, в которой после чистки не осталось
    шести слов, нельзя — кнопка обещала бы то, чего материал не сделает. */
+function renderStoryMode() {
+  document.querySelectorAll('#story-mode .seg-btn').forEach((b) => {
+    b.classList.toggle('is-on', b.dataset.smode === S.storyMode);
+  });
+  $('story-mode-hint').textContent = S.storyMode === 'retell'
+    ? 'Готовый текст: взрослый читает, ребёнок отвечает и пересказывает.'
+    : 'Текста нет: тема, наборы слов и три вопроса — ребёнок сочиняет сам.';
+}
+
+/* Тексты пересказа — только чистые для профиля; список приходит с листом. */
+function renderTextPick() {
+  const box = $('text-pick');
+  box.innerHTML = '';
+  const list = S.textOptions || [];
+  list.forEach((o) => {
+    const b = el('button', 'seg-btn', o.title);
+    b.classList.toggle('is-on', o.id === S.textUsed);
+    b.addEventListener('click', () => {
+      if (o.id === S.textUsed) return;
+      S.textId = o.id;
+      load();
+    });
+    box.appendChild(b);
+  });
+  $('text-hint').textContent = list.length > 1
+    ? 'Все тексты проверены: в них нет звуков, которые у ребёнка не получаются.'
+    : 'На этом звуке пока один текст.';
+}
+
 function renderThemePick() {
   const box = $('theme-pick');
   box.innerHTML = '';
@@ -488,6 +530,12 @@ async function load() {
       // слог по построению чист (целевой звук + гласная).
       res = await post('/api/track',
         { sound: S.sound, typ: S.typ, ...(S.scene === null ? {} : { scene: S.scene }) });
+    } else if (S.tab === 'story' && S.storyMode === 'retell') {
+      // Пересказ готового текста. Профиль работает: отдаются только тексты,
+      // чистые для ЭТОГО ребёнка.
+      res = await post('/api/rasskaz',
+        { sound: S.sound, profile: [...profile],
+          ...(S.textId ? { text: S.textId } : {}) });
     } else if (S.tab === 'story') {
       // «Сочини рассказ» — лист взрослому. Слога нет, тема есть; профиль
       // работает: опорные слова обязаны быть чисты для ЭТОГО ребёнка.
@@ -537,9 +585,13 @@ async function load() {
     if (res.games && res.games.printed) S.game = res.games.printed;
   }
   if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
-  if (S.tab === 'story' && res.stats) {
+  if (S.tab === 'story' && res.stats && res.stats.kind === 'story') {
     S.themes = res.stats.themes || [];
     S.themeUsed = res.stats.theme;
+  }
+  if (S.tab === 'story' && res.stats && res.stats.kind === 'rasskaz') {
+    S.textOptions = res.stats.options || [];
+    S.textUsed = res.stats.text;
   }
   // Карточки настроек и ров прячет экран отказа — материал собрался, вернуть.
   $('moat-box').hidden = false;
@@ -671,6 +723,21 @@ function renderMoat(st) {
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
 
   if (st.kind === 'maze') { renderMazeMoat(box, st, label); return; }
+  if (st.kind === 'rasskaz') {
+    box.appendChild(el('h2', null, 'Рассказ для пересказа'));
+    const p = el('p', 'hint',
+      `«${st.title}»: ${st.sentences} ${plural(st.sentences, 'предложение', 'предложения', 'предложений')}, ` +
+      `${st.words} ${plural(st.words, 'слово', 'слова', 'слов')}, ` +
+      `со звуком [${label}] — ${Math.round(st.share * 100)} % слов.`);
+    p.style.margin = '0 0 10px';
+    box.appendChild(p);
+    box.appendChild(el('p', 'hint',
+      'Текст проверен движком: в нём нет звуков, которые у ребёнка не ' +
+      'получаются. Плотность звука выше обычной речи — так и задумано ' +
+      '(Волкова, Шаховская): это материал ступени закрепления.'));
+    S.prev = null;
+    return;
+  }
   if (st.kind === 'story') {
     box.appendChild(el('h2', null, 'Сочини рассказ'));
     const p = el('p', 'hint',
@@ -1020,6 +1087,14 @@ function bindActions() {
       S.propisiMode = b.dataset.mode;
       renderPropisiMode();
       renderCrumbs();   // на изолированной ступени крошка «слог» уходит
+      load();
+    };
+  });
+  document.querySelectorAll('#story-mode .seg-btn').forEach((b) => {
+    b.onclick = () => {
+      if (S.storyMode === b.dataset.smode) return;
+      S.storyMode = b.dataset.smode;
+      renderTabs();
       load();
     };
   });
