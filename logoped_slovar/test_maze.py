@@ -450,7 +450,9 @@ def test_real_picture_replaces_placeholder():
         check("банк картинок пуст — проверка пропущена", True, True)
         return
     frag = M.render_image("рак")
-    check("картинка встроена в svg", "data:image/jpeg;base64," in frag, True)
+    # Формат не важен: чужой банк лежит в jpeg, свои картинки — png (08-18).
+    check("картинка встроена в svg",
+          ("data:image/jpeg;base64," in frag or "data:image/png;base64," in frag), True)
     check("плейсхолдера больше нет", "[картинка]" in frag, False)
     check("страница самодостаточна (нет ссылок наружу)",
           "http" in frag.split("base64,")[0], False)

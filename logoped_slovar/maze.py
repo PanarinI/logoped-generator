@@ -177,6 +177,7 @@ GRID_MM = GRID * CELL_MM + (GRID - 1) * GAP_MM          # 179 мм из 180 до
 
 # Плейсхолдер рисуется в этой системе координат; CSS растягивает на клетку.
 PIC_VB_W, PIC_VB_H = 100.0, 85.0
+PIC_PAD = 0.06          # поле вокруг рисунка, долей высоты клетки (08-18)
 
 DIR_RU: Dict[str, str] = {"right": "вправо", "left": "влево",
                           "down": "вниз", "up": "вверх"}
@@ -961,12 +962,26 @@ def build_maze(sound: str = "р",
 #  10. КАРТИНКА КЛЕТКИ — ЕДИНСТВЕННАЯ ТОЧКА ЗАМЕНЫ
 # ═══════════════════════════════════════════════════════════════════════
 
-PICTURES = Path(__file__).resolve().parent.parent / "pictures" / "small"
+_BANK = Path(__file__).resolve().parent.parent / "pictures"
+OWN_PICTURES = _BANK / "objects" / "small"      # НАШИ ч/б: выкладывать можно
+OWN_COLOUR = _BANK / "objects_colour" / "small"  # они же в цвете (08-18)
+PICTURES = _BANK / "small"                      # чужие: только для своего экрана
 
 
-@lru_cache(maxsize=512)
-def _picture_data(word: str) -> str:
-    """data:-URI картинки слова, если она есть в банке. Иначе пустая строка."""
+@lru_cache(maxsize=1024)
+def _picture_data(word: str, colour: bool = False) -> str:
+    """data:-URI картинки слова, если она есть в банке. Иначе пустая строка.
+
+    Свои идут ПЕРВЫМИ и вытесняют чужую картинку того же слова: чужие лежат
+    здесь временно, до конца корпуса (08-18), и выкладывать их нельзя.
+    """
+    banks = ((OWN_COLOUR, OWN_PICTURES) if colour else (OWN_PICTURES,))
+    for bank in banks:
+        for name in (word, word.replace("ё", "е")):
+            own = bank / f"{name}.png"
+            if own.is_file():
+                return ("data:image/png;base64,"
+                        + base64.b64encode(own.read_bytes()).decode("ascii"))
     for name in (word, word.replace("ё", "е")):
         p = PICTURES / f"{name}.jpg"
         if p.is_file():
@@ -975,11 +990,11 @@ def _picture_data(word: str) -> str:
     return ""
 
 
-def has_picture(word: str) -> bool:
-    return bool(_picture_data(word))
+def has_picture(word: str, colour: bool = False) -> bool:
+    return bool(_picture_data(word, colour))
 
 
-def render_image(word: str) -> str:
+def render_image(word: str, colour: bool = False) -> str:
     """Плейсхолдер картинки: пунктирная рамка + крупное слово + «[картинка]».
 
     Возвращает самодостаточный <svg viewBox="0 0 100 85">; CSS растягивает его
@@ -997,13 +1012,17 @@ def render_image(word: str) -> str:
     # Настоящая картинка, если она есть в банке: pictures/small/<слово>.jpg.
     # Встраивается в сам SVG (data:), поэтому страница остаётся самодостаточной
     # и печатается без обращения к сети.
-    pic = _picture_data(word)
+    pic = _picture_data(word, colour)
     if pic:
+        # Поле вокруг рисунка: холст картинки квадратный, а клетка шире, чем выше,
+        # поэтому по вертикали предмет упирался в рамку («роза не вошла», автор 08-18).
+        pad = PIC_VB_H * PIC_PAD
         return (
             f'<svg class="pic" viewBox="0 0 {PIC_VB_W:g} {PIC_VB_H:g}" '
             f'preserveAspectRatio="xMidYMid meet" role="img" aria-label="{w}">'
-            f'<image href="{pic}" x="0" y="0" width="{PIC_VB_W:g}" '
-            f'height="{PIC_VB_H:g}" preserveAspectRatio="xMidYMid meet"/>'
+            f'<image href="{pic}" x="{pad:g}" y="{pad:g}" '
+            f'width="{PIC_VB_W - 2 * pad:g}" height="{PIC_VB_H - 2 * pad:g}" '
+            f'preserveAspectRatio="xMidYMid meet"/>'
             f'</svg>'
         )
 
@@ -1243,11 +1262,11 @@ def _e(s: Any) -> str:
     return html.escape(str(s), quote=False)
 
 
-def _cell_html(c: Dict[str, Any], maze: Dict[str, Any]) -> str:
+def _cell_html(c: Dict[str, Any], maze: Dict[str, Any], colour: bool = False) -> str:
     cell = maze["meta"]["cell_mm"]
     x, y = _cell_xy(c["row"], c["col"], cell)
     if c["kind"] == "picture":
-        pic = render_image(c["word"])
+        pic = render_image(c["word"], colour)
         cap = (f'<div class="cap"><span class="ord">{c["order"]}</span>'
                f'{_e(c["caption"])}</div>')
     elif c["kind"] == "scheme":
@@ -1308,10 +1327,15 @@ def _warnbox_html(maze: Dict[str, Any]) -> str:
 
 
 def render_maze(maze: Dict[str, Any], options: Optional[Dict[str, Any]] = None) -> str:
-    """Страница-лабиринт целиком: HTML под печать A4, ч/б."""
+    """Страница-лабиринт целиком: HTML под печать A4.
+
+    options["colour"] — печатать цветные картинки вместо ч/б (08-18).
+    Набор слов от этого не зависит: цвет выбирается на рендере.
+    """
     options = options or {}
     cell = maze["meta"]["cell_mm"]
-    cells = "".join(_cell_html(c, maze) for c in maze["cells"])
+    colour = bool(options.get("colour"))
+    cells = "".join(_cell_html(c, maze, colour) for c in maze["cells"])
     title = (f'Дорожка · звук [{_P.sound_label(maze["meta"]["sound"])}] · '
              f'{maze["meta"]["position_label"]}')
     return (

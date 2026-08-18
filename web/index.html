@@ -31,7 +31,7 @@
         <!-- Картинки лабиринта — исследовательские стимулы ВШЭ, свои ещё не
              нарисованы. Печатать себе можно, выкладывать нельзя, и логопед
              должен это видеть, а не узнать потом. -->
-        <button class="tab" data-tab="maze">Лабиринт<span class="tab-flag">черновик</span></button>
+        <button class="tab" data-tab="maze">Лабиринт</button>
         <!-- ВИТРИНА (решение автора 08-06). Материалы, которых ещё нет, стоят
              здесь неактивными: логопед должен видеть замысел целиком, а не
              гадать, всё ли это. Не путать с правилом 08-10 «нет на этом слоге
@@ -80,12 +80,6 @@
     <div class="result">
 
       <div class="paper">
-        <p class="note maze-note" id="maze-note" hidden>
-          Картинки есть не ко всем словам — там, где её пока нет, стоит рамка
-          со словом. Так честнее: ребёнок должен <em>назвать</em> картинку, а
-          не прочитать, и подставлять непроверенный рисунок хуже, чем оставить
-          пустое место.
-        </p>
         <!-- Позиции, которых у ЭТОГО звука не бывает: пишется из app.js. -->
         <p class="note maze-note" id="maze-limits" hidden></p>
         <div class="stage" id="stage">
@@ -120,12 +114,15 @@
              клетками отметок и подсказки взрослому, на занятии логопед рядом
              и обе обёртки лишние. -->
         <div class="card where" id="where" hidden>
-          <h2>Куда этот лист?</h2>
-          <div class="seg" id="audience">
-            <button class="seg-btn is-on" data-aud="home">Домой</button>
-            <button class="seg-btn" data-aud="lesson">На занятие</button>
-          </div>
-          <p class="hint" id="audience-hint">С шапкой на неделю и подписью родителя.</p>
+          <button class="alt-btn" id="audience-btn"><span class="box"></span>Домой</button>
+          <p class="hint" id="audience-hint">Без шапки и подсказок взрослому — логопед рядом.</p>
+        </div>
+
+        <!-- Картинки лабиринта: ч/б или цвет. Один и тот же рисунок, ч/б снят
+             с цветного (imgbw), поэтому набор слов от кнопки не зависит. -->
+        <div class="card where" id="colour-card" hidden>
+          <button class="alt-btn" id="colour-btn"><span class="box"></span>В цвете</button>
+          <p class="hint" id="colour-hint">Чёрно-белые картинки — печатает любой принтер.</p>
         </div>
 
         <!-- Игра блока [5]. Все канонные; выбор логопеда, а не сида. -->
@@ -149,11 +146,7 @@
              опорным словам (Глухов). Пересказ по канону идёт РАНЬШЕ: Фомичёва
              с. 40 — взрослый читает → вопросы → пересказ → потом самостоятельно. -->
         <div class="card where" id="story-mode-card" hidden>
-          <h2>Какой рассказ?</h2>
-          <div class="seg" id="story-mode">
-            <button class="seg-btn is-on" data-smode="retell">Пересказ</button>
-            <button class="seg-btn" data-smode="compose">Сочини сам</button>
-          </div>
+          <button class="alt-btn" id="story-mode-btn"><span class="box"></span>Сочини сам</button>
           <p class="hint" id="story-mode-hint">Готовый текст: взрослый читает, ребёнок отвечает и пересказывает.</p>
         </div>
 
@@ -176,11 +169,7 @@
         <!-- Ступень звуковой дорожки. Изолированный звук идёт ДО слога:
              сначала ребёнок держит один звук, потом добавляется гласная. -->
         <div class="card where" id="stage-step" hidden>
-          <h2>Какая ступень?</h2>
-          <div class="seg" id="propisi-mode">
-            <button class="seg-btn" data-mode="isolated">Только звук</button>
-            <button class="seg-btn is-on" data-mode="syllable">Звук + слог</button>
-          </div>
+          <button class="alt-btn" id="propisi-mode-btn"><span class="box"></span>Только звук</button>
           <p class="hint" id="propisi-mode-hint">В конце линии гласная — собирается слог.</p>
         </div>
 

@@ -272,10 +272,11 @@ def build_sheet(sound: str, typ: str, prof: str,
 
 
 def build_maze(sound: str, position: str, prof: str,
-               seed: int = 0, service_cell: str = "question") -> Dict[str, Any]:
+               seed: int = 0, service_cell: str = "question",
+               colour: bool = False) -> Dict[str, Any]:
     m = M.build_maze(sound=sound, position=position, profile=prof,
                      seed=seed, service_cell=service_cell)
-    html = M.render_maze(m, {"no_warnbox": True})
+    html = M.render_maze(m, {"no_warnbox": True, "colour": colour})
     return {
         "ok": True,
         "html": html,
@@ -788,6 +789,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(build_maze(
                     sound, position, profile_str(data.get("profile")),
                     seed=as_int(data.get("seed"), 0),
+                    colour=bool(data.get("colour")),
                 ))
             else:
                 self._send(404, b"not found", "text/plain; charset=utf-8")

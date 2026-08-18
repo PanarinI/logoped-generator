@@ -28,5 +28,14 @@ WORKDIR /home/app
 COPY --chown=app:app logoped_slovar/ ./logoped_slovar/
 COPY --chown=app:app web/ ./web/
 
+# КАРТИНКИ (08-18). Едут ТОЛЬКО свои и только уменьшенные копии, которые
+# движок и встраивает в лист: 295 px — это 25 мм при 300 dpi, ровно клетка.
+# Оригиналы 512 px в образ не берём (они источник, а не расходник), а чужой
+# банк `pictures/small/` не берём НАМЕРЕННО: печатать себе можно, выкладывать
+# нельзя — правовая рамка проекта. Отсюда на хосте у слова либо наша картинка,
+# либо честная рамка со словом, но никогда чужой рисунок.
+COPY --chown=app:app pictures/objects/small/ ./pictures/objects/small/
+COPY --chown=app:app pictures/objects_colour/small/ ./pictures/objects_colour/small/
+
 EXPOSE 8080
 CMD ["python3", "web/server.py"]

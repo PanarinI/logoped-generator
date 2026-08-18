@@ -232,6 +232,26 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 @media (max-width: 560px) { #scene-pick { grid-template-columns: repeat(3, 1fr); } }
 .seg-btn.is-on { background: var(--card); color: var(--ink); }
 
+/* Из двух вариантов назван только ОДИН. Молчащий стоит по умолчанию, названный
+   берётся кнопкой: элемент управления имеет цену, и половина её — лишнее слово
+   на экране (08-18). Кнопка залипает вдавленной, поэтому состояние читается без
+   подписи, а подсказка под ней всё равно говорит, какой лист выйдет. */
+.alt-btn { display: inline-flex; align-items: center; gap: 9px;
+           border: 1px solid var(--line-2); background: var(--card); cursor: pointer;
+           font-size: 13px; font-weight: 600; color: var(--ink);
+           padding: 7px 14px 7px 11px; border-radius: var(--r-sm);
+           transition: background .12s, border-color .12s; }
+.alt-btn:hover { background: #f3f0ea; }
+/* Состояние читается ГАЛОЧКОЙ, а не оттенком кнопки: цвет надо помнить,
+   галочку — нет (правка автора 08-18). */
+.alt-btn .box { width: 15px; height: 15px; flex: none; position: relative;
+                border: 1.5px solid var(--line-2); border-radius: 3px; background: #fff; }
+.alt-btn.is-on { border-color: var(--accent); }
+.alt-btn.is-on .box { background: var(--accent); border-color: var(--accent); }
+.alt-btn.is-on .box::after { content: "✓"; position: absolute; inset: 0;
+                             display: flex; align-items: center; justify-content: center;
+                             font-size: 11px; font-weight: 700; color: #fff; line-height: 1; }
+
 /* пометка на вкладке лабиринта: картинки чужие, выкладывать нельзя */
 .tab-flag { display: inline-block; margin-left: 5px; font-size: 10px;
             font-weight: 600; letter-spacing: .02em; text-transform: uppercase;

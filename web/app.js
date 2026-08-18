@@ -14,7 +14,12 @@ const S = {
   position: 'initial',
   syllable: '',    // слог, который РЕАЛЬНО на текущем листе
   prev: null,      // прошлые числа рва — чтобы подсветить, что изменилось
-  audience: 'home', // куда лист: домой (с шапкой и подвалом) или на занятие
+  // Куда лист. Молчащий дефолт — занятие; домашний берётся кнопкой (08-18):
+  // элемент управления имеет цену, из двух названных остаётся одно название.
+  audience: 'lesson',
+  // Картинки лабиринта: молчащий дефолт — ч/б (его печатает любой принтер),
+  // цвет берётся кнопкой. Набор слов от этого не меняется, только рисунки.
+  colour: false,
   game: 'one_many',   // умолчание — «Один — много» (решение автора 08-10)
   games: null,     // какие игры живы на ТЕКУЩЕМ листе — приходит с листом
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
@@ -262,8 +267,9 @@ function renderTabs() {
   // На витринной вкладке настраивать нечего: материала ещё нет.
   const soon = !!SOON[S.tab];
   $('tab-extra').hidden = soon || (S.tab !== 'maze');
-  $('maze-note').hidden = (S.tab !== 'maze');
   if (S.tab !== 'maze') $('maze-limits').hidden = true;
+  $('colour-card').hidden = (S.tab !== 'maze');
+  renderColour();
   if (S.tab === 'maze') renderPositions();
   $('reroll').hidden = (S.tab !== 'sheet');
   // Профиль ребёнка меняет лист и лабиринт, но не дорожку и не прописи:
@@ -298,10 +304,16 @@ function renderTabs() {
   }[S.tab] || 'Из чего это собрано';
 }
 
+function renderColour() {
+  $('colour-btn').classList.toggle('is-on', S.colour);
+  $('colour-hint').textContent = S.colour
+    ? 'Цветные картинки — печатать на цветном принтере.'
+    : 'Чёрно-белые картинки — печатает любой принтер.';
+}
+
+
 function renderAudience() {
-  document.querySelectorAll('#audience .seg-btn').forEach((b) => {
-    b.classList.toggle('is-on', b.dataset.aud === S.audience);
-  });
+  $('audience-btn').classList.toggle('is-on', S.audience === 'home');
   $('audience-hint').textContent = S.audience === 'home'
     ? 'С шапкой на неделю и подписью родителя.'
     : 'Без шапки и подсказок взрослому — логопед рядом.';
@@ -368,9 +380,7 @@ function sceneList() {
    профиля ребёнка, и показывать тему, в которой после чистки не осталось
    шести слов, нельзя — кнопка обещала бы то, чего материал не сделает. */
 function renderStoryMode() {
-  document.querySelectorAll('#story-mode .seg-btn').forEach((b) => {
-    b.classList.toggle('is-on', b.dataset.smode === S.storyMode);
-  });
+  $('story-mode-btn').classList.toggle('is-on', S.storyMode === 'compose');
   $('story-mode-hint').textContent = S.storyMode === 'retell'
     ? 'Готовый текст: взрослый читает, ребёнок отвечает и пересказывает.'
     : 'Текста нет: тема, наборы слов и три вопроса — ребёнок сочиняет сам.';
@@ -445,9 +455,7 @@ function renderScenePick() {
 
 
 function renderPropisiMode() {
-  document.querySelectorAll('#propisi-mode .seg-btn').forEach((b) => {
-    b.classList.toggle('is-on', b.dataset.mode === S.propisiMode);
-  });
+  $('propisi-mode-btn').classList.toggle('is-on', S.propisiMode === 'isolated');
   $('propisi-mode-hint').textContent = S.propisiMode === 'isolated'
     ? 'Гласной в конце нет: ребёнок тянет один звук.'
     : 'В конце линии гласная — собирается слог.';
@@ -553,7 +561,8 @@ async function load() {
     } else if (S.tab === 'maze') {
       ensurePosition();
       res = await post('/api/maze',
-        { sound: S.sound, position: S.position, profile: profile });
+        { sound: S.sound, position: S.position, profile: profile,
+          colour: S.colour });
     } else {
       res = await post('/api/sheet',
         { sound: S.sound, typ: S.typ, profile: profile, sheet_no: S.sheetNo,
@@ -1072,32 +1081,30 @@ function bindActions() {
     b.onclick = () => { S.tab = b.dataset.tab; renderTabs(); load(); };
   });
 
-  document.querySelectorAll('#audience .seg-btn').forEach((b) => {
-    b.onclick = () => {
-      if (S.audience === b.dataset.aud) return;
-      S.audience = b.dataset.aud;
-      renderAudience();
-      load();
-    };
-  });
+  $('colour-btn').onclick = () => {
+    S.colour = !S.colour;
+    renderColour();
+    load();
+  };
 
-  document.querySelectorAll('#propisi-mode .seg-btn').forEach((b) => {
-    b.onclick = () => {
-      if (S.propisiMode === b.dataset.mode) return;
-      S.propisiMode = b.dataset.mode;
-      renderPropisiMode();
-      renderCrumbs();   // на изолированной ступени крошка «слог» уходит
-      load();
-    };
-  });
-  document.querySelectorAll('#story-mode .seg-btn').forEach((b) => {
-    b.onclick = () => {
-      if (S.storyMode === b.dataset.smode) return;
-      S.storyMode = b.dataset.smode;
-      renderTabs();
-      load();
-    };
-  });
+  $('audience-btn').onclick = () => {
+    S.audience = S.audience === 'home' ? 'lesson' : 'home';
+    renderAudience();
+    load();
+  };
+
+  $('propisi-mode-btn').onclick = () => {
+    S.propisiMode = S.propisiMode === 'isolated' ? 'syllable' : 'isolated';
+    renderPropisiMode();
+    renderCrumbs();   // на изолированной ступени крошка «слог» уходит
+    load();
+  };
+
+  $('story-mode-btn').onclick = () => {
+    S.storyMode = S.storyMode === 'compose' ? 'retell' : 'compose';
+    renderTabs();
+    load();
+  };
 }
 
 boot();
