@@ -101,6 +101,7 @@ maze.py — генератор СТРАНИЦЫ-ЛАБИРИНТА 3×3 (кан�
 from __future__ import annotations
 
 import argparse
+import unicodedata
 import base64
 import html
 import json
@@ -968,6 +969,23 @@ OWN_COLOUR = _BANK / "objects_colour" / "small"  # они же в цвете (08
 PICTURES = _BANK / "small"                      # чужие: только для своего экрана
 
 
+def _name_forms(word: str) -> Tuple[str, ...]:
+    """Имена, под которыми файл мог лечь на диск.
+
+    macOS пишет «ё» разложенной (NFD), Linux хранит байты как есть — файл,
+    созданный на ноутбуке, на хостинге не находился бы по слову из картотеки
+    (она вся в NFC). Поймано 08-18 на 107 файлах: локально всё работало,
+    потому что APFS сравнивает имена с нормализацией, а Railway — нет.
+    """
+    forms = []
+    for w in (word, word.replace("ё", "е")):
+        for form in ("NFC", "NFD"):
+            n = unicodedata.normalize(form, w)
+            if n not in forms:
+                forms.append(n)
+    return tuple(forms)
+
+
 @lru_cache(maxsize=1024)
 def _picture_data(word: str, colour: bool = False) -> str:
     """data:-URI картинки слова, если она есть в банке. Иначе пустая строка.
@@ -977,7 +995,7 @@ def _picture_data(word: str, colour: bool = False) -> str:
     """
     banks = ((OWN_COLOUR, OWN_PICTURES) if colour else (OWN_PICTURES,))
     for bank in banks:
-        for name in (word, word.replace("ё", "е")):
+        for name in _name_forms(word):
             own = bank / f"{name}.png"
             if own.is_file():
                 return ("data:image/png;base64,"
