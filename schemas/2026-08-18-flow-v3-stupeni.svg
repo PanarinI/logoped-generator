@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 900" width="1240" height="900" font-family="PT Sans, Helvetica, Arial, sans-serif">
+  <rect width="1240" height="900" fill="#f7f5f1"/>
+
+  <text x="40" y="46" font-size="23" font-weight="700" fill="#16191d">Флоу v3: ось выбирает ступень, а не общий шаг</text>
+  <text x="40" y="72" font-size="13.5" fill="#565d66">2026-08-18. Шаг «тип слога» снят с дороги: он нужен трём материалам из семи. Порядок стал «звук → что делаем → настройка этого материала».</text>
+
+  <!-- БЫЛО -->
+  <g>
+    <rect x="40" y="98" width="360" height="212" rx="10" fill="#fdeeee" stroke="#e6c9c9"/>
+    <text x="58" y="124" font-size="12" font-weight="700" fill="#9d3535" letter-spacing="1">БЫЛО — И В ЧЁМ ОШИБКА</text>
+    <g font-size="13.5" fill="#16191d">
+      <rect x="58" y="138" width="92" height="30" rx="6" fill="#fff" stroke="#d5d0c6"/>
+      <text x="104" y="158" text-anchor="middle">звук</text>
+      <path d="M156 153 L176 153" stroke="#9d3535" stroke-width="1.6" marker-end="url(#ar)"/>
+      <rect x="180" y="138" width="112" height="30" rx="6" fill="#fff" stroke="#9d3535" stroke-width="1.6"/>
+      <text x="236" y="158" text-anchor="middle" fill="#9d3535">тип слога</text>
+      <path d="M298 153 L318 153" stroke="#9d3535" stroke-width="1.6" marker-end="url(#ar)"/>
+      <rect x="322" y="138" width="60" height="30" rx="6" fill="#fff" stroke="#d5d0c6"/>
+      <text x="352" y="158" text-anchor="middle">лист</text>
+    </g>
+    <text x="58" y="196" font-size="12.5" fill="#565d66">Ворота, через которые проходили ВСЕ материалы.</text>
+    <text x="58" y="216" font-size="12.5" fill="#565d66">Но слог получают только лист и две дорожки;</text>
+    <text x="58" y="236" font-size="12.5" fill="#565d66">лабиринт работает по позиции звука в слове,</text>
+    <text x="58" y="256" font-size="12.5" fill="#565d66">а словосочетаниям и рассказам ось не нужна вовсе.</text>
+    <text x="58" y="284" font-size="12.5" fill="#9d3535">Крошка «слог аР» висела и на лабиринте — обещание</text>
+    <text x="58" y="302" font-size="12.5" fill="#9d3535">того, чего в листе нет.</text>
+  </g>
+
+  <!-- СТАЛО -->
+  <g>
+    <rect x="424" y="98" width="776" height="212" rx="10" fill="#fff" stroke="#d5d0c6"/>
+    <text x="444" y="124" font-size="12" font-weight="700" fill="#2f6b4f" letter-spacing="1">СТАЛО</text>
+    <g font-size="13.5">
+      <rect x="444" y="138" width="92" height="34" rx="6" fill="#f7f5f1" stroke="#d5d0c6"/>
+      <text x="490" y="160" text-anchor="middle" fill="#16191d">звук</text>
+      <path d="M542 155 L562 155" stroke="#2f6b4f" stroke-width="1.6" marker-end="url(#ag)"/>
+      <rect x="566" y="138" width="150" height="34" rx="6" fill="#eaf1ec" stroke="#2f6b4f" stroke-width="1.6"/>
+      <text x="641" y="160" text-anchor="middle" fill="#2f6b4f" font-weight="600">что делаем</text>
+      <path d="M722 155 L742 155" stroke="#2f6b4f" stroke-width="1.6" marker-end="url(#ag)"/>
+      <rect x="746" y="138" width="210" height="34" rx="6" fill="#f7f5f1" stroke="#d5d0c6"/>
+      <text x="851" y="160" text-anchor="middle" fill="#16191d">настройка этого материала</text>
+      <path d="M962 155 L982 155" stroke="#2f6b4f" stroke-width="1.6" marker-end="url(#ag)"/>
+      <rect x="986" y="138" width="90" height="34" rx="6" fill="#f7f5f1" stroke="#d5d0c6"/>
+      <text x="1031" y="160" text-anchor="middle" fill="#16191d">материал</text>
+    </g>
+    <text x="444" y="200" font-size="12.5" fill="#565d66">«Что делаем» — материалы по ступеням автоматизации. Настройка появляется, только если материалу есть что спросить:</text>
+    <text x="444" y="222" font-size="12.5" fill="#565d66">листу и дорожкам — тип слога, лабиринту — позиция звука в слове, словосочетаниям и рассказам — ничего.</text>
+    <text x="444" y="252" font-size="12.5" fill="#16191d" font-weight="600">Крошка стала путём: звук Р · делаем Лист автоматизации · слог Ра прямые слоги — и каждый шаг ведёт назад.</text>
+    <text x="444" y="282" font-size="12.5" fill="#565d66">Тип слога переехал в панель карточкой «Где звук в слоге?» — такой же настройкой, как позиции у лабиринта.</text>
+  </g>
+
+  <!-- СТУПЕНИ -->
+  <text x="40" y="352" font-size="16" font-weight="700" fill="#16191d">Ступени автоматизации — и что на каждой лежит</text>
+  <g font-size="12.5">
+    <g>
+      <rect x="40" y="368" width="182" height="140" rx="9" fill="#fff" stroke="#d5d0c6"/>
+      <text x="56" y="392" font-size="14" font-weight="700" fill="#16191d">Один звук</text>
+      <text x="56" y="414" fill="#565d66">гласной ещё нет</text>
+      <text x="56" y="444" fill="#16191d">звуковая дорожка</text>
+      <text x="56" y="470" font-size="11.5" fill="#8b929b">ось: ступень</text>
+    </g>
+    <g>
+      <rect x="234" y="368" width="182" height="140" rx="9" fill="#fff" stroke="#d5d0c6"/>
+      <text x="250" y="392" font-size="14" font-weight="700" fill="#16191d">Слоги</text>
+      <text x="250" y="414" fill="#565d66">звук уже в слоге</text>
+      <text x="250" y="444" fill="#16191d">дорожка со слогом</text>
+      <text x="250" y="464" fill="#16191d">слоговая дорожка</text>
+      <text x="250" y="484" font-size="11.5" fill="#2f6b4f">ось: ТИП СЛОГА (5)</text>
+    </g>
+    <g>
+      <rect x="428" y="368" width="182" height="140" rx="9" fill="#fff" stroke="#d5d0c6"/>
+      <text x="444" y="392" font-size="14" font-weight="700" fill="#16191d">Слова</text>
+      <text x="444" y="414" fill="#565d66">важно, ГДЕ звук в слове</text>
+      <text x="444" y="444" fill="#16191d">лабиринт</text>
+      <text x="444" y="462" font-size="11.5" fill="#8b929b">4-й лишний · зашумлённые</text>
+      <text x="444" y="478" font-size="11.5" fill="#8b929b">обводка — будет позже</text>
+      <text x="444" y="497" font-size="11.5" fill="#2f6b4f">ось: ПОЗИЦИЯ (3)</text>
+    </g>
+    <g>
+      <rect x="622" y="368" width="182" height="140" rx="9" fill="#fff" stroke="#d5d0c6"/>
+      <text x="638" y="392" font-size="14" font-weight="700" fill="#16191d">Словосочетания</text>
+      <text x="638" y="414" fill="#565d66">слово тянет второе</text>
+      <text x="638" y="444" fill="#16191d">словосочетания</text>
+      <text x="638" y="470" font-size="11.5" fill="#8b929b">оси нет</text>
+    </g>
+    <g>
+      <rect x="816" y="368" width="182" height="140" rx="9" fill="#fff" stroke="#d5d0c6"/>
+      <text x="832" y="392" font-size="14" font-weight="700" fill="#16191d">Текст</text>
+      <text x="832" y="414" fill="#565d66">верхняя ступень</text>
+      <text x="832" y="444" fill="#16191d">пересказ</text>
+      <text x="832" y="464" fill="#16191d">сочини рассказ</text>
+      <text x="832" y="484" font-size="11.5" fill="#8b929b">оси нет</text>
+    </g>
+    <g>
+      <rect x="1010" y="368" width="190" height="140" rx="9" fill="#eaf1ec" stroke="#2f6b4f"/>
+      <text x="1026" y="392" font-size="14" font-weight="700" fill="#2f6b4f">Всё занятие</text>
+      <text x="1026" y="414" fill="#565d66">ступени внутри себя</text>
+      <text x="1026" y="444" fill="#16191d">лист автоматизации</text>
+      <text x="1026" y="470" font-size="11.5" fill="#2f6b4f">ось: ТИП СЛОГА (5)</text>
+    </g>
+  </g>
+
+  <!-- ПОЧЕМУ НЕ УНИФИЦИРОВАТЬ -->
+  <g>
+    <rect x="40" y="520" width="580" height="240" rx="10" fill="#fdf5ea" stroke="#e6d5bb"/>
+    <text x="58" y="546" font-size="12" font-weight="700" fill="#9a5a18" letter-spacing="1">ПОЧЕМУ ОСИ НЕ СВЕДЕНЫ В ОДНУ</text>
+    <text x="58" y="574" font-size="13" fill="#16191d">Вопрос автора: «может, позиция в слове — та же логика, что тип слога?»</text>
+    <text x="58" y="600" font-size="13" fill="#16191d" font-weight="600">Ответ уже был в проекте — отчёт 08-01, п. 3:</text>
+    <text x="58" y="624" font-size="12.5" fill="#565d66">«Начало / середина / конец» — ось для СЛОВ. Для слогов канон даёт ОДНУ ось</text>
+    <text x="58" y="644" font-size="12.5" fill="#565d66">из пяти типов: прямой → обратный → между гласными → стечение в начале →</text>
+    <text x="58" y="664" font-size="12.5" fill="#565d66">стечение в конце. Перемножение уже печатало несуществующие «АПЛА», «АПЛ».</text>
+    <text x="58" y="696" font-size="13" fill="#16191d" font-weight="600">Проверка на словах: оси независимы</text>
+    <text x="58" y="720" font-size="12.5" fill="#565d66">рак — в начале, прямой · корова — в середине, тоже прямой ·</text>
+    <text x="58" y="740" font-size="12.5" fill="#565d66">топор — в конце, обратный · арка — в середине, стечение после гласной.</text>
+  </g>
+
+  <!-- ЧТО ЕЩЁ ПОПРАВЛЕНО -->
+  <g>
+    <rect x="640" y="520" width="560" height="240" rx="10" fill="#fff" stroke="#d5d0c6"/>
+    <text x="658" y="546" font-size="12" font-weight="700" fill="#2f6b4f" letter-spacing="1">ЧТО ЕЩЁ ПЕРЕСТАЛО ВРАТЬ</text>
+    <text x="658" y="576" font-size="12.5" fill="#16191d">· витринные вкладки ушли из линейки рабочих — неработающая кнопка</text>
+    <text x="670" y="596" font-size="12.5" fill="#565d66">среди рабочих читается как поломка, теперь это блок «будет позже»</text>
+    <text x="658" y="622" font-size="12.5" fill="#16191d">· их тексты обещали «ждёт свой банк картинок» — банк готов 08-18</text>
+    <text x="658" y="648" font-size="12.5" fill="#16191d">· числа рва вынесены строкой наружу: «16 слов из 139 подходящих ·</text>
+    <text x="670" y="668" font-size="12.5" fill="#565d66">профиль убрал 20»; у лабиринта — «картинок 8 из 8»</text>
+    <text x="658" y="694" font-size="12.5" fill="#16191d">· панель разбита на три группы: действия · «Этот лист» · «Почему так»,</text>
+    <text x="670" y="714" font-size="12.5" fill="#565d66">и заголовок группы гаснет, если внутри пусто</text>
+    <text x="658" y="740" font-size="12.5" fill="#16191d">· слог на кнопке показывает роль: Ра · аР · аРа · кРа · аРт</text>
+  </g>
+
+  <text x="40" y="800" font-size="12.5" fill="#8b929b">Разбор целиком: research/logoped_interface_reviziya_2026-08-18.md · канон осей: research/logoped_canon_verify_2026-08-01.md</text>
+  <text x="40" y="822" font-size="12.5" fill="#8b929b">Проверка утверждения — по сигнатурам движка: sheet.typ · track.syl_type · propisi.syl_type · maze.position · phrases/rasskaz/story — без оси.</text>
+
+  <defs>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#9d3535"/>
+    </marker>
+    <marker id="ag" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#2f6b4f"/>
+    </marker>
+  </defs>
+</svg>
