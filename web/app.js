@@ -31,6 +31,13 @@ const S = {
   textId: null,    // выбранный текст пересказа; null = первый чистый
 };
 
+// Материалы, у которых пересборка реально меняет выдачу. Лабиринта нет намеренно:
+// на узких пулах seed даёт не другой набор, а перестановку тех же слов (проверено
+// на [с] в начале: seed 0 и 1 — те же восемь слов), а кнопка, которая выглядит
+// рабочей и ничего не меняет, — та же ложь, что погашенная кнопка без причины.
+const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story']);
+
+
 const $ = (id) => document.getElementById(id);
 
 /* Слог, который сейчас выбран, — подписью для человека («КЛА»). */
@@ -454,7 +461,7 @@ function renderTabs() {
   if (soon) $('stat-line').hidden = true;   // числа принадлежат собранному материалу
   renderColour();
   if (S.tab === 'maze') renderPositions();
-  $('reroll').hidden = (S.tab !== 'sheet');
+  $('reroll').hidden = !REROLLABLE.has(S.tab);
   // Профиль ребёнка меняет лист и лабиринт, но не дорожку и не прописи:
   // там нет слов, а слог по построению чист (целевой звук + гласная).
   $('ask').hidden = soon || (S.tab === 'track') || (S.tab === 'propisi')
@@ -720,7 +727,8 @@ async function load() {
       // Дорожка Ольги: слоги по тропе. Слов нет — профиль на неё не влияет,
       // слог по построению чист (целевой звук + гласная).
       res = await post('/api/track',
-        { sound: S.sound, typ: S.typ, ...(S.scene === null ? {} : { scene: S.scene }) });
+        { sound: S.sound, typ: S.typ, seed: S.sheetNo - 1,
+          ...(S.scene === null ? {} : { scene: S.scene }) });
     } else if (S.tab === 'story' && S.storyMode === 'retell') {
       // Пересказ готового текста. Профиль работает: отдаются только тексты,
       // чистые для ЭТОГО ребёнка.
@@ -736,11 +744,12 @@ async function load() {
     } else if (S.tab === 'propisi') {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
       res = await post('/api/propisi',
-        { sound: S.sound, typ: S.typ, mode: S.propisiMode });
+        { sound: S.sound, typ: S.typ, mode: S.propisiMode, seed: S.sheetNo - 1 });
     } else if (S.tab === 'phrases') {
       // Здесь профиль работает на ОБЕ части пары: и на существительное,
       // и на прилагательное. Тип слога на словосочетания не влияет.
-      res = await post('/api/phrases', { sound: S.sound, profile: profile });
+      res = await post('/api/phrases',
+        { sound: S.sound, profile: profile, seed: S.sheetNo - 1 });
     } else if (S.tab === 'maze') {
       ensurePosition();
       res = await post('/api/maze',
