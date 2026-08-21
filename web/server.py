@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import urllib.parse
 import sys
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -199,7 +200,8 @@ def games_state(content: Dict[str, Any], fitted: Dict[str, Any],
 
 def build_sheet(sound: str, typ: str, prof: str,
                 sheet_no: int = 1, seed: int = 0,
-                audience: str = "home", game: str = "") -> Dict[str, Any]:
+                audience: str = "home", game: str = "",
+                colour: bool = False) -> Dict[str, Any]:
     """Канонный путь сборки листа. Возвращает готовый ответ для браузера.
 
     ВАЖНО про порядок. `render_sheet_ex` внутри себя зовёт `fit()`, а `fit`
@@ -232,7 +234,8 @@ def build_sheet(sound: str, typ: str, prof: str,
     html, _ = S.render_sheet_ex(
         fitted, meta,
         options={"stress": "non_obvious", "show_warnings": False,
-                 "no_fit": True, "audience": audience},
+                 "no_fit": True, "audience": audience,
+                 "sound": sound, "colour": colour},
     )
 
     words = words_on_sheet(fitted)
@@ -536,6 +539,23 @@ class Handler(BaseHTTPRequestHandler):
         with open(path, "rb") as fh:
             self._send(200, fh.read(), ctype)
 
+    # Герои отдаются ФАЙЛОМ, а не встраиваются в лист base64. Причина в весе:
+    # ч/б герой весит 2-3 КБ и встраивается даром, а цветной 73-229 КБ —
+    # сглаживание краёв делает «плоский цвет» многоцветным. Файлом цвет
+    # не стоит ничего: браузер возьмёт его один раз и закэширует.
+    _GEROI = {"colour": "geroi", "bw": "geroi_bw"}
+
+    def _hero(self, kind: str, name: str) -> None:
+        folder = self._GEROI.get(kind)
+        # имя приходит из адреса — пускаем только то, что реально лежит в банке
+        root = os.path.abspath(os.path.join(HERE, "..", "pictures", folder or ""))
+        path = os.path.abspath(os.path.join(root, name))
+        if not folder or os.path.dirname(path) != root or not os.path.isfile(path):
+            self._send(404, b"not found", "text/plain; charset=utf-8")
+            return
+        with open(path, "rb") as fh:
+            self._send(200, fh.read(), "image/png")
+
     def _body(self) -> Dict[str, Any]:
         length = int(self.headers.get("Content-Length") or 0)
         if not length:
@@ -550,6 +570,12 @@ class Handler(BaseHTTPRequestHandler):
             self._static("index.html")
         elif path in ("/app.css", "/app.js"):
             self._static(path.lstrip("/"))
+        elif path.startswith("/geroi/"):
+            parts = path.split("/")          # ['', 'geroi', <kind>, <file>]
+            if len(parts) == 4:
+                self._hero(parts[2], urllib.parse.unquote(parts[3]))
+            else:
+                self._send(404, b"not found", "text/plain; charset=utf-8")
         elif path == "/api/config":
             self._json(config())
         elif path == "/api/method":
@@ -600,6 +626,7 @@ class Handler(BaseHTTPRequestHandler):
                     seed=as_int(data.get("seed"), 0),
                     audience=aud,
                     game=str(data.get("game") or ""),
+                    colour=bool(data.get("colour")),
                 ))
 
             elif path == "/api/track":
@@ -623,7 +650,7 @@ class Handler(BaseHTTPRequestHandler):
                                   scene=scene)
                 self._json({
                     "ok": True,
-                    "html": T.render_track(t),
+                    "html": T.render_track(t, colour=bool(data.get("colour"))),
                     "warnings": {"blocking": [], "notes": []},
                     "stats": {"kind": "track",
                               "scene": t["meta"].get("scene", ""),
@@ -767,7 +794,7 @@ class Handler(BaseHTTPRequestHandler):
                                      mode=mode)
                 self._json({
                     "ok": True,
-                    "html": PR.render_propisi(p),
+                    "html": PR.render_propisi(p, colour=bool(data.get("colour"))),
                     "syllable": p["meta"]["syllable"],
                     "warnings": {"blocking": [], "notes": notes},
                     "stats": {"kind": "propisi",

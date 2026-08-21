@@ -34,6 +34,9 @@ characters.py — ПЕРСОНАЖИ ЗВУКОВ: собственные ч/б 
 
 from __future__ import annotations
 
+import base64
+from pathlib import Path
+from urllib.parse import quote
 from typing import Dict, Optional
 
 __all__ = ["character_svg", "has_character", "CHARACTERS"]
@@ -188,16 +191,63 @@ def has_character(name: str) -> bool:
     return _resolve(name) in CHARACTERS
 
 
+# ── РИСОВАННЫЕ ГЕРОИ (08-21) ─────────────────────────────────────────
+# Решение автора: герой становится ЦВЕТНЫМ и детским. Разведка живого поля
+# (research/logoped_geroi_fony_2026-08-19.md): контурного нераскрашенного
+# персонажа в русской традиции нет ни разу — все цветные и проработанные.
+# Закон 11 это не ломает: он про узнаваемость СЛОВА, а героя ребёнок не
+# называет, он его узнаёт.
+#
+# Два файла на героя, как у корпуса предметов: цветной и ч/б, снятый с него же
+# (imgbw.strip_colour). Цветное на ч/б принтере печатать нельзя — заливка
+# садится ровным серым и глушит линии (замер 08-18, objects.py).
+# Умолчание — ч/б: лист печатают на обычном принтере.
+#
+# Векторные CHARACTERS остались рядом ЗАПАСОМ: нет PNG — рисуем как раньше.
+_BANK_COLOUR = Path(__file__).resolve().parent.parent / "pictures" / "geroi"
+_BANK_BW = Path(__file__).resolve().parent.parent / "pictures" / "geroi_bw"
+
+
+# Как отдавать рисунок. По умолчанию — АДРЕСОМ (`/geroi/bw/мотор.png`):
+# ч/б весит 2-3 КБ, цветной 73-229 КБ, и файлом цвет не стоит ничего.
+# Встраивание base64 остаётся для случая, когда лист должен быть автономным
+# (сохранён на диск, отправлен файлом) — тогда EMBED=True.
+EMBED = False
+
+
+def _hero_src(name: str, colour: bool) -> Optional[str]:
+    """Адрес или data-URI рисунка героя; None — если файла нет."""
+    banks = ((_BANK_COLOUR, "colour"),) if colour else ((_BANK_BW, "bw"), (_BANK_COLOUR, "colour"))
+    for bank, kind in banks:
+        f = bank / f"{name}.png"
+        if not f.exists():
+            continue
+        if EMBED:
+            return ("data:image/png;base64,"
+                    + base64.b64encode(f.read_bytes()).decode("ascii"))
+        return f"/geroi/{kind}/{quote(name)}.png"
+    return None
+
+
 def character_svg(name: str, width_mm: float = 22.0,
-                  stroke: float = 2.2) -> Optional[str]:
+                  stroke: float = 2.2, colour: bool = False) -> Optional[str]:
     """Готовый <svg> персонажа или None, если рисунка ещё нет.
 
     None — законный ответ: пока нарисован не весь реестр, лист обязан уметь
     обойтись без картинки и не притворяться, будто она есть."""
-    body = CHARACTERS.get(_resolve(name))
+    key = _resolve(name)
+    h = width_mm * 0.70
+    data = _hero_src(key, colour)
+    if data:
+        # рисунок 3:2, окно 10:7 — вписываем без искажения
+        return (f'<svg class="chr" viewBox="0 0 100 70" width="{width_mm:.1f}mm" '
+                f'height="{h:.1f}mm" xmlns="http://www.w3.org/2000/svg" '
+                f'aria-hidden="true">'
+                f'<image href="{data}" x="0" y="0" width="100" height="70" '
+                f'preserveAspectRatio="xMidYMid meet"/></svg>')
+    body = CHARACTERS.get(key)
     if not body:
         return None
-    h = width_mm * 0.70
     return (f'<svg class="chr" viewBox="0 0 100 70" width="{width_mm:.1f}mm" '
             f'height="{h:.1f}mm" xmlns="http://www.w3.org/2000/svg" '
             f'fill="none" stroke="#000" stroke-width="{stroke}" '

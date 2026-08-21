@@ -421,7 +421,7 @@ def _e(s: Any) -> str:
     return html.escape(str(s), quote=True)
 
 
-def render_propisi(p: Dict[str, Any]) -> str:
+def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
     """Структура -> печатный HTML одного листа А4 (ч/б).
 
     Устройство взято с образцов Ольги (ГОЛОСА.md, разбор 08-06): слева
@@ -462,7 +462,7 @@ def render_propisi(p: Dict[str, Any]) -> str:
         # гласной. Обратный: сказали гласную → тянем звук до персонажа.
         # У изолированной ступени порядка нет: гласной там не существует.
         _hero_html = ('<div class="hero"><div class="hero-box">'
-                      + (CH.character_svg(m["image_name"], 30.0, 2.4)
+                      + (CH.character_svg(m["image_name"], 30.0, 2.4, colour=colour)
                          or "<span>" + _e(m["image_name"] or label) + "</span>")
                       + "</div></div>")
         _vowel_html = ("" if isolated

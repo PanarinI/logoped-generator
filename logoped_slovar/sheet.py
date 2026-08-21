@@ -434,8 +434,15 @@ def estimate_heights(content: Dict[str, Any],
 
     iso = content.get("isolated")
     if iso:
-        h["isolated"] = (_speech_line() + METRICS["title_gap"] + g
-                         + _wrap(iso.get("adult"), METRICS["fs_adult"]) * _adult_line())
+        # ⚠ Герой блока [2] — картинка 18 мм шириной, высота 0.70 от ширины.
+        # Она стоит СЛЕВА, текст обтекает её справа, поэтому блок занимает не
+        # сумму, а максимум из двух высот. Не учтёшь — лист уедет на вторую
+        # страницу: ровно так 08-12 четырнадцать конфигураций из двадцати пяти
+        # печатались в два листа, потому что модель не считала то, что дорисовывает
+        # рендер.
+        text_mm = _speech_line() + _wrap(iso.get("adult"), METRICS["fs_adult"]) * _adult_line()
+        h["isolated"] = (max(text_mm, HERO_MM * 0.70 + 1.0)
+                         + METRICS["title_gap"] + g)
 
     syl = content.get("syllables")
     if syl:
@@ -915,6 +922,8 @@ html, body {{
 
 /* ── [2] изолированный звук ───────────────────────────────────────── */
 .iso {{ font-size: var(--fs-speech); white-space: nowrap; }}
+.iso-hero {{ float: left; margin: 0 3mm 0 0; }}
+.iso-hero svg {{ display: block; }}
 .iso b {{ letter-spacing: 1pt; }}
 
 /* ── [3] слоги: 2 печатные колонки, поток сверху вниз (порядок строк
@@ -1106,12 +1115,39 @@ def _b4b_fill(b: Dict[str, Any]) -> str:
             f'<div class="fill">{items}</div></section>')
 
 
-def _b2_isolated(b: Dict[str, Any]) -> str:
+HERO_MM = 18.0          # ширина героя в блоке [2]; высота = 0.70 от неё
+
+
+def _hero_for(meta: Dict[str, Any], opt: Dict[str, Any]) -> str:
+    """SVG героя звука для блока [2]; пустая строка, если рисунка нет.
+
+    Имя образа берётся из того же дома, что и у дорожек (`propisi._image_for`
+    читает gymnastics.json), — иначе лист и дорожка показали бы ребёнку разных
+    существ на один звук."""
+    sound = str(meta.get("sound") or opt.get("sound") or "")
+    if not sound:
+        return ""
+    try:
+        import propisi as _PR
+        import characters as _CH
+        name = (_PR._image_for(sound) or {}).get("name") or ""
+        return _CH.character_svg(name, HERO_MM, colour=bool(opt.get("colour"))) or ""
+    except Exception:
+        return ""
+
+
+def _b2_isolated(b: Dict[str, Any], hero: str = "") -> str:
+    # Герой звука стоит ЗДЕСЬ и только здесь. Причина записана 08-10: на листе
+    # со словами любая картинка становится речевым материалом и обязана пройти
+    # фильтр чистоты по профилю ребёнка. Единственное исключение — образ звука
+    # рядом с самим звуком: его ребёнок не называет, он его узнаёт, и он тот же
+    # самый, что стоит у старта обеих дорожек (постоянство, ✅ Фомичёва).
     line = (f'<span class="iso">{_e(b.get("instruction", ""))} '
             f'<b>{_e(b.get("text", ""))}</b></span>')
     adult = f'<div class="adult">{_e(b["adult"])}</div>' if b.get("adult") else ""
+    pic = f'<div class="iso-hero">{hero}</div>' if hero else ""
     return (f'<section class="block">{_head("2", "Звук", "", "", line)}'
-            f'{adult}</section>')
+            f'{pic}{adult}</section>')
 
 
 def _b3_syllables(b: Dict[str, Any], sp: str) -> str:
@@ -1252,7 +1288,7 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
         parts.append(_b1_articulation(c["articulation"],
                                       with_hints=(audience == "home")))
     if c.get("isolated"):
-        parts.append(_b2_isolated(c["isolated"]))
+        parts.append(_b2_isolated(c["isolated"], _hero_for(meta, opt)))
     if c.get("syllables"):
         parts.append(_b3_syllables(c["syllables"], sp))
     lk = _stress_lookup(c)

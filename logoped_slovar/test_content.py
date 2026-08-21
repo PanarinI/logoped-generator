@@ -927,8 +927,19 @@ def test_characters_are_drawn_not_written():
         name = PR._image_for(sound).get("name") or ""
         truthy(f"[{sound}] у образа «{name}» есть рисунок", CH.has_character(name))
         svg = CH.character_svg(name, 30.0)
-        truthy(f"[{sound}] рисунок — контур без заливки",
-               bool(svg) and 'fill="none"' in svg and "fill:#" not in svg)
+        # 08-21: герой стал ЦВЕТНЫМ по решению автора — прежнее «контур без
+        # заливки» отменено (разведка поля: контурного персонажа в русской
+        # традиции нет ни разу). Осталось то, что не менялось: рисунок есть,
+        # он вписан в лист картинкой, и внутри него НЕТ текста — ребёнок
+        # 5-7 лет не читает, надпись перетянула бы внимание.
+        truthy(f"[{sound}] рисунок есть и вписан в лист",
+               bool(svg) and ('<image' in svg or 'fill="none"' in svg))
+        truthy(f"[{sound}] внутри рисунка нет текста",
+               bool(svg) and "<text" not in svg)
+        # умолчание — ч/б: лист печатают на обычном принтере, а цветная
+        # заливка на нём садится ровным серым и глушит линии (замер 08-18)
+        truthy(f"[{sound}] по умолчанию берётся ч/б, не цветной",
+               bool(svg) and len(svg) < len(CH.character_svg(name, 30.0, colour=True) or "x" * 10**9))
     html = PR.render_propisi(PR.build_propisi("р", "direct"))
     truthy("звуковая дорожка печатает рисунок, а не слово «мотор»",
            "<svg class=\"chr\"" in html)

@@ -36,6 +36,12 @@ COPY --chown=app:app web/ ./web/
 # либо честная рамка со словом, но никогда чужой рисунок.
 COPY --chown=app:app pictures/objects/small/ ./pictures/objects/small/
 COPY --chown=app:app pictures/objects_colour/small/ ./pictures/objects_colour/small/
+# Герои звука (08-21): семь рисованных персонажей, ч/б и цветные. Отдаются
+# файлом по /geroi/<bw|colour>/<имя>.png, а не встраиваются в лист — иначе
+# цветной герой добавлял бы 73-229 КБ к каждому листу. Ч/б банк 28 КБ,
+# цветной 852 КБ — оба целиком, это не выкладка чужого материала, рисунки свои.
+COPY --chown=app:app pictures/geroi/ ./pictures/geroi/
+COPY --chown=app:app pictures/geroi_bw/ ./pictures/geroi_bw/
 
 EXPOSE 8080
 CMD ["python3", "web/server.py"]

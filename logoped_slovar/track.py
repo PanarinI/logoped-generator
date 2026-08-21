@@ -366,7 +366,7 @@ def _occupied(rows: int, cols: int, n_cells: int,
     return out
 
 
-def render_track(track: Dict[str, Any]) -> str:
+def render_track(track: Dict[str, Any], colour: bool = False) -> str:
     m = track["meta"]
     cells = track["cells"]
     e = lambda s: html.escape(str(s), quote=False)   # noqa: E731
@@ -448,7 +448,7 @@ def render_track(track: Dict[str, Any]) -> str:
   </div>
   <h1>{e(track['instruction'])}</h1>
   <div class="lead">
-    <div class="hero">{CH.character_svg(hero, 30.0, 2.4)
+    <div class="hero">{CH.character_svg(hero, 30.0, 2.4, colour=colour)
       or f'<span>{e(hero)}</span>'}</div>
     <p class="hint">{e(track['lead'])}</p>
   </div>

@@ -35,6 +35,9 @@ const S = {
 // на узких пулах seed даёт не другой набор, а перестановку тех же слов (проверено
 // на [с] в начале: seed 0 и 1 — те же восемь слов), а кнопка, которая выглядит
 // рабочей и ничего не меняет, — та же ложь, что погашенная кнопка без причины.
+// Материалы, у которых есть что красить.
+const COLOURABLE = new Set(['maze', 'sheet', 'track', 'propisi']);
+
 const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story']);
 
 
@@ -82,8 +85,31 @@ function listLabels(keys) {
 async function boot() {
   S.cfg = await (await fetch('/api/config')).json();
   renderSounds();
-  renderCrumbs();
   bindActions();
+  // Решение автора 08-19: лист приходит СОБРАННЫМ. Экрана выбора звука перед
+  // листом нет и промежуточного экрана «что делаем» нет — логопед видит бумагу,
+  // а не следующий вопрос. Звук и материал остаются переключателями рядом с листом
+  // (вкладки сверху и крошки), а на сайте звук вдобавок задаётся адресом страницы.
+  openDefault();
+}
+
+// Звук по умолчанию — [р]: самая большая картотека (168 слов) и самый частый
+// запрос ниши. Материал по умолчанию — лист автоматизации: единственный, кто
+// проходит ступени внутри себя, то есть закрывает занятие целиком.
+function openDefault() {
+  const have = (S.cfg.sounds || []).map((s) => s.key);
+  S.sound = have.includes('р') ? 'р' : have[0];
+  S.tab = 'sheet';
+  S.colour = false;
+  S.typ = firstTypFor('sheet');
+  const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === S.typ);
+  S.syllable = t ? t.syllable : '';
+  S.sheetNo = 1;
+  show('result');
+  renderChips();
+  renderAudience();
+  renderTabs();
+  load();
 }
 
 async function post(url, body) {
@@ -365,7 +391,13 @@ function pickMaterial(it) {
   const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === S.typ);
   S.syllable = t ? t.syllable : '';
   S.sheetNo = 1;
-  S.profile.clear();
+  // Цвет — свойство материала: лабиринту он нужен для узнавания картинки,
+  // листу и дорожкам нет (печать на обычном принтере). Поэтому при смене
+  // материала умолчание возвращается, а не тянется из прошлого выбора.
+  S.colour = (it.tab === 'maze');
+  // S.profile НЕ чистим: профиль ребёнка — часть задачи, а не настройка листа.
+  // Прежде он стирался на каждом переключении материала, и ров продукта
+  // (фильтр по непоставленным звукам) сбрасывался незаметно для логопеда.
   S.prev = null;
   S.games = null;
   $('ask').hidden = true;        // профиль спрашиваем после первого материала
@@ -450,7 +482,11 @@ function renderTabs() {
   const soon = !!SOON[S.tab];
   $('tab-extra').hidden = soon || (S.tab !== 'maze');
   if (S.tab !== 'maze') $('maze-limits').hidden = true;
-  $('colour-card').hidden = (S.tab !== 'maze');
+  // Цвет есть там, где есть что красить: картинки лабиринта и герой звука.
+  // Умолчания РАЗНЫЕ и это не прихоть: картинке лабиринта цвет нужен для
+  // узнавания (борщ в ч/б назовут супом), а герою — нет, зато лист печатают
+  // на обычном принтере, где цветная заливка садится серым.
+  $('colour-card').hidden = !COLOURABLE.has(S.tab);
   // Тип слога — только у материалов, которые его получают (см. сигнатуры
   // движка: sheet.typ · track.syl_type · propisi.syl_type). У лабиринта своя
   // ось (позиция), у словосочетаний и рассказов оси нет вовсе.
@@ -495,7 +531,10 @@ function renderTabs() {
   syncGroupTitle();
 }
 function renderColour() {
-  $('colour-btn').classList.toggle('is-on', !S.colour);
+  $('colour-btn').classList.toggle('is-on',
+    S.tab === 'maze' ? !S.colour : S.colour);
+  $('colour-btn').lastChild.textContent =
+    S.tab === 'maze' ? 'Без цвета' : 'Цветной герой';
   $('colour-hint').textContent = S.colour
     ? 'Картинки цветные — печатать на цветном принтере.'
     : 'Картинки чёрно-белые — напечатает любой принтер.';
@@ -727,7 +766,7 @@ async function load() {
       // Дорожка Ольги: слоги по тропе. Слов нет — профиль на неё не влияет,
       // слог по построению чист (целевой звук + гласная).
       res = await post('/api/track',
-        { sound: S.sound, typ: S.typ, seed: S.sheetNo - 1,
+        { sound: S.sound, typ: S.typ, seed: S.sheetNo - 1, colour: S.colour,
           ...(S.scene === null ? {} : { scene: S.scene }) });
     } else if (S.tab === 'story' && S.storyMode === 'retell') {
       // Пересказ готового текста. Профиль работает: отдаются только тексты,
@@ -744,7 +783,8 @@ async function load() {
     } else if (S.tab === 'propisi') {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
       res = await post('/api/propisi',
-        { sound: S.sound, typ: S.typ, mode: S.propisiMode, seed: S.sheetNo - 1 });
+        { sound: S.sound, typ: S.typ, mode: S.propisiMode, seed: S.sheetNo - 1,
+          colour: S.colour });
     } else if (S.tab === 'phrases') {
       // Здесь профиль работает на ОБЕ части пары: и на существительное,
       // и на прилагательное. Тип слога на словосочетания не влияет.
@@ -758,7 +798,7 @@ async function load() {
     } else {
       res = await post('/api/sheet',
         { sound: S.sound, typ: S.typ, profile: profile, sheet_no: S.sheetNo,
-          audience: S.audience, game: S.game });
+          audience: S.audience, game: S.game, colour: S.colour });
     }
   } catch (e) {
     if (my !== TICKET) return;
