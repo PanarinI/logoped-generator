@@ -44,7 +44,12 @@ const COLOURABLE = new Set(['maze', 'sheet', 'track', 'propisi']);
 // У дорожки и прописей слов нет: слог по построению чист (звук + гласная).
 const USES_WORDS = new Set(['sheet', 'maze', 'phrases', 'story']);
 
-const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story']);
+// Кубик включён у лабиринта с 08-23. Прежде он был выключен «потому что на
+// узких пулах seed даёт перестановку тех же слов» — и это объяснение оказалось
+// неверным: seed не участвовал в отборе ВООБЩЕ (перемешивание гасила сортировка,
+// где последним ключом стояло само слово), а пулы не узкие — у [с] в начале
+// 63 слова на 8 клеток. Разобрано и исправлено в maze.py.
+const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story', 'maze']);
 
 
 /* ── адрес страницы говорит, с чем открыть виджет ──────────
@@ -723,7 +728,7 @@ async function load() {
       ensurePosition();
       res = await post('/api/maze',
         { sound: S.sound, position: S.position, profile: profile,
-          colour: S.colour });
+          seed: S.sheetNo - 1, colour: S.colour });
     } else {
       res = await post('/api/sheet',
         { sound: S.sound, typ: S.typ, profile: profile, sheet_no: S.sheetNo,
