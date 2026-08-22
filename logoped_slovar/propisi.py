@@ -465,8 +465,17 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
                       + (CH.character_svg(m["image_name"], 30.0, 2.4, colour=colour)
                          or "<span>" + _e(m["image_name"] or label) + "</span>")
                       + "</div></div>")
+        # ⚠ У финиша печатается СЛОГ, а не фонемная гласная. До 08-23 здесь стоял
+        # `vowel.upper()` — фонема, — и на 22 сочетаниях из 55 ребёнок видел у
+        # финиша букву, которой в его слоге нет: заголовок «слог СЁ», а у финиша
+        # «О»; «слог ШИ» — а у финиша «Ы». Поймано автором на глаз («сь-сь-сь-о —
+        # непонятно») и воспроизведено прогоном 11 звуков × 5 гласных.
+        #
+        # Слог у финиша — не наша выдумка: ровно так просит произнести Борисова
+        # 2008 («обвести трафарет и произнести: с-са»), и так же устроены образцы
+        # Ольги, где у финиша стоит плашка со слогом целиком.
         _vowel_html = ("" if isolated
-                       else '<div class="finish">' + _e(vowel.upper()) + "</div>")
+                       else '<div class="finish">' + _e(syll.upper()) + "</div>")
         _reverse = (m.get("syl_type") == "reverse") and not isolated
         rows.append(f"""
   <div class="row">
