@@ -153,6 +153,176 @@ def strip_colour(src: Path, dst: Path, *, sat: int = 28, dark: int = 128) -> dic
     return stat
 
 
+# ═══════════════════════════════════════════════════════════════════════
+#  ДОВОДКА ЛИНИИ: наращивание штриха до печатной толщины
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Зачем. Сцена слоговой дорожки печатается линией 0.95 мм и бледно (opacity
+# 0.42). Спрайт для неё рисует генератор — и толщину линии он НЕ СЛУШАЕТСЯ:
+# проба 08-22 показала 0.32-0.48 мм на просьбу «столько-то процентов ширины»,
+# и 0.58-0.67 мм после втрое более настойчивой формулировки («широким чёрным
+# маркером, ошибись в сторону слишком толстого»). До нужного не дошёл ни разу.
+#
+# Поэтому толщина не выпрашивается, а доводится здесь — это тот же локальный
+# закон 7 проекта: правило врёт, таблица работает. Меряем и правим механически.
+
+
+def _gray(w: int, rows: list[bytes]) -> list[bytearray]:
+    """Свести любые каналы к одному байту на пиксель."""
+    n = len(rows[0]) // w
+    if n == 1:
+        return [bytearray(r) for r in rows]
+    out = []
+    for r in rows:
+        out.append(bytearray((r[x * n] + r[x * n + 1] + r[x * n + 2]) // 3
+                             for x in range(w)))
+    return out
+
+
+def _dark_mask(g: list[bytearray], thr: int) -> list[bytearray]:
+    return [bytearray(1 if v < thr else 0 for v in row) for row in g]
+
+
+def stroke_px(mask: list[bytearray]) -> float:
+    """Медиана длины тёмного отрезка в строке — оценка толщины штриха.
+
+    Медиана, а не среднее: у рисунка есть и длинные заливки-пересечения, и
+    короткие хвосты, и среднее по ним ничего не говорит о линии.
+    """
+    runs: list[int] = []
+    for row in mask:
+        cur = 0
+        for v in row:
+            if v:
+                cur += 1
+            elif cur:
+                runs.append(cur)
+                cur = 0
+        if cur:
+            runs.append(cur)
+    if not runs:
+        return 0.0
+    runs.sort()
+    return float(runs[len(runs) // 2])
+
+
+def ink_box(mask: list[bytearray]) -> tuple[int, int, int, int]:
+    """Границы чернил: x0, y0, x1, y1. Пустая картинка → нули."""
+    h = len(mask)
+    w = len(mask[0]) if h else 0
+    x0, y0, x1, y1 = w, h, -1, -1
+    for y, row in enumerate(mask):
+        if 1 not in row:
+            continue
+        y0 = min(y0, y)
+        y1 = max(y1, y)
+        x0 = min(x0, row.index(1))
+        # последний тёмный в строке
+        for x in range(len(row) - 1, -1, -1):
+            if row[x]:
+                x1 = max(x1, x)
+                break
+    if x1 < 0:
+        return 0, 0, 0, 0
+    return x0, y0, x1, y1
+
+
+def _grow(mask: list[bytearray], r: int) -> list[bytearray]:
+    """Нарастить тёмное на r пикселей. Раздельно по осям — так быстрее.
+
+    Раздельная дилатация квадратом даёт тот же результат, что один проход
+    квадратным окном, но за два линейных прохода вместо квадратичного.
+    """
+    h = len(mask)
+    w = len(mask[0]) if h else 0
+    # горизонталь скользящим счётчиком
+    tmp = []
+    for row in mask:
+        acc = 0
+        out = bytearray(w)
+        # префиксные суммы дешевле пересчёта окна
+        pref = [0] * (w + 1)
+        for x in range(w):
+            pref[x + 1] = pref[x] + row[x]
+        for x in range(w):
+            a = max(0, x - r)
+            b = min(w, x + r + 1)
+            out[x] = 1 if pref[b] - pref[a] else 0
+        tmp.append(out)
+    # вертикаль тем же приёмом по столбцам
+    col_pref = [[0] * (h + 1) for _ in range(w)]
+    for y in range(h):
+        rowy = tmp[y]
+        for x in range(w):
+            col_pref[x][y + 1] = col_pref[x][y] + rowy[x]
+    out_rows = []
+    for y in range(h):
+        out = bytearray(w)
+        a = max(0, y - r)
+        b = min(h, y + r + 1)
+        for x in range(w):
+            out[x] = 1 if col_pref[x][b] - col_pref[x][a] else 0
+        out_rows.append(out)
+    return out_rows
+
+
+def thicken(src: Path, dst: Path, *, box_w_mm: float, target_mm: float = 0.95,
+            thr: int = 200, max_grow: int = 60) -> dict:
+    """Нарастить линию так, чтобы на бумаге она вышла нужной толщины.
+
+    `box_w_mm` — ширина, которой картинка будет напечатана. Именно она, а не
+    размер файла, задаёт цену пикселя: наращивать надо до печатной толщины,
+    а не до красивого числа в пикселях.
+
+    Возвращает замер до и после — чтобы результат был проверяем, а не на веру.
+    """
+    w, h, rows = read_png(Path(src))
+    g = _gray(w, rows)
+    mask = _dark_mask(g, thr)
+
+    x0, y0, x1, y1 = ink_box(mask)
+    ink_w = max(1, x1 - x0 + 1)
+    mm_per_px = box_w_mm / ink_w
+
+    was_px = stroke_px(mask)
+    was_mm = was_px * mm_per_px
+    need_px = target_mm / mm_per_px
+
+    # ⚠ Формула «наращивание на r прибавляет 2r» НЕВЕРНА, и это проверено:
+    # 08-22 она дала 1.45 · 2.55 · 1.10 мм при цели 0.95. Причина в том, что
+    # наращивание не только утолщает штрих, но и СЛИВАЕТ соседние линии — у
+    # ванны с частой решёткой крана промах был восьмикратным.
+    # Поэтому формула служит только верхней границей, а величину подбираем
+    # ЗАМЕРОМ: наименьшее наращивание, при котором штрих дошёл до цели.
+    hi = max(0, min(max_grow, round((need_px - was_px) / 2) + 2))
+    best, best_mask, best_px = 0, mask, was_px
+    lo = 0
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        cand = _grow(mask, mid) if mid else mask
+        px = stroke_px(cand)
+        if px >= need_px:
+            best, best_mask, best_px = mid, cand, px
+            hi = mid - 1
+        else:
+            lo = mid + 1
+            if mid >= best:
+                best, best_mask, best_px = mid, cand, px
+
+    grow, mask, now_px = best, best_mask, best_px
+    out = [bytearray(0 if v else 255 for v in row) for row in mask]
+    write_png_gray(Path(dst), w, h, [bytes(r) for r in out])
+
+    return {
+        "grow_px": grow,
+        "mm_per_px": round(mm_per_px, 5),
+        "stroke_was_mm": round(was_mm, 2),
+        "stroke_now_mm": round(now_px * mm_per_px, 2),
+        "target_mm": target_mm,
+        "ink": (ink_w, y1 - y0 + 1),
+    }
+
+
 if __name__ == "__main__":
     import sys
     print(strip_colour(Path(sys.argv[1]), Path(sys.argv[2])))
