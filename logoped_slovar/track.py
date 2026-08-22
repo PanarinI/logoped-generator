@@ -411,8 +411,10 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
         f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
         f'fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round" '
         f'stroke-linejoin="round"/>'
-        f'<text x="{sx:.1f}" y="{sy - _R - 3.2:.1f}" font-size="4.2" '
-        f'text-anchor="middle">старт</text>')
+        # ⚠ Слова «старт» и «финиш» сняты 08-23 по слову автора: стрелка и
+        # флажок говорят то же самое, а подпись повторяла их третий раз. Место
+        # у краёв листа дорого — там же лежит сцена.
+        )
     if last:
         fx, fy = last
         # Флажок ставим ПО ХОДУ движения: на обратном ряду ребёнок идёт справа
@@ -443,9 +445,7 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
             f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
             f'L {px + fwd * _FLAG_W:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
             f'fill="#000" stroke="#000" stroke-width="1.4" '
-            f'stroke-linejoin="round"/>'
-            f'<text x="{tx:.1f}" y="{fy + _R + 4.8:.1f}" font-size="4.2" '
-            f'text-anchor="middle">финиш</text>')
+            f'stroke-linejoin="round"/>')
 
     return f"""<!DOCTYPE html>
 <html lang="ru">

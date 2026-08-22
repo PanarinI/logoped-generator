@@ -187,10 +187,17 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    Прежде панель забирала всё свободное место, и пропорции читались нелепо. */
 .result { display: grid;
           grid-template-columns: auto minmax(0, 1fr) clamp(320px, 27vw, 440px);
-          gap: var(--s4); align-items: start;
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: var(--s3) var(--s4); align-items: start;
           height: 100vh; }
 
-.paper { min-width: 0; justify-self: center; }
+/* Закладки звуков и лист занимают обе строки; полоса вкладок стоит над панелью
+   в её колонке. Так вкладки не отнимают высоту у листа — а лист ограничен
+   именно высотой. */
+.rail   { grid-column: 1; grid-row: 1 / span 2; }
+.paper  { grid-column: 2; grid-row: 1 / span 2; min-width: 0; justify-self: center; }
+.tools  { grid-column: 3; grid-row: 1; }
+.panel  { grid-column: 3; grid-row: 2; }
 
 /* ЗАКЛАДКИ ЗВУКОВ — как у книги: узкий вертикальный ряд у самого края.
    Звук виден всегда и переключается одним нажатием; отдельного экрана выбора
@@ -515,7 +522,12 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    ⚠ Прежнее правило ставило панель ПЕРВОЙ (`order:-1`), и на 375 px до листа
    было полтора экрана прокрутки — прямо против того же решения (замер 08-22). */
 @media (max-width: 820px) {
-  .result { grid-template-columns: 1fr; height: auto; }
+  /* Порядок на телефоне — слова автора 08-23: «сверху ряд звуков, а под ним
+     виды листов». Прежде выбор материала стоял ПОД листом, и открывший
+     виджет с телефона впервые мог не догадаться прокрутить до него. */
+  .result { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
+  .rail, .paper, .tools, .panel { grid-column: 1; grid-row: auto; }
+  .tools { order: 1; }
   .rail { flex-direction: row; overflow-x: auto; scrollbar-width: none;
           order: 0; align-self: stretch; }
   .rail::-webkit-scrollbar { display: none; }
@@ -523,6 +535,6 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
      колонки. Правило `width:100%!important` перебивало расчёт, и на 390 px
      лист вылезал за экран обрезанным (поймано глазами 08-22). Один хозяин
      у размера — расчёт, а не таблица стилей. */
-  .paper { order: 1; }
-  .panel { order: 2; max-height: none; overflow: visible; }
+  .paper { order: 2; }
+  .panel { order: 3; max-height: none; overflow: visible; }
 }
