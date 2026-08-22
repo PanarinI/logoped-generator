@@ -1,0 +1,452 @@
+"""Сайт вокруг виджета: реестр страниц, шаблон и разметка для поиска.
+
+Имя файла не `site.py` намеренно: так называется модуль стандартной библиотеки,
+который Python загружает ещё до нашего кода — свой `site.py` его не перебивает,
+и `import site` молча отдаёт чужой модуль.
+
+Зачем отдельный модуль. Виджет (`index.html` + `app.js`) — это ИНСТРУМЕНТ, он живёт
+в `/app/` и для поиска невидим: содержимое iframe не индексируется. Ключи снимают
+СТРАНИЦЫ, и это разные сущности — у страницы есть заголовок-запрос, текст и мета,
+у виджета их нет вовсе.
+
+Как разложено и почему именно так:
+  · МЕТАДАННЫЕ страницы (slug, h1, title, description, родитель, параметры виджета)
+    живут здесь, в коде — их пишет Клод, они выверяются по канону и меняются редко;
+  · ТЕКСТ страницы живёт файлом в `pages/<имя>.html` — его пишет АВТОР руками.
+    Канон Site Builders запрещает писать текст страниц ИИ прямо и дважды, поэтому
+    прозы в этом файле нет и не будет: только каркас вокруг неё.
+  · СВЕДЕНИЯ О ПРОЕКТЕ (название, адрес, почта, соцсети) — один словарь `PROJECT`,
+    из которого разливаются подвал, «Контакты», «О проекте» и разметка Organization.
+    Один факт — один дом: правка в одном месте меняет все четыре.
+
+Черновик. У страницы есть флаг `draft`. Черновик не отдаётся публично (404), не
+попадает в карту сайта и не появляется в подвале. Причина не гигиена, а индексация:
+полупустая страница, единожды попавшая в индекс, тратит бюджет обхода и тянет вниз
+весь сайт. Пока автор не написал текст — страница черновик.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import os
+from typing import Any, Dict, List, Optional, Tuple
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PAGES_DIR = os.path.join(HERE, "pages")
+
+# Адрес сайта приходит окружением, а не вшивается в код: домен куплен позже сервера,
+# прод переезжает, а canonical и <loc> в карте обязаны указывать на настоящий адрес.
+# Брать из заголовка Host нельзя — подставится чужой.
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:8784").rstrip("/")
+
+# ─── сведения о проекте ─────────────────────────────────────────────────────
+# Канон ШАГа 4 требует в подвале ПЯТЬ элементов: название · полный адрес с индексом ·
+# email на своём домене · минимум одна зарубежная соцсеть · ссылки на ключевые
+# страницы. «Поисковики смотрят на футер, когда решают, сколько траста выдать».
+# ⚠ Пустые строки ниже — не заглушка «на потом», а условие запуска: пока они пусты,
+# страницы остаются черновиками и в индекс не уходят.
+PROJECT: Dict[str, str] = {
+    "name": "Логозвук",
+    "domain": "logozvuk.com",
+    "email": "",          # info@logozvuk.com — завести на своём домене
+    "address": "",        # полный почтовый адрес С ИНДЕКСОМ
+    "social": "",         # ссылка минимум на одну зарубежную площадку
+}
+
+# ─── реестр страниц ─────────────────────────────────────────────────────────
+# Карта собрана по канону ШАГов 3-4-7: главная → категории → вложенные страницы.
+# Звук — КАТЕГОРИЯ, а не тег: лист бывает либо на Р, либо на Л, категории
+# взаимоисключающи и отражаются в адресе, теги — нет. Тегов на старте нет вовсе,
+# канон это прямо разрешает.
+#
+# Вторая звуковая категория (Л · Ш · С) сюда НЕ добавляется, пока нет методики:
+# движок между Р, Л, Ш и С различий не даёт, а канон запрещает дублирование
+# подстановкой буквы. Различие обязана нести методика звука, а не заменённая буква.
+
+Page = Dict[str, Any]
+
+PAGES: Tuple[Page, ...] = (
+    {
+        "slug": "",
+        "file": "glavnaya.html",
+        "h1": "Автоматизация звука",
+        "title": "Автоматизация звука — печатный материал под ребёнка | Логозвук",
+        "description": "Соберите лист на автоматизацию звука под конкретного ребёнка: "
+                       "слова с ещё не поставленными звуками уходят сами. "
+                       "Печать сразу, без установки.",
+        "parent": None,
+        "widget": "?embed=1",
+        "draft": True,
+    },
+    {
+        "slug": "avtomatizaciya-zvuka-r",
+        "file": "zvuk-r.html",
+        "h1": "Автоматизация звука Р",
+        "title": "Автоматизация звука Р у ребёнка — Логозвук",
+        "description": "Автоматизация звука Р: отметьте, каких звуков у ребёнка ещё нет, "
+                       "и получите чистый речевой материал на лист. "
+                       "Готово за минуту, печатать сразу.",
+        "parent": None,
+        "widget": "?sound=r&material=list&embed=1",
+        "draft": True,
+    },
+    {
+        "slug": "avtomatizaciya-zvuka-r/doma",
+        "file": "zvuk-r-doma.html",
+        "h1": "Домашнее задание логопеда на звук Р",
+        "title": "Домашнее задание логопеда на звук Р — Логозвук",
+        "description": "Домашнее задание на звук Р: тот же лист, но с подсказками для "
+                       "родителя — что показать и в каком порядке вести ребёнка.",
+        "parent": "avtomatizaciya-zvuka-r",
+        "widget": "?sound=r&material=list&audience=doma&embed=1",
+        "draft": True,
+    },
+    {
+        "slug": "profil-rebenka",
+        "file": "profil-rebenka.html",
+        "h1": "Как убрать из речевого материала непоставленные звуки",
+        "title": "Непоставленные звуки в материале на автоматизацию — Логозвук",
+        "description": "Пока ш и ж не поставлены, слова с ними мешают. Показываем на "
+                       "замере, сколько слов уходит из листа при разных профилях ребёнка.",
+        # Родителя нет намеренно: страница сквозная. Появится категория Л — она
+        # сошлётся сюда, а не перепишет то же самое своими словами (это и была бы
+        # запрещённая каноном подстановка буквы).
+        "parent": None,
+        "widget": None,
+        "draft": True,
+    },
+    {
+        "slug": "docs",
+        "file": "docs.html",
+        "h1": "Как устроены наши материалы",
+        "title": "Как устроены материалы — автоматизация звука",
+        "description": "Из каких блоков собран каждый материал и откуда взято каждое "
+                       "слово. Короткие страницы для тех, кто хочет проверить, чем печатает.",
+        "parent": None,
+        "widget": None,
+        "draft": True,
+    },
+    # Слаги доков намеренно совпадают со слагами материалов в адресе виджета
+    # (list · slogovaya-dorozhka · labirint): одна карта имён на сайт и на инструмент.
+    {
+        "slug": "docs/list",
+        "file": "docs-list.html",
+        "h1": "Как собран лист автоматизации",
+        "title": "Как собран лист автоматизации — Логозвук",
+        "description": "Лист автоматизации состоит из семи блоков — от разминки до "
+                       "чистоговорки. Разбираем каждый: что в нём стоит и почему именно там.",
+        "parent": "docs",
+        "widget": None,
+        "draft": True,
+    },
+    {
+        "slug": "docs/slogovaya-dorozhka",
+        "file": "docs-dorozhka.html",
+        "h1": "Как собрана слоговая дорожка",
+        "title": "Как собрана слоговая дорожка — Логозвук",
+        "description": "Слоговая дорожка: ребёнок ведёт палец по тропе и проговаривает "
+                       "слоги. Показываем, как она собрана и чем отличается от листа.",
+        "parent": "docs",
+        "widget": None,
+        "draft": True,
+    },
+    {
+        "slug": "docs/labirint",
+        "file": "docs-labirint.html",
+        "h1": "Как собран лабиринт",
+        "title": "Как собран лабиринт — Логозвук",
+        "description": "Лабиринт на автоматизацию звука: девять картинок, один проход. "
+                       "Откуда берутся слова и почему не любая позиция звука доступна.",
+        "parent": "docs",
+        "widget": None,
+        "draft": True,
+    },
+    {
+        "slug": "docs/kakie-zvuki",
+        "file": "docs-zvuki.html",
+        "h1": "Какие звуки генератор собирает сейчас",
+        "title": "Какие звуки генератор собирает сейчас — Логозвук",
+        "description": "Какие звуки генератор собирает сейчас, каких нет и почему. "
+                       "Честная карта: где материала хватает на все ступени, а где формат ограничен.",
+        "parent": "docs",
+        "widget": None,
+        "draft": True,
+    },
+    {
+        "slug": "o-proekte",
+        "file": "o-proekte.html",
+        "h1": "О проекте",
+        "title": "О проекте — автоматизация звука",
+        "description": "Кто и зачем сделал сервис для автоматизации звука, что уже "
+                       "работает, а чего ещё нет. Пишем честно, без обещаний, которых лист не выполняет.",
+        "parent": None,
+        "widget": None,
+        "draft": True,
+    },
+    {
+        "slug": "kontakty",
+        "file": "kontakty.html",
+        "h1": "Контакты",
+        "title": "Контакты — автоматизация звука",
+        "description": "Почта, форма обратной связи и реквизиты проекта. Пишите, если "
+                       "лист напечатался не так, как ждали, или нужен звук, которого пока нет.",
+        "parent": None,
+        "widget": None,
+        "draft": True,
+    },
+)
+
+BY_SLUG: Dict[str, Page] = {p["slug"]: p for p in PAGES}
+
+
+def url_of(slug: str) -> str:
+    """Канонический адрес страницы. Форма ОДНА: со слешем на конце.
+
+    Два вида одного адреса — самая дорогая грабля чужого опыта: сайт начинает
+    ссылаться сам на свой дубль, и консоль засоряется непроиндексированными
+    страницами. Поэтому вид ровно один, а второй отдаёт один 301 (не цепочку).
+    """
+    return f"{SITE_URL}/" if not slug else f"{SITE_URL}/{slug}/"
+
+
+def live_pages() -> List[Page]:
+    """Страницы, которые реально отдаются: черновиков здесь нет."""
+    return [p for p in PAGES if not p.get("draft")]
+
+
+def breadcrumbs(page: Page) -> List[Page]:
+    """Цепочка от главной до страницы. Нужна и разметке, и человеку."""
+    chain: List[Page] = []
+    cur: Optional[Page] = page
+    while cur is not None:
+        chain.append(cur)
+        parent = cur.get("parent")
+        cur = BY_SLUG.get(parent) if parent is not None else None
+    if page["slug"] and BY_SLUG.get("") not in chain:
+        chain.append(BY_SLUG[""])
+    chain.reverse()
+    return chain
+
+
+def children(slug: str) -> List[Page]:
+    return [p for p in live_pages() if p.get("parent") == slug]
+
+
+# ─── разметка для поиска ────────────────────────────────────────────────────
+
+def _jsonld(page: Page) -> str:
+    """JSON-LD: WebSite + WebPage + Organization + BreadcrumbList.
+
+    Разметка ставится ТОЛЬКО на страницах сайта. У виджета её нет намеренно:
+    приложение, встроенное через iframe, не должно нести собственную разметку —
+    она продублирует разметку страницы.
+    """
+    graph: List[Dict[str, Any]] = [
+        {
+            "@type": "WebSite",
+            "@id": f"{SITE_URL}/#website",
+            "url": f"{SITE_URL}/",
+            "name": PROJECT["name"],
+            "inLanguage": "ru-RU",
+        },
+        {
+            "@type": "WebPage",
+            "@id": url_of(page["slug"]) + "#webpage",
+            "url": url_of(page["slug"]),
+            "name": page["title"],
+            "description": page["description"],
+            "isPartOf": {"@id": f"{SITE_URL}/#website"},
+            "inLanguage": "ru-RU",
+        },
+    ]
+
+    org: Dict[str, Any] = {
+        "@type": "Organization",
+        "@id": f"{SITE_URL}/#org",
+        "name": PROJECT["name"],
+        "url": f"{SITE_URL}/",
+    }
+    if PROJECT["email"]:
+        org["email"] = PROJECT["email"]
+    # sameAs ставится только если ссылка ЕСТЬ и видимой ссылкой на странице тоже:
+    # одной разметки мало, без живой ссылки сигнал слишком слабый.
+    if PROJECT["social"]:
+        org["sameAs"] = [PROJECT["social"]]
+    graph.append(org)
+
+    chain = breadcrumbs(page)
+    if len(chain) > 1:
+        graph.append({
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1,
+                 "name": p["h1"], "item": url_of(p["slug"])}
+                for i, p in enumerate(chain)
+            ],
+        })
+
+    return json.dumps({"@context": "https://schema.org", "@graph": graph},
+                      ensure_ascii=False, indent=1)
+
+
+def _footer(page: Page) -> str:
+    """Подвал — сквозной, из одного словаря `PROJECT`."""
+    e = html.escape
+    bits: List[str] = [f'<span class="f-name">{e(PROJECT["name"])}</span>']
+    if PROJECT["address"]:
+        bits.append(f'<span class="f-addr">{e(PROJECT["address"])}</span>')
+    if PROJECT["email"]:
+        bits.append(f'<a href="mailto:{e(PROJECT["email"])}">{e(PROJECT["email"])}</a>')
+    if PROJECT["social"]:
+        bits.append(f'<a href="{e(PROJECT["social"])}" rel="me">{e(PROJECT["social"])}</a>')
+
+    links = [p for p in live_pages() if p["slug"] in ("kontakty", "o-proekte", "docs")]
+    nav = " · ".join(
+        f'<a href="{url_of(p["slug"])}">{e(p["h1"])}</a>' for p in links
+    )
+    return (
+        '<footer class="site-foot">\n'
+        f'  <div class="f-org">{" · ".join(bits)}</div>\n'
+        + (f'  <nav class="f-nav">{nav}</nav>\n' if nav else "")
+        + "</footer>"
+    )
+
+
+def _crumbs(page: Page) -> str:
+    chain = breadcrumbs(page)
+    if len(chain) < 2:
+        return ""
+    e = html.escape
+    parts = [f'<a href="{url_of(p["slug"])}">{e(p["h1"])}</a>' for p in chain[:-1]]
+    parts.append(f'<span>{e(chain[-1]["h1"])}</span>')
+    return '<nav class="crumbs">' + " → ".join(parts) + "</nav>"
+
+
+def _widget(page: Page) -> str:
+    """Виджет — fullwidth, ПЕРВЫМ экраном, шапки сайта над ним нет.
+
+    Канон: «нам нужно на сайте забрать весь фокус на сам сервис»; виджет не в
+    первом экране или за кнопкой «перейти к сервису» стоит 10-30 % трафика.
+    Встраивается со своего же origin, поэтому ни X-Frame-Options, ни CSP чинить
+    не надо — сервер их не ставит вовсе.
+    """
+    if not page.get("widget"):
+        return ""
+    return (
+        '<div class="widget-box">\n'
+        f'  <iframe class="widget" src="/app/{page["widget"]}" '
+        'title="Генератор листов на автоматизацию звука" loading="eager"></iframe>\n'
+        "</div>"
+    )
+
+
+def _body(page: Page) -> str:
+    """Тело страницы — файл, который пишет автор. Нет файла → пусто, не ошибка."""
+    path = os.path.join(PAGES_DIR, page["file"])
+    if not os.path.isfile(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as fh:
+        return fh.read()
+
+
+def render(page: Page) -> bytes:
+    """Собрать страницу целиком.
+
+    Правила головы, из которых нельзя выйти:
+      · h1 на странице РОВНО ОДИН — два h1 канон называет злом прямо;
+      · title НЕ РАВЕН h1 (у внутренних — h1 плюс имя сайта через тире);
+      · description есть у каждой и уникален;
+      · canonical указывает на СЕБЯ и на конечный адрес, а не на тот, что редиректит;
+      · og:url совпадает с canonical.
+    """
+    e = html.escape
+    url = url_of(page["slug"])
+    return (
+        "<!DOCTYPE html>\n"
+        '<html lang="ru-RU">\n'
+        "<head>\n"
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        f"<title>{e(page['title'])}</title>\n"
+        f'<meta name="description" content="{e(page["description"])}">\n'
+        f'<link rel="canonical" href="{url}">\n'
+        f'<meta property="og:type" content="website">\n'
+        f'<meta property="og:site_name" content="{e(PROJECT["name"])}">\n'
+        f'<meta property="og:title" content="{e(page["title"])}">\n'
+        f'<meta property="og:description" content="{e(page["description"])}">\n'
+        f'<meta property="og:url" content="{url}">\n'
+        f'<meta property="og:locale" content="ru_RU">\n'
+        '<link rel="stylesheet" href="/site.css">\n'
+        f'<script type="application/ld+json">{_jsonld(page)}</script>\n'
+        "</head>\n"
+        "<body>\n"
+        f"{_widget(page)}\n"
+        '<main class="site">\n'
+        f"{_crumbs(page)}\n"
+        f"<h1>{e(page['h1'])}</h1>\n"
+        f"{_body(page)}\n"
+        "</main>\n"
+        f"{_footer(page)}\n"
+        "</body>\n"
+        "</html>\n"
+    ).encode("utf-8")
+
+
+def render_404() -> bytes:
+    """Человеческая страница, а не голый текст «not found».
+
+    Отдаётся с кодом 404 и с noindex: страница-ошибка не должна попасть в индекс
+    и тратить бюджет обхода.
+    """
+    return (
+        "<!DOCTYPE html>\n"
+        '<html lang="ru-RU">\n'
+        "<head>\n"
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '<meta name="robots" content="noindex">\n'
+        "<title>Страница не найдена</title>\n"
+        '<link rel="stylesheet" href="/site.css">\n'
+        "</head>\n"
+        '<body>\n<main class="site">\n'
+        "<h1>Такой страницы нет</h1>\n"
+        f'<p>Вернуться на <a href="{SITE_URL}/">главную</a> '
+        'или сразу <a href="/app/">собрать лист</a>.</p>\n'
+        "</main>\n</body>\n</html>\n"
+    ).encode("utf-8")
+
+
+def robots_txt() -> bytes:
+    """robots.txt.
+
+    Канон про него почти молчит (за 425 сообщений чата сборки он не упомянут ни
+    разу), поэтому пишем сами и внимательно. Закрываем то, что не является
+    страницей: ответы движка и банк картинок — они тратят бюджет обхода и в
+    выдаче не нужны. Сам виджет `/app/` НЕ закрываем: он не индексируется как
+    страница (iframe), но робот должен видеть, что он существует и работает.
+    """
+    return (
+        "User-agent: *\n"
+        "Disallow: /api/\n"
+        "Disallow: /geroi/\n"
+        "\n"
+        f"Sitemap: {SITE_URL}/sitemap.xml\n"
+    ).encode("utf-8")
+
+
+def sitemap_xml() -> bytes:
+    """Карта сайта: только живые публичные страницы, только <loc>.
+
+    Черновиков здесь нет по построению. Адрес в карте обязан совпадать с
+    canonical и отдавать 200, а не 301 — иначе карта сама себе противоречит.
+    """
+    urls = "\n".join(
+        f"  <url><loc>{url_of(p['slug'])}</loc></url>" for p in live_pages()
+    )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{urls}\n"
+        "</urlset>\n"
+    ).encode("utf-8")

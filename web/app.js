@@ -41,6 +41,45 @@ const COLOURABLE = new Set(['maze', 'sheet', 'track', 'propisi']);
 const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story']);
 
 
+/* ── адрес страницы говорит, с чем открыть виджет ──────────
+   На сайте виджет стоит в iframe внутри страницы, и страница обязана уметь
+   сказать, ЧТО показать: /?sound=l&material=labirint&embed=1. Виджет для
+   поиска невидим (содержимое iframe не индексируется) — ключи снимает
+   страница, а параметр только доносит её тему до листа.
+
+   Правило одно: неизвестное значение молча падает в умолчание, а не в ошибку.
+   По этому адресу придут робот и случайная ссылка, и пустой экран вместо листа
+   был бы той же ложью, что погашенная кнопка без причины (закон 12).
+
+   Мягкость внутри пишется апострофом, в адресе так нельзя — берём хвост «j».
+   Витринных материалов (4-й лишний · зашумлённые · обводка) в карте нет
+   намеренно: адрес не имеет права открывать то, чего движок не соберёт. */
+const SOUND_SLUG = {
+  r: 'р', rj: "р'", l: 'л', lj: "л'", s: 'с', sj: "с'",
+  z: 'з', zj: "з'", sh: 'ш', zh: 'ж', shch: 'щ',
+};
+const MATERIAL_SLUG = {
+  list: 'sheet',
+  'slogovaya-dorozhka': 'track',
+  'zvukovaya-dorozhka': 'propisi',
+  slovosochetaniya: 'phrases',
+  labirint: 'maze',
+  rasskaz: 'story',
+};
+
+// Адресат листа. Движок и экран домашний лист умеют давно — не хватало только
+// адреса, а без него страница «домашнее задание» открывала бы лист для занятия,
+// то есть обещала бы то, чего не покажет (закон 12).
+const AUDIENCE_SLUG = { doma: 'home', zanyatie: 'lesson' };
+
+const URLQ = new URLSearchParams(location.search);
+
+// Fullwidth по канону: виджет от края до края в начале страницы, шапка сайта
+// спрятана. Класс вешаем СРАЗУ при разборе скрипта, а не в boot(): boot ждёт
+// ответа сервера, и за это время шапка успела бы мигнуть.
+if (URLQ.get('embed') === '1') document.body.classList.add('embed');
+
+
 const $ = (id) => document.getElementById(id);
 
 /* Слог, который сейчас выбран, — подписью для человека («КЛА»). */
@@ -98,10 +137,15 @@ async function boot() {
 // проходит ступени внутри себя, то есть закрывает занятие целиком.
 function openDefault() {
   const have = (S.cfg.sounds || []).map((s) => s.key);
-  S.sound = have.includes('р') ? 'р' : have[0];
-  S.tab = 'sheet';
-  S.colour = false;
-  S.typ = firstTypFor('sheet');
+  // Адрес сильнее умолчания, но только если он называет то, что у нас есть.
+  const asked = SOUND_SLUG[(URLQ.get('sound') || '').toLowerCase()];
+  S.sound = have.includes(asked) ? asked : (have.includes('р') ? 'р' : have[0]);
+  S.tab = MATERIAL_SLUG[(URLQ.get('material') || '').toLowerCase()] || 'sheet';
+  S.audience = AUDIENCE_SLUG[(URLQ.get('audience') || '').toLowerCase()] || 'lesson';
+  // Цвет — свойство материала, ровно как при переключении вкладки (pickMaterial):
+  // лабиринту он нужен для узнавания картинки, листу и дорожкам нет.
+  S.colour = (S.tab === 'maze');
+  S.typ = firstTypFor(S.tab);
   const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === S.typ);
   S.syllable = t ? t.syllable : '';
   S.sheetNo = 1;

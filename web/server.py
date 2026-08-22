@@ -35,6 +35,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import urllib.parse
@@ -59,6 +60,7 @@ import phrases as PH         # noqa: E402
 import story as ST           # noqa: E402  — «сочини рассказ», лист взрослому
 import rasskaz as RZ         # noqa: E402  — готовый рассказ для пересказа
 import phonetics as ph       # noqa: E402
+import sitepages as SITE    # noqa: E402  — страницы сайта вокруг виджета
 
 sys.path.insert(0, HERE)
 import method                # noqa: E402  — методическая цепочка для панели
@@ -511,20 +513,62 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: Any) -> None:
         sys.stderr.write("  %s\n" % (fmt % args))
 
-    def _send(self, code: int, body: bytes, ctype: str) -> None:
+    # Кэш разведён по смыслу ответа, а не задан одной строкой на всё.
+    # Раньше «no-store» стоял и на api, и на статике, и на героях — и при каждом
+    # открытии страницы заново ехали 95 КБ кода плюс цветной герой 73-229 КБ.
+    # На сайте виджет открывают со страницы, а скорость получения пользы канон
+    # считает прямым фактором ранжирования.
+    #   ответы движка   — no-store: лист собирается заново, кэшировать нечего;
+    #   код и разметка  — no-cache: спрашивать сервер каждый раз, но по ETag
+    #                     получать 304 без тела (после выката приедет новое);
+    #   картинки банка  — сутки: имя файла = имя картинки, содержимое за ним
+    #                     не меняется, а перерисовку переживёт одна ночь.
+    CACHE_LIVE = "no-store"
+    CACHE_CODE = "no-cache"
+    CACHE_PICT = "public, max-age=86400"
+
+    def _send(self, code: int, body: bytes, ctype: str,
+              cache: str = CACHE_LIVE, etag: str = "") -> None:
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
+        if etag:
+            self.send_header("ETag", etag)
         self.end_headers()
         # На HEAD тело не отправляется — так велит HTTP. Заголовки при этом те
         # же, что у GET, поэтому один код обслуживает оба метода.
         if self.command != "HEAD":
             self.wfile.write(body)
 
+    def _cached(self, body: bytes, ctype: str, cache: str) -> None:
+        """Отдать файл с ETag; если у браузера уже такой — ответить 304 без тела."""
+        etag = '"%s"' % hashlib.md5(body).hexdigest()[:16]
+        if self.headers.get("If-None-Match") == etag:
+            self.send_response(304)
+            self.send_header("Cache-Control", cache)
+            self.send_header("ETag", etag)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self._send(200, body, ctype, cache, etag)
+
     def _json(self, payload: Dict[str, Any], code: int = 200) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self._send(code, body, "application/json; charset=utf-8")
+
+    def _redirect(self, location: str) -> None:
+        """Один 301, а не цепочка.
+
+        Цепочка редиректов — чужая набитая шишка: http://www.site → https://www.site
+        → https://site это два перехода там, где хватает одного. Поэтому всякий
+        неканонический адрес отправляется СРАЗУ на конечный.
+        """
+        self.send_response(301)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", self.CACHE_LIVE)
+        self.end_headers()
 
     def _static(self, name: str) -> None:
         path = os.path.join(HERE, name)
@@ -537,12 +581,12 @@ class Handler(BaseHTTPRequestHandler):
             ".js": "application/javascript; charset=utf-8",
         }.get(os.path.splitext(name)[1], "application/octet-stream")
         with open(path, "rb") as fh:
-            self._send(200, fh.read(), ctype)
+            self._cached(fh.read(), ctype, self.CACHE_CODE)
 
     # Герои отдаются ФАЙЛОМ, а не встраиваются в лист base64. Причина в весе:
     # ч/б герой весит 2-3 КБ и встраивается даром, а цветной 73-229 КБ —
     # сглаживание краёв делает «плоский цвет» многоцветным. Файлом цвет
-    # не стоит ничего: браузер возьмёт его один раз и закэширует.
+    # не стоит почти ничего: браузер берёт его один раз и держит сутки (CACHE_PICT).
     _GEROI = {"colour": "geroi", "bw": "geroi_bw"}
 
     def _hero(self, kind: str, name: str) -> None:
@@ -554,7 +598,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, b"not found", "text/plain; charset=utf-8")
             return
         with open(path, "rb") as fh:
-            self._send(200, fh.read(), "image/png")
+            self._cached(fh.read(), "image/png", self.CACHE_PICT)
 
     def _body(self) -> Dict[str, Any]:
         length = int(self.headers.get("Content-Length") or 0)
@@ -564,26 +608,102 @@ class Handler(BaseHTTPRequestHandler):
 
     # — маршруты —
 
+    def _canonical_host(self) -> str | None:
+        """Единственный адрес, по которому сайт живёт. Всё прочее — 301 сюда.
+
+        Домена у проекта два: `logozvuk.com` — сайт, `logozvuk.ru` — защитная
+        покупка. Два домена с одним содержимым это дублирование, и оно бьёт по
+        выдаче; поэтому второй не показывает копию сайта, а отдаёт 301. Тем же
+        кодом снимается и `www`. Локально (SITE_URL не задан) проверка молчит —
+        иначе разработка ушла бы в вечный редирект.
+        """
+        if SITE.SITE_URL.startswith("http://localhost"):
+            return None
+        return urllib.parse.urlsplit(SITE.SITE_URL).netloc or None
+
     def do_GET(self) -> None:            # noqa: N802
-        path = self.path.split("?")[0]
-        if path == "/":
-            self._static("index.html")
-        elif path in ("/app.css", "/app.js"):
+        split = urllib.parse.urlsplit(self.path)
+        path, query = split.path, split.query
+
+        # 1. чужой хост (logozvuk.ru, www) — сразу на канонический, одним прыжком
+        canon = self._canonical_host()
+        if canon:
+            host = (self.headers.get("Host") or "").split(":")[0]
+            if host and host != canon:
+                tail = f"?{query}" if query else ""
+                self._redirect(f"{SITE.SITE_URL}{path}{tail}")
+                return
+
+        # 2. статика и ответы движка
+        if path in ("/app.css", "/app.js", "/site.css"):
             self._static(path.lstrip("/"))
-        elif path.startswith("/geroi/"):
+            return
+        if path.startswith("/geroi/"):
             parts = path.split("/")          # ['', 'geroi', <kind>, <file>]
             if len(parts) == 4:
                 self._hero(parts[2], urllib.parse.unquote(parts[3]))
             else:
-                self._send(404, b"not found", "text/plain; charset=utf-8")
-        elif path == "/api/config":
+                self._not_found()
+            return
+        if path == "/api/config":
             self._json(config())
-        elif path == "/api/method":
+            return
+        if path == "/api/method":
             # Счётчики тиров сняты 2026-08-10: логопеду нужна пометка у
             # конкретной строки, а не арифметика по всей справке.
             self._json(method.as_json())
-        else:
-            self._send(404, b"not found", "text/plain; charset=utf-8")
+            return
+
+        # 3. виджет живёт в КАТАЛОГЕ /app/, а не на поддомене: каталог переливает
+        #    больше веса. Корень принадлежит сайту.
+        if path in ("/app", "/app/"):
+            self._static("index.html")
+            return
+
+        # 4. служебные файлы поиска
+        if path == "/robots.txt":
+            self._send(200, SITE.robots_txt(), "text/plain; charset=utf-8",
+                       self.CACHE_CODE)
+            return
+        if path == "/sitemap.xml":
+            self._send(200, SITE.sitemap_xml(), "application/xml; charset=utf-8",
+                       self.CACHE_CODE)
+            return
+
+        # 5. страницы сайта
+        slug = path.strip("/")
+        page = SITE.BY_SLUG.get(slug)
+
+        if slug == "":
+            # Пока главная — черновик, корень отдаёт виджет, как и до сайта:
+            # прод не должен сломаться из-за того, что текст ещё не написан.
+            home = SITE.BY_SLUG.get("")
+            if home and not home.get("draft"):
+                self._send(200, SITE.render(home), "text/html; charset=utf-8",
+                           self.CACHE_CODE)
+            else:
+                self._static("index.html")
+            return
+
+        if page and not page.get("draft"):
+            # Форма адреса ровно одна — со слешем на конце. Второй вид отдаёт
+            # один 301, чтобы сайт не ссылался сам на свой дубль.
+            if not path.endswith("/"):
+                # Относительный Location законен и работает и локально, и на
+                # проде: канонический хост уже обеспечен шагом 1 выше.
+                tail = f"?{query}" if query else ""
+                self._redirect(f"/{slug}/{tail}")
+                return
+            self._send(200, SITE.render(page), "text/html; charset=utf-8",
+                       self.CACHE_CODE)
+            return
+
+        # Черновик снаружи неотличим от несуществующей страницы — это и нужно:
+        # полупустая страница, попавшая в индекс, тратит бюджет обхода.
+        self._not_found()
+
+    def _not_found(self) -> None:
+        self._send(404, SITE.render_404(), "text/html; charset=utf-8", "no-store")
 
     def do_HEAD(self) -> None:           # noqa: N802
         """То же, что GET, но без тела.
