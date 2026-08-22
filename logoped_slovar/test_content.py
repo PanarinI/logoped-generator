@@ -947,6 +947,40 @@ def test_characters_are_drawn_not_written():
     truthy("слоговая дорожка печатает рисунок", "<svg class=\"chr\"" in html_t)
 
 
+def test_scene_sprite_raster_with_vector_fallback():
+    """Спрайт сцены приходит картинкой, а нет картинки — рисуется вектором.
+
+    Записано 08-22, когда сцена научилась класть растр. Проверяем ровно то, что
+    может тихо сломаться: (1) при пустом банке сцена НЕ пустеет, а возвращается
+    к вектору — иначе не доехавший в образ банк оставил бы логопеду голый лист;
+    (2) при живом банке растр реально попадает в лист; (3) картинка отдаётся
+    адресом, а не встраивается — «трава» кладёт полсотни предметов, и встраивание
+    раздуло бы один лист на мегабайт.
+    """
+    import os
+    import scenes as SC
+    import track as TR
+
+    h = TR._TOP + 5 * TR._ROW_H + TR._R + TR._AMP + 8.0
+    avoid = TR._occupied(6, 5, 30, TR.shape_for("лес"))
+
+    real_have = SC.have_sprite
+    try:
+        SC.have_sprite = lambda name: False          # банк «не доехал»
+        empty = SC.scene_svg("лес", TR._W, h, avoid=avoid)
+    finally:
+        SC.have_sprite = real_have
+    check("без банка сцена не пустеет", "<path" in empty, True)
+    check("без банка растра нет", "<image" in empty, False)
+
+    live = SC.scene_svg("лес", TR._W, h, avoid=avoid)
+    if any(SC.have_sprite(n) for n in ("tree", "bush", "cloud", "mushroom")):
+        check("с банком растр попадает в лист", "<image" in live, True)
+        check("картинка отдаётся адресом, а не base64",
+              "data:image" in live, False)
+        check("бок о бок с вектором", "<path" in live, True)
+
+
 def test_scene_is_chosen_and_never_absurd():
     """Фон — строка запроса Ольги «менять фон».
 

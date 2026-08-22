@@ -40,6 +40,9 @@ COPY --chown=app:app pictures/objects_colour/small/ ./pictures/objects_colour/sm
 # файлом по /geroi/<bw|colour>/<имя>.png, а не встраиваются в лист — иначе
 # цветной герой добавлял бы 73-229 КБ к каждому листу. Ч/б банк 28 КБ,
 # цветной 852 КБ — оба целиком, это не выкладка чужого материала, рисунки свои.
+# Спрайты сцены (08-22): предметы фона, нарисованные генератором и доведённые
+# по толщине линии. Весят копейки — ч/б без заливок, 7-10 КБ штука.
+COPY --chown=app:app pictures/fony/ ./pictures/fony/
 COPY --chown=app:app pictures/geroi/ ./pictures/geroi/
 COPY --chown=app:app pictures/geroi_bw/ ./pictures/geroi_bw/
 

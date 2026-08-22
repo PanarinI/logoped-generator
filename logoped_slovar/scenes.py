@@ -60,6 +60,7 @@ scenes.py — ФОН слоговой дорожки: сюжетная сцен�
 from __future__ import annotations
 
 import math
+import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 __all__ = ["scene_svg", "SCENES", "SCENE_LABELS", "WORLDS",
@@ -148,6 +149,30 @@ ZONE_W = 27.0       # ширина боковой кромки, мм
 ZONE_H = 28.0       # высота верхней и нижней полосы, мм
 
 
+# ═══════════════════════════════════════════════════════════════════════
+#  БАНК СПРАЙТОВ: растровые предметы сцены
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Сцену рисовал только вектор. С 08-22 предмет может прийти КАРТИНКОЙ из банка
+# `pictures/fony/` — тем же конвейером, что 979 предметов корпуса, с доводкой
+# линии до печатных 0.95 мм (`imgbw.thicken`).
+#
+# Вектор при этом НЕ удаляется, а остаётся запасом: нет файла — предмет рисуется
+# как раньше. Это то же правило, что у героев звука, и оно же страхует от пустой
+# сцены, если банк не доехал в образ.
+#
+# Отдаём картинку ФАЙЛОМ по адресу, а не встраиваем base64: сцена «трава» кладёт
+# 53 предмета, и встраивание раздуло бы один лист на мегабайт. Файл браузер
+# возьмёт один раз и закэширует (сервер отдаёт банк с `max-age`).
+_FONY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "..", "pictures", "fony")
+_FONY_URL = "/fony/"
+
+
+def have_sprite(name: str) -> bool:
+    return os.path.isfile(os.path.join(_FONY_DIR, name + ".png"))
+
+
 class Canvas:
     """Место для предметов сцены с оглядкой на дорожку.
 
@@ -163,6 +188,7 @@ class Canvas:
         self.avoid = list(avoid or [])
         self.taken: List[Tuple[float, float, float, float]] = []
         self.parts: List[str] = []
+        self.images: List[str] = []
 
     # — проверка места —
 
@@ -231,6 +257,22 @@ class Canvas:
 
     # — рисование —
 
+    def image(self, name: str, x: float, y: float,
+              w: float, h: float) -> bool:
+        """Положить предмет картинкой. False — картинки нет, рисуй вектором.
+
+        `meet` вписывает рисунок в бокс целиком, не обрезая: предмет со своей
+        пропорцией займёт бокс не полностью, и это честнее растяжки — растянутая
+        ёлка перестаёт быть ёлкой, а пустое место рядом с ней ничему не мешает.
+        """
+        if not have_sprite(name):
+            return False
+        self.images.append(
+            f'<image href="{_FONY_URL}{name}.png" x="{x:.1f}" y="{y:.1f}" '
+            f'width="{w:.1f}" height="{h:.1f}" '
+            f'preserveAspectRatio="xMidYMid meet"/>')
+        return True
+
     def add(self, d: str) -> None:
         self.parts.append(f'<path d="{d}"/>')
 
@@ -269,11 +311,19 @@ class Canvas:
             self.add(f"M{a:.1f} {y:.1f} L{b:.1f} {y:.1f}")
 
     def svg(self, stroke: float, opacity: float) -> str:
-        if not self.parts:
+        """Слой сцены. Картинки идут ПЕРВЫМИ, под векторными поверхностями.
+
+        Бледность одна на всю сцену: растровый предмет обязан выцвести ровно
+        так же, как векторный, иначе фон распадётся на два разных фона.
+        Толщина линии картинке не передаётся — она уже впечена в пиксели
+        доводкой, и в этом весь смысл доводки.
+        """
+        if not self.parts and not self.images:
             return ""
+        body = "".join(self.images) + "".join(self.parts)
         return (f'<g fill="none" stroke="#000" stroke-width="{stroke}" '
                 f'stroke-linecap="round" stroke-linejoin="round" '
-                f'opacity="{opacity}">{"".join(self.parts)}</g>')
+                f'opacity="{opacity}">{body}</g>')
 
 
 def _seq(a: float, b: float, step: float) -> List[float]:
@@ -289,6 +339,8 @@ def _seq(a: float, b: float, step: float) -> List[float]:
 
 def _sp_tree(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Ёлка: три яруса и ствол."""
+    if cv.image("tree", x, y, w, h):
+        return
     cx = x + w / 2
     step = h / 4.2
     top = y
@@ -301,28 +353,38 @@ def _sp_tree(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_bush(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("bush", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} q {w*0.1:.1f} {-h:.1f} {w*0.5:.1f} {-h*0.85:.1f} "
            f"q {w*0.4:.1f} {-h*0.15:.1f} {w*0.5:.1f} {h*0.85:.1f} z")
 
 
 def _sp_mushroom(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("mushroom", x, y, w, h):
+        return
     cx = x + w / 2
     cv.add(f"M{cx-w*0.14:.1f} {y+h:.1f} l 0 {-h*0.45:.1f} l {w*0.28:.1f} 0 l 0 {h*0.45:.1f}")
     cv.add(f"M{x:.1f} {y+h*0.55:.1f} a {w*0.5:.1f} {h*0.5:.1f} 0 0 1 {w:.1f} 0 z")
 
 
 def _sp_cloud(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("cloud", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} a {h*0.55:.1f} {h*0.55:.1f} 0 0 1 {h*0.5:.1f} {-h*0.6:.1f} "
            f"a {w*0.28:.1f} {h*0.75:.1f} 0 0 1 {w*0.55:.1f} {h*0.06:.1f} "
            f"a {h*0.45:.1f} {h*0.45:.1f} 0 0 1 {w*0.2:.1f} {h*0.54:.1f} z")
 
 
 def _sp_bird(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("bird", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h*0.6:.1f} q {w*0.25:.1f} {-h*0.6:.1f} {w*0.5:.1f} 0 "
            f"q {w*0.25:.1f} {-h*0.6:.1f} {w*0.5:.1f} 0")
 
 
 def _sp_sun(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("sun", x, y, w, h):
+        return
     cx, cy, r = x + w / 2, y + h / 2, min(w, h) * 0.28
     cv.circle(cx, cy, r)
     for i in range(8):
@@ -332,6 +394,8 @@ def _sp_sun(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_house(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("house", x, y, w, h):
+        return
     roof = h * 0.34
     cv.add(f"M{x:.1f} {y+h:.1f} l 0 {-(h-roof):.1f} l {w*0.5:.1f} {-roof:.1f} "
            f"l {w*0.5:.1f} {roof:.1f} l 0 {h-roof:.1f} z")
@@ -340,6 +404,8 @@ def _sp_house(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 def _sp_tower(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Городская башня: окна рядами."""
+    if cv.image("tower", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} l 0 {-h:.1f} l {w:.1f} 0 l 0 {h:.1f} z")
     rows = max(2, int(h // 7))
     for r in range(rows):
@@ -350,12 +416,16 @@ def _sp_tower(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_lamp(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("lamp", x, y, w, h):
+        return
     cv.add(f"M{x+w*0.5:.1f} {y+h:.1f} l 0 {-h*0.8:.1f} q 0 {-h*0.2:.1f} {w*0.4:.1f} {-h*0.2:.1f}")
     cv.circle(x + w * 0.9, y + h * 0.05, min(w, h) * 0.12)
 
 
 def _sp_reed(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Камыш: стебель и початок."""
+    if cv.image("reed", x, y, w, h):
+        return
     cx = x + w / 2
     cv.add(f"M{cx:.1f} {y+h:.1f} L{cx:.1f} {y+h*0.22:.1f}")
     cv.add(f"M{cx-w*0.22:.1f} {y+h*0.30:.1f} a {w*0.22:.1f} {h*0.14:.1f} 0 0 1 "
@@ -365,23 +435,31 @@ def _sp_reed(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_lily(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("lily", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h*0.75:.1f} a {w*0.5:.1f} {h*0.42:.1f} 0 1 1 {w:.1f} 0 z")
     cv.add(f"M{x+w*0.5:.1f} {y+h*0.75:.1f} l 0 {-h*0.3:.1f}")
 
 
 def _sp_dragonfly(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("dragonfly", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h*0.5:.1f} l {w:.1f} 0")
     cv.add(f"M{x+w*0.28:.1f} {y+h*0.5:.1f} q {w*0.2:.1f} {-h*0.5:.1f} {w*0.42:.1f} {-h*0.1:.1f}")
     cv.add(f"M{x+w*0.28:.1f} {y+h*0.5:.1f} q {w*0.2:.1f} {h*0.5:.1f} {w*0.42:.1f} {h*0.1:.1f}")
 
 
 def _sp_grass(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("grass", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} q {w*0.22:.1f} {-h*0.55:.1f} {w*0.4:.1f} {-h:.1f}")
     cv.add(f"M{x+w*0.3:.1f} {y+h:.1f} q {w*0.1:.1f} {-h*0.5:.1f} {w*0.24:.1f} {-h*0.8:.1f}")
     cv.add(f"M{x+w*0.62:.1f} {y+h:.1f} q {w*0.2:.1f} {-h*0.5:.1f} {w*0.38:.1f} {-h*0.92:.1f}")
 
 
 def _sp_flower(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("flower", x, y, w, h):
+        return
     cx, cy = x + w / 2, y + h * 0.32
     cv.add(f"M{cx:.1f} {y+h:.1f} L{cx:.1f} {cy + h*0.16:.1f}")
     cv.circle(cx, cy, min(w, h) * 0.13)
@@ -393,11 +471,15 @@ def _sp_flower(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_stone(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("stone", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} a {w*0.5:.1f} {h*0.85:.1f} 0 0 1 {w:.1f} 0 z")
     cv.add(f"M{x+w*0.3:.1f} {y+h:.1f} q {w*0.12:.1f} {-h*0.45:.1f} {w*0.3:.1f} {-h*0.55:.1f}")
 
 
 def _sp_pebbles(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("pebbles", x, y, w, h):
+        return
     for i, (dx, dy, r) in enumerate(((0.2, 0.7, 0.16), (0.55, 0.35, 0.12),
                                      (0.8, 0.75, 0.1))):
         cv.circle(x + w * dx, y + h * dy, min(w, h) * r)
@@ -405,6 +487,8 @@ def _sp_pebbles(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 def _sp_fence(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Кусок забора: планки и две поперечины."""
+    if cv.image("fence", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h*0.35:.1f} l {w:.1f} 0 M{x:.1f} {y+h*0.72:.1f} l {w:.1f} 0")
     step = max(4.0, w / 5)
     xx = x
@@ -415,22 +499,30 @@ def _sp_fence(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_swing(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("swing", x, y, w, h):
+        return
     cv.add(f"M{x+w*0.15:.1f} {y:.1f} l 0 {h*0.75:.1f} M{x+w*0.85:.1f} {y:.1f} l 0 {h*0.75:.1f}")
     cv.add(f"M{x:.1f} {y:.1f} l {w:.1f} 0 M{x+w*0.15:.1f} {y+h*0.75:.1f} l {w*0.7:.1f} 0")
 
 
 def _sp_tyre(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("tyre", x, y, w, h):
+        return
     cx, cy, r = x + w / 2, y + h / 2, min(w, h) / 2
     cv.circle(cx, cy, r)
     cv.circle(cx, cy, r * 0.42)
 
 
 def _sp_can(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("can", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} l 0 {-h*0.8:.1f} l {w:.1f} 0 l 0 {h*0.8:.1f} z")
     cv.add(f"M{x+w*0.25:.1f} {y+h*0.2:.1f} l 0 {-h*0.2:.1f} l {w*0.4:.1f} 0 l 0 {h*0.2:.1f}")
 
 
 def _sp_bucket(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("bucket", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h*0.25:.1f} l {w*0.14:.1f} {h*0.75:.1f} l {w*0.72:.1f} 0 "
            f"l {w*0.14:.1f} {-h*0.75:.1f} z")
     cv.add(f"M{x:.1f} {y+h*0.25:.1f} q {w*0.5:.1f} {-h*0.45:.1f} {w:.1f} 0")
@@ -438,6 +530,8 @@ def _sp_bucket(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 def _sp_tools(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Полка с инструментами: молоток, ключ, отвёртка."""
+    if cv.image("tools", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y:.1f} l {w:.1f} 0")
     cv.add(f"M{x+w*0.18:.1f} {y:.1f} l 0 {h*0.55:.1f} "
            f"M{x+w*0.08:.1f} {y+h*0.55:.1f} l {w*0.2:.1f} 0 l 0 {h*0.16:.1f} l {-w*0.2:.1f} 0 z")
@@ -449,6 +543,8 @@ def _sp_tools(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 def _sp_bath(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Ванна на ножках — самый узнаваемый предмет ванной."""
+    if cv.image("bath", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h*0.25:.1f} q 0 {h*0.65:.1f} {w*0.2:.1f} {h*0.65:.1f} "
            f"l {w*0.6:.1f} 0 q {w*0.2:.1f} 0 {w*0.2:.1f} {-h*0.65:.1f}")
     cv.add(f"M{x-w*0.04:.1f} {y+h*0.25:.1f} l {w*1.08:.1f} 0")
@@ -459,6 +555,8 @@ def _sp_bath(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_shower(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("shower", x, y, w, h):
+        return
     cx = x + w * 0.5
     cv.add(f"M{cx:.1f} {y:.1f} l 0 {h*0.32:.1f}")
     cv.add(f"M{cx-w*0.3:.1f} {y+h*0.32:.1f} l {w*0.6:.1f} 0 l {-w*0.12:.1f} {h*0.18:.1f} "
@@ -469,6 +567,8 @@ def _sp_shower(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_towel(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("towel", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y:.1f} l {w:.1f} 0")
     cv.add(f"M{x+w*0.2:.1f} {y:.1f} l 0 {h*0.8:.1f} q {w*0.3:.1f} {h*0.2:.1f} {w*0.6:.1f} 0 "
            f"l 0 {-h*0.8:.1f}")
@@ -476,18 +576,24 @@ def _sp_towel(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_door(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("door", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} l 0 {-h:.1f} l {w:.1f} 0 l 0 {h:.1f}")
     cv.add(f"M{x+w*0.18:.1f} {y+h*0.12:.1f} l {w*0.64:.1f} 0 l 0 {h*0.3:.1f} l {-w*0.64:.1f} 0 z")
     cv.circle(x + w * 0.82, y + h * 0.6, min(w, h) * 0.05)
 
 
 def _sp_boots(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("boots", x, y, w, h):
+        return
     for dx in (0.0, 0.52):
         cv.add(f"M{x+w*dx:.1f} {y+h:.1f} l 0 {-h*0.62:.1f} q 0 {-h*0.38:.1f} {w*0.2:.1f} {-h*0.38:.1f} "
                f"q {w*0.2:.1f} 0 {w*0.2:.1f} {h*0.5:.1f} l {w*0.08:.1f} {h*0.5:.1f} z")
 
 
 def _sp_hooks(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("hooks", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y:.1f} l {w:.1f} 0")
     for i in range(3):
         cx = x + w * (0.18 + i * 0.32)
@@ -495,6 +601,8 @@ def _sp_hooks(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_umbrella(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("umbrella", x, y, w, h):
+        return
     cx = x + w * 0.5
     cv.add(f"M{cx:.1f} {y+h*0.28:.1f} l 0 {h*0.6:.1f} q 0 {h*0.12:.1f} {-w*0.16:.1f} {h*0.12:.1f}")
     cv.add(f"M{x:.1f} {y+h*0.28:.1f} a {w*0.5:.1f} {h*0.28:.1f} 0 0 1 {w:.1f} 0 z")
@@ -502,23 +610,31 @@ def _sp_umbrella(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 def _sp_tank(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
     """Диспетчерская вышка аэродрома."""
+    if cv.image("tank", x, y, w, h):
+        return
     cv.add(f"M{x+w*0.2:.1f} {y+h:.1f} l 0 {-h*0.55:.1f} M{x+w*0.8:.1f} {y+h:.1f} l 0 {-h*0.55:.1f}")
     cv.add(f"M{x:.1f} {y+h*0.45:.1f} l {w:.1f} 0 l {-w*0.16:.1f} {-h*0.22:.1f} l {-w*0.68:.1f} 0 z")
     cv.add(f"M{x+w*0.16:.1f} {y+h*0.23:.1f} l {w*0.68:.1f} 0 M{x+w*0.5:.1f} {y+h*0.23:.1f} l 0 {-h*0.2:.1f}")
 
 
 def _sp_hangar(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("hangar", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} l 0 {-h*0.5:.1f} q {w*0.5:.1f} {-h*0.55:.1f} {w:.1f} 0 "
            f"l 0 {h*0.5:.1f} z")
     cv.add(f"M{x+w*0.36:.1f} {y+h:.1f} l 0 {-h*0.32:.1f} l {w*0.28:.1f} 0 l 0 {h*0.32:.1f}")
 
 
 def _sp_windsock(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("windsock", x, y, w, h):
+        return
     cv.add(f"M{x+w*0.12:.1f} {y+h:.1f} l 0 {-h:.1f}")
     cv.add(f"M{x+w*0.12:.1f} {y:.1f} l {w*0.88:.1f} {h*0.2:.1f} l {-w*0.88:.1f} {h*0.2:.1f} z")
 
 
 def _sp_wave(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("wave", x, y, w, h):
+        return
     d, xx, up = [f"M{x:.1f} {y+h*0.5:.1f}"], x, True
     while xx < x + w:
         step = min(6.0, x + w - xx)
@@ -529,6 +645,8 @@ def _sp_wave(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_algae(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("algae", x, y, w, h):
+        return
     cx, yy, bend = x + w / 2, y + h, 3.2
     d = [f"M{cx:.1f} {yy:.1f}"]
     seg = h / 3.0
@@ -539,6 +657,8 @@ def _sp_algae(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
 
 
 def _sp_shell(cv: Canvas, x: float, y: float, w: float, h: float) -> None:
+    if cv.image("shell", x, y, w, h):
+        return
     cv.add(f"M{x:.1f} {y+h:.1f} a {w*0.5:.1f} {h:.1f} 0 0 1 {w:.1f} 0 z")
     for dx in (0.28, 0.5, 0.72):
         cv.add(f"M{x+w*dx:.1f} {y+h:.1f} L{x+w*0.5:.1f} {y+h*0.12:.1f}")
@@ -559,9 +679,9 @@ def _sea(cv: Canvas) -> None:
 
 
 def _forest(cv: Canvas) -> None:
-    cv.spread(_sp_tree, 15.0, 28.0, "left", 4)
-    cv.spread(_sp_tree, 15.0, 28.0, "right", 4)
-    cv.spread(_sp_tree, 13.0, 22.0, "any", 3)      # в промежутках между рядами
+    cv.spread(_sp_tree, 10.0, 18.0, "left", 4)
+    cv.spread(_sp_tree, 10.0, 18.0, "right", 4)
+    cv.spread(_sp_tree, 9.0, 16.0, "any", 3)      # в промежутках между рядами
     cv.spread(_sp_bush, 12.0, 8.0, "bottom", 4)
     cv.spread(_sp_bush, 12.0, 8.0, "any", 3)
     cv.spread(_sp_mushroom, 7.5, 7.5, "bottom", 3)
@@ -570,7 +690,7 @@ def _forest(cv: Canvas) -> None:
 
 
 def _sky(cv: Canvas) -> None:
-    cv.spread(_sp_sun, 18.0, 18.0, "top", 1)
+    cv.spread(_sp_sun, 13.0, 13.0, "top", 1)
     cv.spread(_sp_cloud, 24.0, 10.0, "top", 2)
     cv.spread(_sp_cloud, 22.0, 9.0, "left", 2)
     cv.spread(_sp_cloud, 22.0, 9.0, "right", 2)
@@ -630,7 +750,7 @@ def _city(cv: Canvas) -> None:
 
 def _yard(cv: Canvas) -> None:
     cv.spread(_sp_fence, 26.0, 12.0, "bottom", 5)
-    cv.spread(_sp_tree, 15.0, 26.0, "left", 2)
+    cv.spread(_sp_tree, 10.0, 18.0, "left", 2)
     cv.spread(_sp_swing, 20.0, 14.0, "top", 1)
     cv.spread(_sp_bush, 12.0, 8.0, "right", 2)
     cv.spread(_sp_grass, 10.0, 6.0, "bottom", 3)
@@ -682,7 +802,7 @@ def _stones(cv: Canvas) -> None:
 
 
 def _bathroom(cv: Canvas) -> None:
-    cv.spread(_sp_bath, 40.0, 18.0, "bottom", 1)
+    cv.spread(_sp_bath, 20.0, 12.0, "bottom", 1)
     cv.spread(_sp_shower, 14.0, 20.0, "top", 1)
     cv.spread(_sp_towel, 12.0, 20.0, "right", 1)
     cv.spread(_sp_pebbles, 10.0, 8.0, "left", 2)     # мыльные пузыри

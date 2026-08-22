@@ -616,6 +616,16 @@ class Handler(BaseHTTPRequestHandler):
         with open(path, "rb") as fh:
             self._cached(fh.read(), ctype, self.CACHE_PICT)
 
+    def _bank(self, folder: str, name: str) -> None:
+        """Картинка из банка `pictures/<folder>/`. Кэш длинный, как у героев."""
+        root = os.path.abspath(os.path.join(HERE, "..", "pictures", folder))
+        path = os.path.abspath(os.path.join(root, name))
+        if os.path.dirname(path) != root or not os.path.isfile(path):
+            self._not_found()
+            return
+        with open(path, "rb") as fh:
+            self._cached(fh.read(), "image/png", self.CACHE_PICT)
+
     def _body(self) -> Dict[str, Any]:
         length = int(self.headers.get("Content-Length") or 0)
         if not length:
@@ -665,6 +675,11 @@ class Handler(BaseHTTPRequestHandler):
         # страницу и называет картинку фундаментом статьи, а не украшением.
         if path.startswith("/img/"):
             self._img(urllib.parse.unquote(path[len("/img/"):]))
+            return
+        # Банк спрайтов сцены: предметы фона отдаются файлом, как и герои.
+        # Встраивать их в лист нельзя — сцена «трава» кладёт 53 предмета.
+        if path.startswith("/fony/"):
+            self._bank("fony", urllib.parse.unquote(path[len("/fony/"):]))
             return
         if path.startswith("/geroi/"):
             parts = path.split("/")          # ['', 'geroi', <kind>, <file>]
