@@ -173,8 +173,10 @@ function renderSounds() {
   S.cfg.sounds.forEach((s) => {
     const b = el('button', 'sound');
     b.appendChild(el('div', 'glyph', s.label));
+    // plural() написан в этом же файле и не звался: на карточках стояло
+    // «81 слов» и «152 слов» — строка о документе обязана читаться по-русски.
     b.appendChild(el('div', 'meta',
-      `${s.stats.dict_total} слов в картотеке`));
+      `${s.stats.dict_total} ${plural(s.stats.dict_total, 'слово', 'слова', 'слов')} в картотеке`));
     b.onclick = () => { S.sound = s.key; show('material'); };
     box.appendChild(b);
   });
@@ -272,7 +274,10 @@ function renderSylPick() {
   const cur = list.find((x) => x.typ === S.typ) || {};
   const kind = SHORT_LABEL[cur.typ] || cur.label || '';
   const thin = cur.thin
-    ? ' Слов в картотеке мало: ' + cur.words + ' из 12 канонных — лист выйдет бедным.'
+    // Число канона приходит с сервера полем need: на стечениях канон 7, а не 12,
+    // и вшитая двенадцатка печатала логопеду неправду («3 из 12» вместо «3 из 7»).
+    ? ' Слов в картотеке мало: ' + cur.words + ' из ' + (cur.need || 12)
+      + ' канонных — лист выйдет бедным.'
     : '';
   $('syl-hint').textContent = (kind ? kind[0].toUpperCase() + kind.slice(1) + '.' : '')
     + ' Гласная на кнопке — пример: на листе будет весь ряд.' + thin;
@@ -1382,8 +1387,14 @@ function bindActions() {
   // возврат к выбору слога живёт в крошке «слог РА» сверху — отдельной
   // кнопки для того же действия больше нет
 
+  // Дверь к материалу ОДНА. Прежде вкладка выставляла S.tab руками, а карточка
+  // ступени звала pickMaterial — и один материал открывался в двух разных
+  // состояниях: pickMaterial переустанавливает цвет, слог, номер сборки и игры,
+  // а обработчик вкладки не трогал ничего. Через карточку лабиринт выходил
+  // цветным, через вкладку чёрно-белым (поймано разбором 08-22). Теперь обе
+  // двери ведут в одну комнату.
   document.querySelectorAll('.tab').forEach((b) => {
-    b.onclick = () => { S.tab = b.dataset.tab; renderTabs(); load(); };
+    b.onclick = () => pickMaterial({ tab: b.dataset.tab, soon: !!b.dataset.soon });
   });
 
   $('colour-btn').onclick = () => {

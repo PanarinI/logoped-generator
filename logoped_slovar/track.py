@@ -285,6 +285,9 @@ SHAPE_BY_SCENE: Dict[str, str] = {
 SHAPE_DEFAULT = "wave"
 
 
+_FLAG_W = 7.5      # ширина полотнища флажка; нужна и расчёту места, и рисунку
+
+
 def shape_for(scene: str) -> str:
     """Какой формы путь на этой сцене."""
     return SHAPE_BY_SCENE.get(scene or "", SHAPE_DEFAULT)
@@ -406,9 +409,9 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
     svg.insert(1,
         f'<path d="M {sx - _R - 8.0:.1f} {sy:.1f} L {sx - _R - 1.5:.1f} {sy:.1f} '
         f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
-        f'fill="none" stroke="#000" stroke-width="0.9" stroke-linecap="round" '
+        f'fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round" '
         f'stroke-linejoin="round"/>'
-        f'<text x="{sx:.1f}" y="{sy - _R - 2.5:.1f}" font-size="4.2" '
+        f'<text x="{sx:.1f}" y="{sy - _R - 3.2:.1f}" font-size="4.2" '
         f'text-anchor="middle">старт</text>')
     if last:
         fx, fy = last
@@ -416,19 +419,32 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
         # налево, и цель у него слева. Иначе финиш оказывается позади него.
         last_row = (len(cells) - 1) // cols
         fwd = -1.0 if (last_row % 2 == 1) else 1.0
+
+        def _flag_fits(px: float, d: float) -> bool:
+            lo, hi = sorted((px, px + d * _FLAG_W))
+            return lo >= 1.0 and hi <= _W - 1.0
+
         px = fx + fwd * (_R + 2.5)
-        # Флажок и подпись обязаны остаться на бумаге. На обратном ряду цель
-        # уходит влево, и «финиш» вылезал за левый край — на листе читалось
-        # «иниш» (поймано автором 08-10). Держим оба в границах листа, подпись
-        # отдельно: она шире флажка.
-        px = max(_R * 0.9, min(_W - _R * 0.9, px))
+        # ⚠ Прежде здесь стоял ЗАЖИМ в границы листа, и он молча ставил флажок
+        # ПОВЕРХ слога: на [щ] кружок занимал 7.0-25.0 мм, а зажатый флажок
+        # оказывался на 8.1 — внутри кружка (замер 08-22, поймано автором
+        # глазами). Это ровно та молчаливая подмена, которую запрещает закон 12:
+        # материал делал не то, что обещал, и никак об этом не говорил.
+        # Теперь: не помещается по ходу — флажок уходит на ДРУГУЮ сторону
+        # кружка. Сторона хуже, чем задумано, но слог остаётся читаемым, а это
+        # важнее: по слогу ребёнок говорит, по флажку только понимает, что дошёл.
+        if not _flag_fits(px, fwd):
+            fwd = -fwd
+            px = fx + fwd * (_R + 2.5)
+        # Подпись уходит ПОД кружок с зазором, а не впритык к нему: на [щ] она
+        # начиналась в полумиллиметре от края кружка и читалась как его часть.
         tx = max(8.0, min(_W - 8.0, px))
         svg.append(
             f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
-            f'L {px + fwd * 7.5:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
-            f'fill="#000" stroke="#000" stroke-width="0.9" '
+            f'L {px + fwd * _FLAG_W:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
+            f'fill="#000" stroke="#000" stroke-width="1.4" '
             f'stroke-linejoin="round"/>'
-            f'<text x="{tx:.1f}" y="{fy + 9.5:.1f}" font-size="4.2" '
+            f'<text x="{tx:.1f}" y="{fy + _R + 4.8:.1f}" font-size="4.2" '
             f'text-anchor="middle">финиш</text>')
 
     return f"""<!DOCTYPE html>
