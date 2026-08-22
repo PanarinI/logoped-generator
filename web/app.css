@@ -133,10 +133,14 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
                letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
 .stat-line { margin: var(--s2) 0 0; font-size: 12px; color: var(--ink-2); }
 
-/* Слоги в панели: кнопки шире обычных сегментов, ряд переносится. */
-.syl-seg { grid-template-columns: repeat(3, 1fr); }
-.syl-seg .seg-btn { font-size: 17px; padding: 7px 0; }
-.syl-seg .seg-btn.is-thin { color: var(--warn); }
+/* Слоги в панели: кнопки шире обычных сегментов, ряд переносится.
+   ⚠ Класс был `.syl-seg` и стоял ВЫШЕ правила `.seg { 1fr 1fr }` при равной
+   специфичности — то есть молча не работал, и пять слогов ложились в три ряда
+   по два (замер 08-22). Мёртвое правило неотличимо от сломанного, пока его не
+   измеришь. Теперь колонки задаются самому ряду по его id. */
+#syl-pick { grid-template-columns: repeat(3, 1fr); }
+#syl-pick .seg-btn { font-size: 17px; padding: 7px 0; }
+#syl-pick .seg-btn.is-thin { color: var(--warn); }
 
 /* Слог показывает РОЛЬ, а не букву: целевой звук крупный и заглавный,
    гласные и соседние согласные — мелкие строчные. Так «Ра · аР · аРа»
@@ -170,9 +174,12 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 
 /* Две колонки: результат слева, настройки справа. Панель сжимается, но не
    ломается — лист умеет масштабироваться, поэтому строй держится до ~820px. */
+/* Колонка листа шириной ПОД ЛИСТ (её ставит fitFrame), панель забирает всё
+   остальное. Прежде было наоборот: лист тянулся на две трети, панель жалась
+   в 270-360 px, а лист всё равно уходил вниз под прокрутку. */
 .result { display: grid;
-          grid-template-columns: minmax(0, 1fr) clamp(270px, 25vw, 360px);
-          gap: var(--s4); align-items: start; }
+          grid-template-columns: auto minmax(300px, 1fr);
+          gap: var(--s5); align-items: start; }
 
 .paper { min-width: 0; }
 
@@ -242,6 +249,30 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .stage.is-msg .scaler { display: none; }
 .stage.is-msg .stage-msg { position: static; inset: auto; }
 
+/* ⚠ `hidden` — атрибут, и его `display:none` слабее любого правила с классом.
+   Как только настройка получила `display:flex`, она перестала прятаться: на
+   вкладке «Лист» вылезли «Сочини сам» и «Только звук», принадлежащие другим
+   материалам (поймано глазами 08-22 сразу после перестройки панели). Правило
+   ниже возвращает атрибуту силу — один раз на весь экран. */
+[hidden] { display: none !important; }
+
+/* Настройка = заголовок + сам контрол. Коробки вокруг каждой настройки сняты
+   08-22 по слову автора («проблему блока в блоке тоже надо решить»): панель уже
+   отделена от листа, и вторая рамка внутри неё ничего не отделяла. */
+.set { margin: 0 0 var(--s5); }
+.set > h2 { font-size: 13px; font-weight: 650; margin: 0 0 var(--s2); }
+.set > .hint { margin: 0 0 var(--s2); }
+.set > .hint.thin { margin: var(--s2) 0 0; color: var(--warn); }
+
+/* Ряд «как печатать»: самоочевидные переключатели, без заголовка и подписей.
+   Отделён от смысловых настроек чертой — это и есть требуемое автором деление
+   «смысловые в одной части, форматирование отдельно». */
+.print-as { display: flex; flex-wrap: wrap; gap: var(--s2);
+            margin: var(--s5) 0 0; padding: var(--s4) 0 0;
+            border-top: 1px solid var(--line); }
+.print-as .alt-btn { flex: 0 0 auto; }
+.toggles { display: flex; flex-wrap: wrap; gap: var(--s2); }
+
 /* ── панель ───────────────────────────────────────────────── */
 
 .panel { display: flex; flex-direction: column; gap: var(--s2);
@@ -278,10 +309,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
            transition: background .12s, color .12s; }
 .seg-btn:hover { background: #ece8e0; }
 /* Фонов пять, а не два — сетка «1fr 1fr» рвала их на неровные ряды. */
-#scene-pick { grid-template-columns: repeat(5, 1fr); }
-#game-pick { grid-template-columns: repeat(4, 1fr); }
+#scene-pick { grid-template-columns: repeat(3, 1fr); }
+#game-pick { grid-template-columns: repeat(3, 1fr); }
 .seg-btn.is-off { opacity: .45; cursor: not-allowed; }
-@media (max-width: 560px) { #scene-pick { grid-template-columns: repeat(3, 1fr); } }
 .seg-btn.is-on { background: var(--card); color: var(--ink); }
 
 /* Из двух вариантов назван только ОДИН. Молчащий стоит по умолчанию, названный

@@ -38,6 +38,12 @@ const S = {
 // Материалы, у которых есть что красить.
 const COLOURABLE = new Set(['maze', 'sheet', 'track', 'propisi']);
 
+// Материалы, СОБРАННЫЕ ИЗ СЛОВ, — только у них профиль ребёнка что-то меняет.
+// Признак именно такой, а не «есть слог»: у словосочетаний слога нет вовсе, и
+// проверка по слогу прятала чипы там, где профиль работает (найдено 08-22).
+// У дорожки и прописей слов нет: слог по построению чист (звук + гласная).
+const USES_WORDS = new Set(['sheet', 'maze', 'phrases', 'story']);
+
 const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story']);
 
 
@@ -177,7 +183,9 @@ function renderSounds() {
     // «81 слов» и «152 слов» — строка о документе обязана читаться по-русски.
     b.appendChild(el('div', 'meta',
       `${s.stats.dict_total} ${plural(s.stats.dict_total, 'слово', 'слова', 'слов')} в картотеке`));
-    b.onclick = () => { S.sound = s.key; show('material'); };
+    // Экрана «что делаем» больше нет — выбрав звук, логопед сразу видит лист
+    // на этом звуке в текущем материале.
+    b.onclick = () => { S.sound = s.key; pickMaterial({ tab: S.tab }); };
     box.appendChild(b);
   });
   $('sounds-note').textContent =
@@ -279,8 +287,15 @@ function renderSylPick() {
     ? ' Слов в картотеке мало: ' + cur.words + ' из ' + (cur.need || 12)
       + ' канонных — лист выйдет бедным.'
     : '';
-  $('syl-hint').textContent = (kind ? kind[0].toUpperCase() + kind.slice(1) + '.' : '')
-    + ' Гласная на кнопке — пример: на листе будет весь ряд.' + thin;
+  // Подписи под рядом больше нет (решение автора 08-22): название типа
+  // повторяло то, что кнопка показывает глифом, и уехало в ховер самой кнопки.
+  // Осталось только предупреждение о бедной картотеке — оно не про устройство
+  // кнопки, а про то, каким выйдет лист, и молчать о нём нельзя.
+  const warnThin = $('syl-thin');
+  if (warnThin) {
+    warnThin.textContent = thin.trim();
+    warnThin.hidden = !thin;
+  }
 }
 
 
@@ -291,8 +306,7 @@ function soundLabel() {
 
 
 function show(step) {
-  if (step === 'material') renderMaterials();
-  ['sound', 'material', 'result'].forEach((k) => {
+  ['sound', 'result'].forEach((k) => {
     $('step-' + k).hidden = (k !== step);
   });
   // Переключатель инструментов живёт в верхней панели и имеет смысл только
@@ -316,109 +330,25 @@ function renderCrumbs() {
     if (c.children.length) c.appendChild(el('span', 'crumb-sep', '·'));
     c.appendChild(b);
   };
-  // Слог в крошке рисуется как на кнопке, и рядом стоит НАЗВАНИЕ типа: без него
-  // «слог РА» читалось как выбор гласной (автор 08-18).
-  const addSyllable = (t, go) => {
-    const b = el('button', 'crumb');
-    b.append('слог ');
-    const strong = el('b', null);
-    strong.appendChild(syllableGlyph(S.syllable || t.syllable, soundLabel()));
-    b.appendChild(strong);
-    b.appendChild(el('span', 'crumb-kind', SHORT_LABEL[t.typ] || t.label));
-    b.onclick = go;
-    if (c.children.length) c.appendChild(el('span', 'crumb-sep', '·'));
-    c.appendChild(b);
-  };
   if (S.sound) add('звук', S.cfg.sounds.find((x) => x.key === S.sound).label,
                    () => show('sound'));
-  // Материал в крошке — путь назад к «что делаем»: без него шаг 2 недоступен,
-  // ведь слог больше не ведёт туда (08-18).
-  if (!$('step-result').hidden) {
-    const cur = STAGES.flatMap((s) => s.items).find((it) =>
-      it.tab === S.tab
-      && (!it.mode || it.mode === S.propisiMode)
-      && (!it.storyMode || it.storyMode === S.storyMode));
-    if (cur) add('делаем', cur.name, () => show('material'));
-  }
-  // На изолированной ступени слога нет вовсе — крошка «слог РА» была бы
-  // обещанием того, чего на листе не напечатано. У словосочетаний слога нет
-  // тем более: они собираются из слов, а не из слогов.
-  // Лабиринт слог НЕ использует: он собирается по звуку, ПОЗИЦИИ звука в слове
-  // и профилю (см. /api/maze). Крошка «слог аР» на нём была обещанием того,
-  // чего в листе нет — а позиция показана своими кнопками над листом (08-18).
-  const noSyllable = (S.tab === 'story')
-    || (S.tab === 'maze')
-    || !!SOON[S.tab]
-    || (S.tab === 'propisi' && S.propisiMode === 'isolated')
-    || (S.tab === 'phrases');
-  if (S.typ && !noSyllable && !$('step-result').hidden) {
-    // слог берём из ОТВЕТА (S.syllable), а не из подписи кнопки: подписи
-    // посчитаны на старте при пустом профиле, а профиль слог меняет —
-    // «РША» на кнопке против «ФША» на листе, когда ребёнку убрали [Р]
-    const t = S.cfg.syllables[S.sound].find((x) => x.typ === S.typ);
-    addSyllable(t, () => { const c = $('syl-card'); if (c) c.scrollIntoView({block: 'center'}); });
-  }
+  // ⚠ Крошек «делаем …» и «слог …» здесь БОЛЬШЕ НЕТ (решение автора 08-22:
+  // «они дублируют»). Материал назван вкладкой прямо над листом, тип слога —
+  // рядом кнопками в панели; крошка повторяла оба выбора третьим и четвёртым
+  // словом на экране, ничего не добавляя. Осталась одна крошка — ЗВУК: он
+  // нигде больше на этом экране не назван и не переключается.
+  //
+  // Цена этого решения названа вслух: путь назад к экрану «что делаем» вёл
+  // именно через крошку материала. Теперь возврата туда с листа нет, и если
+  // экран «что делаем» понадобится — дверь придётся дать заново.
 }
 
 /* ── шаг 2: ступень и материал ────────────────────────────── */
 
-/* Материалы стоят по ступеням автоматизации, как их видит методика:
-   изолированный звук → слоги → слова → фразы → текст (Филичева; ступени
-   реальных занятий — `research/zanyatie_stupeni_dataset_2026-08-04.csv`).
-   Ось настройки задаёт ступень, а не общий шаг: на ступени слогов спрашивают
-   ТИП СЛОГА, на ступени слов — ПОЗИЦИЮ звука в слове. Смешивать их нельзя,
-   это разные этапы (`logoped_canon_verify_2026-08-01.md` п. 3). */
-const STAGES = [
-  {
-    title: 'Один звук',
-    hint: 'Ребёнок тянет звук, гласной ещё нет.',
-    items: [{ tab: 'propisi', mode: 'isolated', name: 'Звуковая дорожка',
-              what: 'Линия, по которой ведут пальцем и тянут звук.' }],
-  },
-  {
-    title: 'Слоги',
-    hint: 'Звук уже в слоге. Какой именно слог — спросим на листе.',
-    items: [
-      { tab: 'propisi', mode: 'syllable', name: 'Звуковая дорожка со слогом',
-        what: 'В конце линии гласная — слог собирается сам.' },
-      { tab: 'track', name: 'Слоговая дорожка',
-        what: 'Кружки со слогами и герой звука на фоне.' },
-    ],
-  },
-  {
-    title: 'Слова',
-    hint: 'Здесь важно, ГДЕ звук стоит в слове.',
-    items: [
-      { tab: 'maze', name: 'Лабиринт',
-        what: 'Девять картинок и путь по стрелкам; к ним же три игры.' },
-      { tab: 'soon-odd', name: '4-й лишний', soon: true },
-      { tab: 'soon-noise', name: 'Зашумлённые', soon: true },
-      { tab: 'soon-trace', name: 'Обводка', soon: true },
-    ],
-  },
-  {
-    title: 'Словосочетания',
-    hint: 'Слово тянет за собой второе — прилагательное с существительным.',
-    items: [{ tab: 'phrases', name: 'Словосочетания',
-              what: 'Пары «какой — что» на чистых словах.' }],
-  },
-  {
-    title: 'Текст',
-    hint: 'Верхняя ступень: ребёнок говорит связно.',
-    items: [
-      { tab: 'story', storyMode: 'retell', name: 'Пересказ',
-        what: 'Готовый текст: взрослый читает, ребёнок отвечает и пересказывает.' },
-      { tab: 'story', storyMode: 'compose', name: 'Сочини рассказ',
-        what: 'Текста нет: тема, опорные слова и три вопроса.' },
-    ],
-  },
-  {
-    title: 'Всё занятие на одном листе',
-    hint: 'Лист проходит ступени внутри себя: разминка, слоги, слова, предложения.',
-    items: [{ tab: 'sheet', name: 'Лист автоматизации',
-              what: 'Семь блоков по канону, под профиль ребёнка.' }],
-  },
-];
+/* ⚠ Массив STAGES снят 08-22 вместе с экраном «Что делаем?»: он описывал
+   ступени автоматизации и карточки материалов для того экрана, а материал
+   теперь выбирается полосой вкладок. Ступени как ЗНАНИЕ никуда не делись —
+   они живут в каноне и в `research/`, а не в разметке экрана. */
 
 /* Первый тип слога, на котором материал собирается: логопед выбрал МАТЕРИАЛ,
    а слог у него настраивается потом — значит стартовый слог берём рабочий. */
@@ -459,30 +389,6 @@ function pickMaterial(it) {
   load();
 }
 
-function renderMaterials() {
-  const box = $('materials');
-  box.innerHTML = '';
-  STAGES.forEach((st) => {
-    const card = el('section', 'stage-card');
-    card.appendChild(el('h2', null, st.title));
-    card.appendChild(el('p', 'stage-hint', st.hint));
-    const row = el('div', 'stage-items');
-    st.items.forEach((it) => {
-      const b = el('button', 'mat' + (it.soon ? ' is-soon' : ''));
-      b.appendChild(el('div', 'mat-name', it.name));
-      if (it.soon) {
-        b.appendChild(el('div', 'mat-what', 'будет позже'));
-        b.onclick = () => pickMaterial(it);
-      } else {
-        b.appendChild(el('div', 'mat-what', it.what));
-        b.onclick = () => pickMaterial(it);
-      }
-      row.appendChild(b);
-    });
-    card.appendChild(row);
-    box.appendChild(card);
-  });
-}
 
 /* ── шаг 3: материал ─────────────────────────────────────── */
 
@@ -509,11 +415,13 @@ const SOON = {
 /* Заголовок группы без содержимого читается как поломка: на витрине все
    настройки скрыты, и «ЭТОТ ЛИСТ» висел над пустотой (08-18). */
 function syncGroupTitle() {
-  const ids = ['syl-card', 'ask', 'where', 'colour-card', 'game-card', 'scene-card',
-               'story-mode-card', 'text-card', 'theme-card', 'stage-step', 'warn'];
-  const any = ids.some((id) => { const n = $(id); return n && !n.hidden; });
-  const title = $('group-this');
-  if (title) title.hidden = !any;
+  // Заголовка «Этот лист» больше нет — снят 08-22 по слову автора: он называл
+  // то, что и так очевидно (панель стоит у листа). Функция осталась одна на
+  // блок «Почему так»: заголовок над свёрнутым рвом на витрине висел бы над
+  // пустотой, а это читается как поломка.
+  const why = $('group-why');
+  const moat = $('moat-box');
+  if (why) why.hidden = !moat || moat.hidden;
 }
 
 
@@ -535,7 +443,12 @@ function renderTabs() {
   // Умолчания РАЗНЫЕ и это не прихоть: картинке лабиринта цвет нужен для
   // узнавания (борщ в ч/б назовут супом), а герою — нет, зато лист печатают
   // на обычном принтере, где цветная заливка садится серым.
-  $('colour-card').hidden = !COLOURABLE.has(S.tab);
+  // Ряд «как печатать» показывается, если в нём есть хоть одна живая кнопка.
+  const canColour = COLOURABLE.has(S.tab);
+  const canAudience = (S.tab === 'sheet');
+  $('colour-btn').hidden = !canColour;
+  $('audience-btn').hidden = !canAudience;
+  $('print-as').hidden = soon || !(canColour || canAudience);
   // Тип слога — только у материалов, которые его получают (см. сигнатуры
   // движка: sheet.typ · track.syl_type · propisi.syl_type). У лабиринта своя
   // ось (позиция), у словосочетаний и рассказов оси нет вовсе.
@@ -543,17 +456,19 @@ function renderTabs() {
     || (S.tab === 'propisi' && S.propisiMode !== 'isolated');
   $('syl-card').hidden = soon || !usesSyllable;
   if (usesSyllable && !soon) renderSylPick();
-  if (soon) $('stat-line').hidden = true;   // числа принадлежат собранному материалу
   renderColour();
   if (S.tab === 'maze') renderPositions();
   $('reroll').hidden = !REROLLABLE.has(S.tab);
-  // Профиль ребёнка меняет лист и лабиринт, но не дорожку и не прописи:
-  // там нет слов, а слог по построению чист (целевой звук + гласная).
-  $('ask').hidden = soon || (S.tab === 'track') || (S.tab === 'propisi')
-    || (S.tab === 'phrases') || !S.syllable;
+  // Профиль ребёнка меняет лист, лабиринт И СЛОВОСОЧЕТАНИЯ, но не дорожку и не
+  // прописи: там нет слов, а слог по построению чист (целевой звук + гласная).
+  // ⚠ Словосочетания были исключены ошибочно: профиль уходил на сервер и менял
+  // все пары, а карточка чипов была спрятана — настройка не погашена, её просто
+  // не было, а действие было. Худший случай закона 12: логопед менял материал,
+  // не видя, чем (найдено разбором 08-22).
+  $('ask').hidden = soon || !USES_WORDS.has(S.tab);
   // «Домой / на занятие» — свойство ЛИСТА: шапка-документ и подвал взрослому
   // есть только у него. У дорожки и лабиринта их нет, переключать нечего.
-  $('where').hidden = (S.tab !== 'sheet');
+  // Сама кнопка живёт в ряду «как печатать», её видимость выставлена выше.
   // Ступень «только звук / звук + слог» есть лишь у звуковой дорожки.
   $('stage-step').hidden = (S.tab !== 'propisi');
   $('scene-card').hidden = (S.tab !== 'track');
@@ -580,21 +495,20 @@ function renderTabs() {
   syncGroupTitle();
 }
 function renderColour() {
-  $('colour-btn').classList.toggle('is-on',
-    S.tab === 'maze' ? !S.colour : S.colour);
-  $('colour-btn').lastChild.textContent =
-    S.tab === 'maze' ? 'Без цвета' : 'Цветной герой';
-  $('colour-hint').textContent = S.colour
-    ? 'Картинки цветные — печатать на цветном принтере.'
-    : 'Картинки чёрно-белые — напечатает любой принтер.';
+  // Одно имя и одна логика галочки на всех материалах. Прежде кнопка
+  // переворачивала И название («Без цвета» ↔ «Цветной герой»), И смысл галочки
+  // (на лабиринте is-on означало ОТСУТСТВИЕ цвета) — её приходилось перечитывать
+  // при каждой смене вкладки. Разные УМОЛЧАНИЯ по материалам остаются: лабиринту
+  // цвет нужен для узнавания картинки, листу нет (pickMaterial).
+  $('colour-btn').classList.toggle('is-on', S.colour);
+  $('colour-btn').lastChild.textContent = 'Цветной лист';
 }
 
 
 function renderAudience() {
+  // Подпись снята 08-22: кнопка самоочевидна, а два состояния читаются
+  // залипанием — этого хватает (закон 13).
   $('audience-btn').classList.toggle('is-on', S.audience === 'home');
-  $('audience-hint').textContent = S.audience === 'home'
-    ? 'С шапкой на неделю и подписью родителя.'
-    : 'Без шапки и подсказок взрослому — логопед рядом.';
 }
 
 /* Живая игра или нет — свойство КОНКРЕТНОГО листа: игры собираются из его же
@@ -659,9 +573,6 @@ function sceneList() {
    шести слов, нельзя — кнопка обещала бы то, чего материал не сделает. */
 function renderStoryMode() {
   $('story-mode-btn').classList.toggle('is-on', S.storyMode === 'compose');
-  $('story-mode-hint').textContent = S.storyMode === 'retell'
-    ? 'Готовый текст: взрослый читает, ребёнок отвечает и пересказывает.'
-    : 'Текста нет: тема, наборы слов и три вопроса — ребёнок сочиняет сам.';
 }
 
 /* Тексты пересказа — только чистые для профиля; список приходит с листом. */
@@ -734,9 +645,6 @@ function renderScenePick() {
 
 function renderPropisiMode() {
   $('propisi-mode-btn').classList.toggle('is-on', S.propisiMode === 'isolated');
-  $('propisi-mode-hint').textContent = S.propisiMode === 'isolated'
-    ? 'Гласной в конце нет: ребёнок тянет один звук.'
-    : 'В конце линии гласная — собирается слог.';
 }
 
 function positionList() {
@@ -888,12 +796,10 @@ async function load() {
   renderTabs();
   writeFrame(res.html);
   renderMoat(res.stats);
-  renderStatLine(res.stats);
   renderWarnings(res.warnings);   // она же решает, можно ли печатать
   // Вопрос о профиле — только ПОСЛЕ первого материала и только там, где он
   // на что-то влияет. На дорожке и в прописях слов нет, убирать нечего.
-  $('ask').hidden = (S.tab === 'track') || (S.tab === 'propisi')
-    || (S.tab === 'phrases');
+  $('ask').hidden = !USES_WORDS.has(S.tab);
 }
 
 function showError(res) {
@@ -975,26 +881,49 @@ function fitFrame() {
   if (!d || !d.documentElement) return;
 
   const stage = $('stage');
+  const paper = document.querySelector('.paper');
+  const wrap = document.querySelector('.result');
   // Отступы берём из стилей, а не зашитым числом: они разные на разных
   // ширинах, и на 1000px лист вылезал за колонку и обрезался.
   const cs = getComputedStyle(stage);
   const pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-  const avail = stage.clientWidth - pad;
-  // экран результата скрыт → ширина 0 → масштаб ушёл бы в минус и лист
-  // остался бы зеркальным. Пересчитаем, когда экран снова покажут.
-  if (avail <= 0) return;
+  const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
 
   const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
+  if (!h) return;
   f.style.height = h + 'px';
 
-  // Масштабируем от ВЕРХНЕГО ЛЕВОГО угла и центрируем отступом. При origin
-  // «top center» видимая коробка вылезала за колонку и лист обрезало справа.
-  const k = Math.min(1, avail / 794);
+  // ЛИСТ ЦЕЛИКОМ, БЕЗ ПРОКРУТКИ — решение автора 08-22: «не хочу, чтобы лист
+  // уходил под скролл; по умолчанию лист должен занимать центральное и
+  // максимально оптимизированное пространство, и относительно него строится
+  // весь интерфейс».
+  //
+  // Поэтому масштаб считается по ДВУМ пределам сразу, а не по одной ширине:
+  //   · сколько высоты осталось до низа окна;
+  //   · сколько ширины мы согласны отдать листу (остальное — панели).
+  // Раньше k считался только из ширины колонки, и лист высотой A4 неизбежно
+  // уходил вниз за экран.
+  //
+  // Ширину листу считаем от ОКНА, а не от его собственной колонки: колонка
+  // теперь подстраивается под лист, и брать её ширину значило бы гоняться за
+  // собственным хвостом.
+  const top = stage.getBoundingClientRect().top;
+  const availH = window.innerHeight - top - 16 - padY;
+  const room = (wrap ? wrap.clientWidth : window.innerWidth);
+  // Панели оставляем не меньше 300 px — ниже неё карточки настроек ломаются.
+  const availW = Math.max(240, Math.min(room - 300 - 16, room * 0.62)) - pad;
+
+  if (availH <= 0 || availW <= 0) return;
+
+  const k = Math.min(1, availW / 794, availH / h);
   const sc = $('scaler');
   sc.style.transformOrigin = 'top left';
   sc.style.transform = `scale(${k})`;
-  sc.style.marginLeft = Math.max(0, (avail - 794 * k) / 2) + 'px';
-  stage.style.height = (h * k + pad) + 'px';
+  sc.style.marginLeft = '0px';
+  stage.style.height = (h * k + padY) + 'px';
+  // Колонка листа сжимается до самого листа — освободившееся место уходит
+  // панели, ради чего вся правка и делалась.
+  if (paper) paper.style.width = (794 * k + pad) + 'px';
 }
 
 window.addEventListener('resize', fitFrame);
@@ -1008,32 +937,6 @@ if (window.ResizeObserver) {
 
 /* ── ров: пересчёт на глазах ─────────────────────────────── */
 
-/* Числа рва наружу одной строкой: они уже считаются, но лежали в свёрнутом
-   блоке, и логопед не видел, что сделал профиль (правка автора 08-18). */
-function renderStatLine(st) {
-  const line = $('stat-line');
-  if (!line || !st) return;
-  const parts = [];
-  if (st.kind === 'maze') {
-    // У лабиринта свои числа: сколько слов подошло по ПОЗИЦИИ и сколько
-    // картинок реально встало в клетки (остальные — рамка со словом).
-    if (st.fit_position) parts.push(`${st.fit_position} ${plural(st.fit_position, 'слово подходит', 'слова подходят', 'слов подходят')} по позиции`);
-    if (st.pictures != null && st.cells) parts.push(`картинок ${st.pictures} из ${st.cells - 1}`);
-    line.textContent = parts.join(' · ');
-    line.hidden = !parts.length;
-    return;
-  }
-  if (st.on_sheet && st.left) {
-    parts.push(`${st.on_sheet} ${plural(st.on_sheet, 'слово', 'слова', 'слов')} из ${st.left} подходящих`);
-  } else if (st.words_on_sheet && st.pool) {
-    parts.push(`${st.words_on_sheet} из ${st.pool}`);
-  }
-  if (st.profile_removed) {
-    parts.push(`профиль убрал ${st.profile_removed}`);
-  }
-  line.textContent = parts.join(' · ');
-  line.hidden = !parts.length;
-}
 
 
 function renderMoat(st) {
@@ -1236,7 +1139,9 @@ function renderChips() {
   const note = $('chips-note');
   if (note) {
     note.textContent = off.length
-      ? `${off.join(', ')} — уже убраны: их путают с [${label}], поэтому слов с ними на листе нет в любом случае.`
+      // Хвост «поэтому слов с ними на листе нет в любом случае» снят 08-22 по
+      // слову автора: он повторял то же самое второй раз другими словами.
+      ? `${off.join(', ')} — уже убраны: их путают с [${label}].`
       : '';
     note.hidden = !off.length;
   }
