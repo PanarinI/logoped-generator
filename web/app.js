@@ -174,24 +174,22 @@ async function post(url, body) {
 /* ── шаг 1: звук ─────────────────────────────────────────── */
 
 function renderSounds() {
-  const box = $('sounds');
-  box.innerHTML = '';
+  // ЗВУК — закладки книги в вертикальном ряду. Прежде звук выбирался на
+  // отдельном экране, а с листа туда вела серая крошка «звук Р». Слова автора
+  // 08-22: «непонятно, если я на листе Л, а решил перейти на Р — как мне это
+  // сделать? интуитивно ничто не подсказывает, что нужно нажать на „звук Л“».
+  // Закладка решает это тем, что она всегда на виду и всегда одна нажатие.
+  const rail = $('rail');
+  if (!rail) return;
+  rail.innerHTML = '';
   S.cfg.sounds.forEach((s) => {
-    const b = el('button', 'sound');
-    b.appendChild(el('div', 'glyph', s.label));
-    // plural() написан в этом же файле и не звался: на карточках стояло
-    // «81 слов» и «152 слов» — строка о документе обязана читаться по-русски.
-    b.appendChild(el('div', 'meta',
-      `${s.stats.dict_total} ${plural(s.stats.dict_total, 'слово', 'слова', 'слов')} в картотеке`));
-    // Экрана «что делаем» больше нет — выбрав звук, логопед сразу видит лист
-    // на этом звуке в текущем материале.
+    const b = el('button', 'rail-btn', s.label);
+    b.title = `${s.stats.dict_total} ${plural(s.stats.dict_total, 'слово', 'слова', 'слов')} в картотеке`;
+    b.classList.toggle('is-on', s.key === S.sound);
+    // Смена звука пересобирает материал целиком — той же дверью, что вкладка.
     b.onclick = () => { S.sound = s.key; pickMaterial({ tab: S.tab }); };
-    box.appendChild(b);
+    rail.appendChild(b);
   });
-  $('sounds-note').textContent =
-    'Это все звуки, которые умеет этот лист. Ц и Ч сюда не входят: их нельзя ' +
-    'тянуть на одном выдохе, и порядок слогов у них обратный — им нужен ' +
-    'другой лист. Смычные (П Б Т Д К Г) — по той же причине.';
 }
 
 /* ── шаг 2: слог ─────────────────────────────────────────── */
@@ -306,42 +304,16 @@ function soundLabel() {
 
 
 function show(step) {
-  ['sound', 'result'].forEach((k) => {
-    $('step-' + k).hidden = (k !== step);
-  });
-  // Переключатель инструментов живёт в верхней панели и имеет смысл только
-  // тогда, когда материал уже собран.
-  $('tools').hidden = (step !== 'result');
-  renderCrumbs();
-  // вернулись на экран листа — пересчитать масштаб: пока он был скрыт,
-  // ширина сцены была нулевой и подгонка не работала
-  if (step === 'result') requestAnimationFrame(fitFrame);
+  // Экран остался ОДИН — лист. Функция сохранена, чтобы не переписывать
+  // полсотни вызовов, и чтобы возврат экранов был дешёвым, если понадобится.
+  const r = $('step-result');
+  if (r) r.hidden = false;
+  if (step) fitFrame();
 }
 
-function renderCrumbs() {
-  const c = $('crumbs');
-  c.innerHTML = '';
-  const add = (label, value, go) => {
-    const b = el('button', 'crumb');
-    b.append(label + ' ');
-    const strong = el('b', null, value);
-    b.appendChild(strong);
-    b.onclick = go;
-    if (c.children.length) c.appendChild(el('span', 'crumb-sep', '·'));
-    c.appendChild(b);
-  };
-  if (S.sound) add('звук', S.cfg.sounds.find((x) => x.key === S.sound).label,
-                   () => show('sound'));
-  // ⚠ Крошек «делаем …» и «слог …» здесь БОЛЬШЕ НЕТ (решение автора 08-22:
-  // «они дублируют»). Материал назван вкладкой прямо над листом, тип слога —
-  // рядом кнопками в панели; крошка повторяла оба выбора третьим и четвёртым
-  // словом на экране, ничего не добавляя. Осталась одна крошка — ЗВУК: он
-  // нигде больше на этом экране не назван и не переключается.
-  //
-  // Цена этого решения названа вслух: путь назад к экрану «что делаем» вёл
-  // именно через крошку материала. Теперь возврата туда с листа нет, и если
-  // экран «что делаем» понадобится — дверь придётся дать заново.
-}
+/* ⚠ Крошки сняты целиком 08-22: материал назван вкладкой, звук — закладкой,
+   тип слога — кнопками в панели. Повторять всё это четвёртый раз строкой в
+   углу незачем. */
 
 /* ── шаг 2: ступень и материал ────────────────────────────── */
 
@@ -456,6 +428,7 @@ function renderTabs() {
     || (S.tab === 'propisi' && S.propisiMode !== 'isolated');
   $('syl-card').hidden = soon || !usesSyllable;
   if (usesSyllable && !soon) renderSylPick();
+  renderSounds();   // закладка активного звука обновляется вместе со всем
   renderColour();
   if (S.tab === 'maze') renderPositions();
   $('reroll').hidden = !REROLLABLE.has(S.tab);
@@ -481,7 +454,6 @@ function renderTabs() {
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
   if (S.tab === 'propisi') renderPropisiMode();
-  renderCrumbs();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
   $('moat-summary').textContent = {
@@ -774,7 +746,7 @@ async function load() {
   $('stage-msg').hidden = true;
   $('stage').classList.remove('is-msg');
   $('frame').style.visibility = 'visible';
-  if (res.syllable) { S.syllable = res.syllable; renderCrumbs(); }
+  if (res.syllable) S.syllable = res.syllable;
   // Состояние игр приходит вместе с листом — это его свойство, а не настройка.
   // Выбор логопеда подтягиваем к напечатанному: иначе на кнопке остаётся игра,
   // которой на бумаге нет, и повторное нажатие по ней не делает ничего.
@@ -832,7 +804,6 @@ function showError(res) {
       b.addEventListener('click', () => {
         S.typ = o.typ;
         S.syllable = o.syllable;
-        renderCrumbs();
         renderTabs();
         load();
       });
@@ -908,10 +879,14 @@ function fitFrame() {
   // теперь подстраивается под лист, и брать её ширину значило бы гоняться за
   // собственным хвостом.
   const top = stage.getBoundingClientRect().top;
-  const availH = window.innerHeight - top - 16 - padY;
-  const room = (wrap ? wrap.clientWidth : window.innerWidth);
-  // Панели оставляем не меньше 300 px — ниже неё карточки настроек ломаются.
-  const availW = Math.max(240, Math.min(room - 300 - 16, room * 0.62)) - pad;
+  // Высоту берём до самого низа окна: верхней полосы больше нет, отступы сняты,
+  // и каждый оставшийся пиксель — это размер листа.
+  const availH = window.innerHeight - top - 4 - padY;
+  // Ширину даёт САМА колонка: она средняя из трёх и уже посчитана раскладкой
+  // (закладки слева фиксированы, панель справа ограничена сверху). Гоняться за
+  // собственным хвостом больше не приходится.
+  const col = paper ? paper.parentElement : null;
+  const availW = (col ? col.clientWidth : window.innerWidth) - pad;
 
   if (availH <= 0 || availW <= 0) return;
 
@@ -921,8 +896,8 @@ function fitFrame() {
   sc.style.transform = `scale(${k})`;
   sc.style.marginLeft = '0px';
   stage.style.height = (h * k + padY) + 'px';
-  // Колонка листа сжимается до самого листа — освободившееся место уходит
-  // панели, ради чего вся правка и делалась.
+  // Ширина листа — ровно по бумаге; лишнее место в колонке раскладка отдаёт
+  // отступам слева и справа, центрируя лист.
   if (paper) paper.style.width = (794 * k + pad) + 'px';
 }
 
@@ -1316,8 +1291,7 @@ function bindActions() {
 
   $('propisi-mode-btn').onclick = () => {
     S.propisiMode = S.propisiMode === 'isolated' ? 'syllable' : 'isolated';
-    renderPropisiMode();
-    renderCrumbs();   // на изолированной ступени крошка «слог» уходит
+    renderPropisiMode();   // на изолированной ступени крошка «слог» уходит
     load();
   };
 

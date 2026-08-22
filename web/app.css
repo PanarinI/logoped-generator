@@ -36,7 +36,11 @@ html, body {
 
 button { font: inherit; color: inherit; }
 
-.app { max-width: 1400px; margin: 0 auto; padding: var(--s4) var(--s5) var(--s6); }
+/* Отступы сверху и снизу сняты 08-22 по слову автора («можешь убрать отступы
+   сверху и снизу») — каждый их пиксель отнимался у высоты листа, а лист именно
+   высотой и ограничен. По бокам отступ остался: без него закладки звуков и
+   панель липли бы к краям окна. */
+.app { max-width: 1600px; margin: 0 auto; padding: 0 var(--s4); }
 
 /* Виджет внутри страницы сайта (?embed=1). Канон Fullwidth: виджет занимает
    всю ширину в начале страницы, а шапка прячется — «нам нужно на сайте забрать
@@ -174,14 +178,47 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 
 /* Две колонки: результат слева, настройки справа. Панель сжимается, но не
    ломается — лист умеет масштабироваться, поэтому строй держится до ~820px. */
-/* Колонка листа шириной ПОД ЛИСТ (её ставит fitFrame), панель забирает всё
-   остальное. Прежде было наоборот: лист тянулся на две трети, панель жалась
-   в 270-360 px, а лист всё равно уходил вниз под прокрутку. */
-.result { display: grid;
-          grid-template-columns: auto minmax(300px, 1fr);
-          gap: var(--s5); align-items: start; }
+/* ТРИ КОЛОНКИ: закладки звуков · лист · панель.
 
-.paper { min-width: 0; }
+   Лист упирается в ВЫСОТУ окна, а не в ширину: при окне 800 px он физически не
+   может быть шире ~560 px, иначе не влезет по высоте. Поэтому «дать листу
+   больше» невозможно — можно только не отдавать весь остаток панели. Отсюда
+   средняя колонка тянется (1fr) и центрирует лист, а панель ограничена сверху.
+   Прежде панель забирала всё свободное место, и пропорции читались нелепо. */
+.result { display: grid;
+          grid-template-columns: auto minmax(0, 1fr) clamp(320px, 27vw, 440px);
+          gap: var(--s4); align-items: start;
+          height: 100vh; }
+
+.paper { min-width: 0; justify-self: center; }
+
+/* ЗАКЛАДКИ ЗВУКОВ — как у книги: узкий вертикальный ряд у самого края.
+   Звук виден всегда и переключается одним нажатием; отдельного экрана выбора
+   больше нет. */
+.rail { display: flex; flex-direction: column; gap: 2px;
+        padding: 2px; background: #ece8e0; border-radius: var(--r-sm);
+        align-self: start;
+        /* ⚠ min-width: 0 обязателен. Элемент сетки по умолчанию не может стать
+           уже своего содержимого, и одиннадцать закладок в строку распирали
+           раскладку на 275 px за край экрана, утаскивая лист вправо (замер
+           08-22 на 390 px). Ровно та же болезнь, что ловили на полосе вкладок
+           08-12 — и ловится она только замером `scrollWidth`, на глаз она
+           читается как «лист почему-то обрезан». */
+        min-width: 0; }
+.rail-btn { border: 0; background: none; cursor: pointer;
+            font-size: 15px; font-weight: 600; color: var(--ink-2);
+            padding: 8px 10px; min-width: 40px; border-radius: 6px;
+            transition: background .12s, color .12s; }
+.rail-btn:hover { color: var(--ink); }
+.rail-btn.is-on { background: var(--card); color: var(--ink); }
+
+/* Панель прокручивается сама, не утаскивая лист: лист стоит на месте, как у
+   incompetech, где липкой держат колонку предпросмотра, а не настроек.
+   ⚠ min-width: 0 обязателен по той же причине, что у закладок: внутри панели
+   лежит полоса вкладок в 650 px, и без разрешения сжиматься она распирала всю
+   сетку за край экрана — лист уезжал вправо и обрезался. На глаз это читалось
+   как «лист почему-то обрезан», а нашлось только замером `scrollWidth`. */
+.panel { max-height: 100vh; overflow-y: auto; min-width: 0; }
 
 /* переключатель материалов — маленький и тихий.
    Полоса ПРОКРУЧИВАЕТСЯ вбок сама, а не тащит за собой страницу: материалов
@@ -231,8 +268,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .maze-note[hidden] { display: none; }
 
 /* бумага: одна мягкая тень, никаких рамок поверх рамок */
-.stage { position: relative; overflow: hidden;
-         background: var(--stage); border-radius: var(--r); padding: var(--s4); }
+/* Подложка сцены прижата: её отступ отнимался у высоты листа. */
+.stage { position: relative; overflow: hidden; max-width: 100%;
+         background: var(--stage); border-radius: var(--r); padding: var(--s2); }
 .scaler { transform-origin: top center; width: 794px; margin: 0 auto;
           filter: drop-shadow(0 2px 4px rgba(22,25,29,.08))
                   drop-shadow(0 12px 32px rgba(22,25,29,.10)); }
@@ -470,9 +508,21 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 
 /* И только на совсем узком (планшет книжно, телефон) складываем в одну
    колонку — панель ПЕРВОЙ, иначе настройки уезжают под лист в целый А4. */
+/* УЗКИЙ ЭКРАН. Три колонки рядом не помещаются, поэтому раскладка становится
+   одноколоночной — но порядок держит решение автора 08-21: логопед видит
+   БУМАГУ, а не следующий вопрос. Значит сверху закладки звуков (ряд ложится
+   горизонтально), под ними лист, и только потом настройки.
+   ⚠ Прежнее правило ставило панель ПЕРВОЙ (`order:-1`), и на 375 px до листа
+   было полтора экрана прокрутки — прямо против того же решения (замер 08-22). */
 @media (max-width: 820px) {
-  .result { grid-template-columns: 1fr; }
-  .panel { order: -1; position: static; }
-  .top { flex-wrap: wrap; }
-  .crumbs { margin-left: 0; }
+  .result { grid-template-columns: 1fr; height: auto; }
+  .rail { flex-direction: row; overflow-x: auto; scrollbar-width: none;
+          order: 0; align-self: stretch; }
+  .rail::-webkit-scrollbar { display: none; }
+  /* ⚠ Ширину листа НЕ навязываем: её считает fitFrame по высоте и ширине
+     колонки. Правило `width:100%!important` перебивало расчёт, и на 390 px
+     лист вылезал за экран обрезанным (поймано глазами 08-22). Один хозяин
+     у размера — расчёт, а не таблица стилей. */
+  .paper { order: 1; }
+  .panel { order: 2; max-height: none; overflow: visible; }
 }
