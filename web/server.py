@@ -579,6 +579,7 @@ class Handler(BaseHTTPRequestHandler):
             ".html": "text/html; charset=utf-8",
             ".css": "text/css; charset=utf-8",
             ".js": "application/javascript; charset=utf-8",
+            ".svg": "image/svg+xml; charset=utf-8",
         }.get(os.path.splitext(name)[1], "application/octet-stream")
         with open(path, "rb") as fh:
             self._cached(fh.read(), ctype, self.CACHE_CODE)
@@ -637,6 +638,12 @@ class Handler(BaseHTTPRequestHandler):
         # 2. статика и ответы движка
         if path in ("/app.css", "/app.js", "/site.css"):
             self._static(path.lstrip("/"))
+            return
+        # Браузеры и превью-боты просят /favicon.ico независимо от того, что
+        # объявлено в разметке. Отдаём один и тот же SVG на оба адреса, чтобы
+        # 404 не сыпался на каждой странице.
+        if path in ("/favicon.ico", "/favicon.svg"):
+            self._static("favicon.svg")
             return
         if path.startswith("/geroi/"):
             parts = path.split("/")          # ['', 'geroi', <kind>, <file>]

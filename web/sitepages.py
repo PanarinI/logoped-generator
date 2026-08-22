@@ -377,6 +377,7 @@ def render(page: Page) -> bytes:
         f'<meta property="og:description" content="{e(page["description"])}">\n'
         f'<meta property="og:url" content="{url}">\n'
         f'<meta property="og:locale" content="ru_RU">\n'
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
         '<link rel="stylesheet" href="/site.css">\n'
         f'<script type="application/ld+json">{_jsonld(page)}</script>\n'
         "</head>\n"
@@ -407,6 +408,7 @@ def render_404() -> bytes:
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '<meta name="robots" content="noindex">\n'
         "<title>Страница не найдена</title>\n"
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
         '<link rel="stylesheet" href="/site.css">\n'
         "</head>\n"
         '<body>\n<main class="site">\n'
