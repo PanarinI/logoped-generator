@@ -601,6 +601,21 @@ class Handler(BaseHTTPRequestHandler):
         with open(path, "rb") as fh:
             self._cached(fh.read(), "image/png", self.CACHE_PICT)
 
+    def _img(self, name: str) -> None:
+        """Картинка страницы сайта. Кэш длинный: снимок листа не меняется."""
+        root = os.path.join(HERE, "img")
+        path = os.path.abspath(os.path.join(root, name))
+        if os.path.dirname(path) != root or not os.path.isfile(path):
+            self._not_found()
+            return
+        ctype = {".png": "image/png", ".jpg": "image/jpeg",
+                 ".svg": "image/svg+xml"}.get(os.path.splitext(name)[1], "")
+        if not ctype:
+            self._not_found()
+            return
+        with open(path, "rb") as fh:
+            self._cached(fh.read(), ctype, self.CACHE_PICT)
+
     def _body(self) -> Dict[str, Any]:
         length = int(self.headers.get("Content-Length") or 0)
         if not length:
@@ -644,6 +659,12 @@ class Handler(BaseHTTPRequestHandler):
         # 404 не сыпался на каждой странице.
         if path in ("/favicon.ico", "/favicon.svg"):
             self._static("favicon.svg")
+            return
+        # Иллюстрации страниц сайта — снимки НАСТОЯЩИХ листов, снятые с движка
+        # (см. tools/snimki_listov.py). Канон требует минимум три иллюстрации на
+        # страницу и называет картинку фундаментом статьи, а не украшением.
+        if path.startswith("/img/"):
+            self._img(urllib.parse.unquote(path[len("/img/"):]))
             return
         if path.startswith("/geroi/"):
             parts = path.split("/")          # ['', 'geroi', <kind>, <file>]
