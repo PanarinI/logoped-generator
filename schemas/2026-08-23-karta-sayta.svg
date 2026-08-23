@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1000" viewBox="0 0 1180 1000" role="img" aria-label="Карта сайта-сервиса logozvuk.com: что построено, чего нет, где мы по канону">
+<style>
+  .bg{fill:#FAF8F4}
+  .t{font:600 25px Inter,system-ui,-apple-system,sans-serif;fill:#23231F}
+  .sub{font:400 14px Inter,system-ui,sans-serif;fill:#6B635A}
+  .h{font:600 13px Inter,system-ui,sans-serif;fill:#6B635A;letter-spacing:.09em}
+  .n{font:600 14px Inter,system-ui,sans-serif;fill:#23231F}
+  .s{font:400 12.5px Inter,system-ui,sans-serif;fill:#4A463F}
+  .xs{font:400 11.5px Inter,system-ui,sans-serif;fill:#7A736A}
+  .num{font:600 22px Inter,system-ui,sans-serif;fill:#2F6B4F}
+  .box{fill:#fff;stroke:#DED7CC}
+  .have{fill:#fff;stroke:#2F6B4F;stroke-width:1.6}
+  .empty{fill:#F3EFE8;stroke:#DED7CC;stroke-dasharray:4 3}
+  .gap{fill:#FBF1EC;stroke:#C97B57;stroke-dasharray:4 3}
+  .line{stroke:#C9C0B4;fill:none}
+  .ok{font:600 12px Inter,system-ui,sans-serif;fill:#2F6B4F}
+  .no{font:600 12px Inter,system-ui,sans-serif;fill:#C05A2E}
+</style>
+<rect class="bg" width="1180" height="1000"/>
+
+<text class="t" x="40" y="48">Карта сайта-сервиса — что стоит и чего нет</text>
+<text class="sub" x="40" y="72">logozvuk.com · 23 августа 2026 · виджет работает, ни одна страница не опубликована — все черновики</text>
+
+<!-- ── шкала шагов ─────────────────────────────────────────── -->
+<text class="h" x="40" y="112">ГДЕ МЫ ПО КАНОНУ SITE BUILDERS</text>
+<rect class="box" x="40" y="124" width="1100" height="76" rx="8"/>
+<line class="line" x1="64" y1="170" x2="1116" y2="170"/>
+<g>
+  <circle cx="96" cy="170" r="12" fill="#2F6B4F"/><text class="xs" x="96" y="174" text-anchor="middle" fill="#fff">1</text>
+  <text class="xs" x="96" y="196" text-anchor="middle">ниша, домен</text>
+  <circle cx="216" cy="170" r="14" fill="#C05A2E"/><text class="xs" x="216" y="175" text-anchor="middle" fill="#fff">2</text>
+  <text class="no" x="216" y="196" text-anchor="middle">мы здесь</text>
+  <text class="xs" x="216" y="150" text-anchor="middle">тест + текст</text>
+  <circle cx="336" cy="170" r="12" fill="#2F6B4F"/><text class="xs" x="336" y="174" text-anchor="middle" fill="#fff">3</text>
+  <text class="xs" x="336" y="196" text-anchor="middle">на домен, мета</text>
+  <circle cx="456" cy="170" r="12" fill="#2F6B4F"/><text class="xs" x="456" y="174" text-anchor="middle" fill="#fff">4</text>
+  <text class="xs" x="456" y="196" text-anchor="middle">структура, подвал</text>
+  <circle cx="576" cy="170" r="12" fill="#2F6B4F"/><text class="xs" x="576" y="174" text-anchor="middle" fill="#fff">5</text>
+  <text class="xs" x="576" y="196" text-anchor="middle">категории</text>
+  <circle cx="696" cy="170" r="12" fill="#2F6B4F"/><text class="xs" x="696" y="174" text-anchor="middle" fill="#fff">6</text>
+  <text class="xs" x="696" y="196" text-anchor="middle">sitemap, schema</text>
+  <circle cx="816" cy="170" r="11" fill="#DED7CC"/><text class="xs" x="816" y="174" text-anchor="middle" fill="#6B635A">7</text>
+  <text class="xs" x="816" y="196" text-anchor="middle">доки, Reddit</text>
+  <circle cx="936" cy="170" r="11" fill="#DED7CC"/><text class="xs" x="936" y="174" text-anchor="middle" fill="#6B635A">8–12</text>
+  <text class="xs" x="936" y="196" text-anchor="middle">каналы</text>
+  <circle cx="1076" cy="170" r="11" fill="#DED7CC"/><text class="xs" x="1076" y="174" text-anchor="middle" fill="#6B635A">13</text>
+  <text class="xs" x="1076" y="196" text-anchor="middle">монетизация</text>
+</g>
+<text class="s" x="64" y="140">Технически прошли до шестого. Методически стоим на втором: теста на людях не было, текста нет.</text>
+
+<!-- ── четыре оси ──────────────────────────────────────────── -->
+<text class="h" x="40" y="248">ЧЕТЫРЕ ОСИ НАРЕЗКИ, КОТОРЫЕ НАЗЫВАЕТ КАНОН — КАНОН ПРОСИТ 3–4</text>
+
+<rect class="have" x="40" y="262" width="262" height="128" rx="8"/>
+<text class="n" x="58" y="288">НА ЧЁМ применяется</text>
+<text class="s" x="58" y="310">ось: звук</text>
+<text class="s" x="58" y="330">Р — есть. Л, Ш, С, Ж, З, Щ — нет.</text>
+<text class="xs" x="58" y="352">Размножить подстановкой буквы</text>
+<text class="xs" x="58" y="368">канон ЗАПРЕЩАЕТ: различие обязана</text>
+<text class="xs" x="58" y="384">нести методика звука.</text>
+
+<rect class="have" x="318" y="262" width="262" height="128" rx="8"/>
+<text class="n" x="336" y="288">КЕМ применяется</text>
+<text class="ok" x="336" y="310">заведена 08-23 — три страницы</text>
+<text class="s" x="336" y="330">логопед ДОУ · частный · родитель</text>
+<text class="xs" x="336" y="352">Не упирается в методику звука:</text>
+<text class="xs" x="336" y="368">разница между ДОУ и домом настоящая.</text>
+<text class="xs" x="336" y="384">У эталона здесь самый длинный текст.</text>
+
+<rect class="have" x="596" y="262" width="262" height="128" rx="8"/>
+<text class="n" x="614" y="288">КОНКУРЕНТЫ</text>
+<text class="ok" x="614" y="310">заведена 08-23 — одна страница</text>
+<text class="s" x="614" y="330">чем отличается от картотеки</text>
+<text class="xs" x="614" y="352">Здесь живёт ров. Всё остальное</text>
+<text class="xs" x="614" y="368">у бумаги тоже есть — фильтра по</text>
+<text class="xs" x="614" y="384">непоставленным звукам нет только у неё.</text>
+
+<rect class="gap" x="874" y="262" width="266" height="128" rx="8"/>
+<text class="n" x="892" y="288">СФЕРА применения</text>
+<text class="no" x="892" y="310">свободна</text>
+<text class="s" x="892" y="330">занятие · домашнее задание ·</text>
+<text class="s" x="892" y="346">дифференциация</text>
+<text class="xs" x="892" y="368">Частично закрыта листом «/doma»,</text>
+<text class="xs" x="892" y="384">отдельной осью не развёрнута.</text>
+
+<!-- ── карта страниц ───────────────────────────────────────── -->
+<text class="h" x="40" y="438">КАРТА СТРАНИЦ — 16 ШТУК ПРИ ОРИЕНТИРЕ КАНОНА ≈15</text>
+
+<rect class="have" x="440" y="452" width="300" height="52" rx="8"/>
+<text class="n" x="590" y="474" text-anchor="middle">/ — главная</text>
+<text class="xs" x="590" y="492" text-anchor="middle">виджет + контент + подвал, хедера нет</text>
+
+<line class="line" x1="590" y1="504" x2="590" y2="524"/>
+<line class="line" x1="150" y1="524" x2="1030" y2="524"/>
+<line class="line" x1="150" y1="524" x2="150" y2="544"/>
+<line class="line" x1="400" y1="524" x2="400" y2="544"/>
+<line class="line" x1="660" y1="524" x2="660" y2="544"/>
+<line class="line" x1="880" y1="524" x2="880" y2="544"/>
+<line class="line" x1="1030" y1="524" x2="1030" y2="544"/>
+
+<!-- звук -->
+<rect class="have" x="40" y="544" width="220" height="46" rx="7"/>
+<text class="n" x="150" y="566" text-anchor="middle">/avtomatizaciya-zvuka-r/</text>
+<text class="xs" x="150" y="582" text-anchor="middle">категория · виджет на Р</text>
+<line class="line" x1="150" y1="590" x2="150" y2="610"/>
+<rect class="have" x="60" y="610" width="180" height="42" rx="7"/>
+<text class="s" x="150" y="628" text-anchor="middle">/doma/</text>
+<text class="xs" x="150" y="644" text-anchor="middle">виджет в домашнем режиме</text>
+<rect class="gap" x="60" y="666" width="180" height="42" rx="7"/>
+<text class="s" x="150" y="684" text-anchor="middle">Л · Ш · С · Ж · З · Щ</text>
+<text class="xs" x="150" y="700" text-anchor="middle">ждут методики звука</text>
+
+<!-- для кого -->
+<rect class="have" x="290" y="544" width="220" height="46" rx="7"/>
+<text class="n" x="400" y="566" text-anchor="middle">/dlya-kogo/</text>
+<text class="xs" x="400" y="582" text-anchor="middle">категория · виджета НЕТ</text>
+<line class="line" x1="400" y1="590" x2="400" y2="610"/>
+<rect class="empty" x="310" y="610" width="180" height="38" rx="7"/>
+<text class="s" x="400" y="633" text-anchor="middle">/logoped-dou/</text>
+<rect class="empty" x="310" y="656" width="180" height="38" rx="7"/>
+<text class="s" x="400" y="679" text-anchor="middle">/chastnyy-logoped/</text>
+<rect class="empty" x="310" y="702" width="180" height="38" rx="7"/>
+<text class="s" x="400" y="720" text-anchor="middle">/roditel/</text>
+<text class="xs" x="400" y="734" text-anchor="middle">виджет сразу домашним листом</text>
+
+<!-- доки -->
+<rect class="have" x="550" y="544" width="220" height="46" rx="7"/>
+<text class="n" x="660" y="566" text-anchor="middle">/docs/</text>
+<text class="xs" x="660" y="582" text-anchor="middle">категория · 4 страницы</text>
+<line class="line" x1="660" y1="590" x2="660" y2="610"/>
+<rect class="empty" x="570" y="610" width="180" height="98" rx="7"/>
+<text class="s" x="660" y="632" text-anchor="middle">list · slogovaya-dorozhka</text>
+<text class="s" x="660" y="650" text-anchor="middle">labirint · kakie-zvuki</text>
+<text class="xs" x="660" y="674" text-anchor="middle">⚠ канон ШАГ 7: доки пишутся,</text>
+<text class="xs" x="660" y="690" text-anchor="middle">только если не дублируют</text>
+<text class="xs" x="660" y="706" text-anchor="middle">полезняшки. У нас дублируют.</text>
+
+<!-- сквозные -->
+<rect class="have" x="800" y="544" width="160" height="46" rx="7"/>
+<text class="n" x="880" y="566" text-anchor="middle">сквозные</text>
+<text class="xs" x="880" y="582" text-anchor="middle">родителя нет</text>
+<rect class="empty" x="800" y="602" width="160" height="38" rx="7"/>
+<text class="s" x="880" y="625" text-anchor="middle">/profil-rebenka/</text>
+<rect class="empty" x="800" y="648" width="160" height="52" rx="7"/>
+<text class="s" x="880" y="670" text-anchor="middle">/chem-otlichaetsya-</text>
+<text class="s" x="880" y="686" text-anchor="middle">ot-kartoteki/</text>
+
+<!-- служебные -->
+<rect class="have" x="990" y="544" width="150" height="46" rx="7"/>
+<text class="n" x="1065" y="566" text-anchor="middle">служебные</text>
+<text class="xs" x="1065" y="582" text-anchor="middle">канон ШАГ 4</text>
+<rect class="empty" x="990" y="602" width="150" height="38" rx="7"/>
+<text class="s" x="1065" y="625" text-anchor="middle">/o-proekte/</text>
+<rect class="gap" x="990" y="648" width="150" height="52" rx="7"/>
+<text class="s" x="1065" y="670" text-anchor="middle">/kontakty/</text>
+<text class="xs" x="1065" y="688" text-anchor="middle">нет почты на домене</text>
+
+<!-- ── что держит запуск ───────────────────────────────────── -->
+<text class="h" x="40" y="790">ЧТО ДЕРЖИТ ЗАПУСК — ВСЕ 16 СТРАНИЦ ЧЕРНОВИКИ, В ИНДЕКС НЕ УХОДЯТ</text>
+<rect class="gap" x="40" y="804" width="356" height="150" rx="8"/>
+<text class="n" x="58" y="830">1 · Текста нет ни на одной</text>
+<text class="s" x="58" y="854">Канон запрещает писать страницы ИИ</text>
+<text class="s" x="58" y="872">прямо и дважды. В файлах лежат брифы:</text>
+<text class="s" x="58" y="890">что написать и откуда взять цифры.</text>
+<text class="xs" x="58" y="916">Первый текст по канону ОДИН, 2000–4500</text>
+<text class="xs" x="58" y="932">знаков, в Google Doc, потом разойдётся</text>
+<text class="xs" x="58" y="948">по страницам. Скелет готов.</text>
+
+<rect class="gap" x="412" y="804" width="356" height="150" rx="8"/>
+<text class="n" x="430" y="830">2 · Три пустые строки в PROJECT</text>
+<text class="s" x="430" y="854">Подвал по канону ШАГ 4 несёт пять вещей.</text>
+<text class="s" x="430" y="872">У нас пусты почта на своём домене,</text>
+<text class="s" x="430" y="890">почтовый адрес и соцсеть.</text>
+<text class="xs" x="430" y="916">Это не заглушка «на потом», а условие</text>
+<text class="xs" x="430" y="932">запуска: пока пусты — страницы остаются</text>
+<text class="xs" x="430" y="948">черновиками. Почта ≈ $2/мес.</text>
+
+<rect class="gap" x="784" y="804" width="356" height="150" rx="8"/>
+<text class="n" x="802" y="830">3 · Тест на людях не пройден</text>
+<text class="s" x="802" y="854">Канон: пять человек, МИНИМАЛЬНО знающих</text>
+<text class="s" x="802" y="872">про проект. Домашние и друзья подойдут —</text>
+<text class="s" x="802" y="890">целевая аудитория тут НЕ нужна.</text>
+<text class="xs" x="802" y="916">Смысл не «нравится ли логопедам»,</text>
+<text class="xs" x="802" y="932">а «понятно ли тому, кто не в теме».</text>
+<text class="xs" x="802" y="948">В группу 150 логопедов — сильно позже.</text>
+</svg>
