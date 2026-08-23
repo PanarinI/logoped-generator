@@ -294,10 +294,34 @@ function renderSylPick() {
   // повторяло то, что кнопка показывает глифом, и уехало в ховер самой кнопки.
   // Осталось только предупреждение о бедной картотеке — оно не про устройство
   // кнопки, а про то, каким выйдет лист, и молчать о нём нельзя.
+  //
+  // ⚠ 2026-08-23. Причина у ПОГАШЕННОГО слога жила только в ховере (`b.title`).
+  // У лабиринта и у игр та же причина выведена строкой на экран, и логопед её
+  // видит; у слогов — нет, и погашенная кнопка молчала. Это ровно закон 12:
+  // «погашенная кнопка без объяснения — та же ложь, только тише». С ховера
+  // причина не читается вовсе на телефоне, где ховера не существует.
+  const off = list.filter((t) => {
+    const m = (t.materials || {})[S.tab];
+    return m ? !m.ok : !t.available;
+  });
+  // Причину подписываем слогом, к которому она относится, — как это давно
+  // сделано у лабиринта («„в конце слова“: …»). Без подписи две причины
+  // сливались в один абзац, и логопед не понимал, какая кнопка про что.
+  const offSaid = off
+    .map((t) => {
+      const why = materialWhy(S.tab, t.typ);
+      if (!why) return '';
+      const name = (t.syllable && t.syllable !== '—')
+        ? '«' + t.syllable.toUpperCase() + '»'
+        : '«' + (SHORT_LABEL[t.typ] || t.label || '') + '»';
+      return name + ': ' + why;
+    })
+    .filter(Boolean);
   const warnThin = $('syl-thin');
   if (warnThin) {
-    warnThin.textContent = thin.trim();
-    warnThin.hidden = !thin;
+    const said = [thin.trim(), ...offSaid].filter(Boolean).join(' ');
+    warnThin.textContent = said;
+    warnThin.hidden = !said;
   }
 }
 
@@ -1233,8 +1257,13 @@ async function openMethod() {
       METHOD = null;
       return;
     }
-    renderMethod();
   }
+  // ⚠ 2026-08-23. renderMethod() стоял ВНУТРИ `if (!METHOD)` — то есть справка
+  // рисовалась один раз, на той вкладке, где ящик открыли первым, и дальше
+  // замерзала. Логопед на «Лабиринте» читал устройство листа и не мог понять,
+  // почему написано не про то. Справка своя на каждой вкладке — значит и
+  // рисоваться обязана на каждое открытие, а не на первое.
+  renderMethod();
   $('method-back').hidden = false;
   $('method-drawer').hidden = false;
   $('method-drawer').scrollTop = 0;
