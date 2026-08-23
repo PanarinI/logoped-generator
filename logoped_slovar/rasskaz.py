@@ -188,9 +188,17 @@ def check_text(t: Dict[str, Any], sound: str, banned: frozenset
             errors.append(f"предложение {i} без целевого звука: «{s_}»")
 
     # ЧИСТОТА — главное. Всё, что читают вслух: текст, заголовок, вопросы.
+    # ⚠ 2026-08-23. Здесь стоял тот же список БЕЗ extra_questions — а блок
+    # «Ещё поговорите» печатается (`render_rasskaz`, «{extra_block}») и читается
+    # ребёнку вслух наравне с остальным. Замер на пустом профиле: 17 текстов из
+    # 31 ставили ребёнка ровно на тот звук, который подвал листа обещает не
+    # давать («Что ты строил?» на листе [Р] — «строил» несёт [Л]). Ложь стояла
+    # не где-нибудь, а на главном обещании продукта. Проверяем ВСЁ, что уходит
+    # на бумагу, — список полон по конструкции, а не по памяти.
     dirty: List[str] = []
     for w in words + _tokens(t.get("title", "")) + \
-            [w for q in t.get("questions", []) for w in _tokens(q)]:
+            [w for q in t.get("questions", []) for w in _tokens(q)] + \
+            [w for q in t.get("extra_questions", []) for w in _tokens(q)]:
         bad = _keys(w) & banned
         if bad:
             dirty.append(f"«{w}» {sorted(bad)}")
