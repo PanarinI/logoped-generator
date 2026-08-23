@@ -125,6 +125,17 @@ body {
 .f-org, .f-nav { margin: var(--s1) 0; }
 .f-name { font-weight: 600; color: var(--ink); }
 
+/* ── вложенные страницы категории ─────────────────────────────────────
+   Канон ШАГ 7 даёт прямую проверку структуры: убрал последний слаг — попал на
+   категорию, и там ссылки на все вложенные. Список собирается из реестра, а не
+   руками, поэтому разойтись с ним не может. */
+
+.kids { list-style: none; padding: 0; margin: var(--s4) 0 0; }
+.kids li { padding: var(--s3) 0; border-top: 1px solid var(--line); }
+.kids li:last-child { border-bottom: 1px solid var(--line); }
+.kids a { font-weight: 600; }
+.kid-what { display: block; color: var(--ink-soft); font-size: 0.92rem; margin-top: 2px; }
+
 @media (max-width: 640px) {
   body { font-size: 16px; }
   .site { padding: var(--s4) var(--s3) var(--s5); }
