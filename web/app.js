@@ -237,6 +237,16 @@ function materialOk(tab, typ) {
   return !m || m.ok;
 }
 
+/* Сколько типов слога РЕАЛЬНО живы у текущего материала. Считается ровно тем
+   же способом, каким renderSylPick решает, гасить ли кнопку, — иначе счётчик и
+   ряд разойдутся, и карточка спрячется там, где выбор есть. */
+function sylChoices() {
+  return (S.cfg.syllables[S.sound] || []).filter((t) => {
+    const m = (t.materials || {})[S.tab];
+    return m ? m.ok : t.available;
+  });
+}
+
 function materialWhy(tab, typ) {
   const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === typ);
   const m = t && t.materials && t.materials[tab];
@@ -304,19 +314,20 @@ function renderSylPick() {
     const m = (t.materials || {})[S.tab];
     return m ? !m.ok : !t.available;
   });
-  // Причину подписываем слогом, к которому она относится, — как это давно
-  // сделано у лабиринта («„в конце слова“: …»). Без подписи две причины
-  // сливались в один абзац, и логопед не понимал, какая кнопка про что.
-  const offSaid = off
-    .map((t) => {
-      const why = materialWhy(S.tab, t.typ);
-      if (!why) return '';
-      const name = (t.syllable && t.syllable !== '—')
-        ? '«' + t.syllable.toUpperCase() + '»'
-        : '«' + (SHORT_LABEL[t.typ] || t.label || '') + '»';
-      return name + ': ' + why;
-    })
-    .filter(Boolean);
+  // Причины ПОГАШЕННЫХ кнопок — одной строкой и без повторов. У слоговой
+  // дорожки два стечения гаснут по ОДНОЙ причине, и разница между текстами
+  // только в слоге внутри кавычек: печатать оба — значит дважды сказать одно.
+  // Сравниваем тексты, вырезав кавычечную вставку, и оставляем первый.
+  const seen = new Set();
+  const offSaid = [];
+  off.forEach((t) => {
+    const why = materialWhy(S.tab, t.typ);
+    if (!why) return;
+    const key = why.replace(/«[^»]*»/g, '«»');
+    if (seen.has(key)) return;
+    seen.add(key);
+    offSaid.push(why);
+  });
   const warnThin = $('syl-thin');
   if (warnThin) {
     const said = [thin.trim(), ...offSaid].filter(Boolean).join(' ');
@@ -467,8 +478,17 @@ function renderTabs() {
   // Тип слога — только у материалов, которые его получают (см. сигнатуры
   // движка: sheet.typ · track.syl_type · propisi.syl_type). У лабиринта своя
   // ось (позиция), у словосочетаний и рассказов оси нет вовсе.
-  const usesSyllable = (S.tab === 'sheet') || (S.tab === 'track')
-    || (S.tab === 'propisi' && S.propisiMode !== 'isolated');
+  //
+  // ⚠ 2026-08-23. Мало «материал слог получает» — нужно, чтобы выбор БЫЛ.
+  // У звуковой дорожки тип слога один (`PROPISI_TYPES = ("direct",)`), и
+  // карточка показывала ряд из пяти кнопок, где живая одна. Это не выбор, а
+  // его видимость: ровно то, что запрещает закон 13 («элемент управления имеет
+  // цену»), и заодно четыре объяснения подряд под рядом — стена текста вместо
+  // экрана. Считаем ПО ДАННЫМ, а не по списку вкладок: доступен один тип —
+  // карточки нет вовсе, вместе со всеми объяснениями.
+  const usesSyllable = ((S.tab === 'sheet') || (S.tab === 'track')
+    || (S.tab === 'propisi' && S.propisiMode !== 'isolated'))
+    && sylChoices().length > 1;
   $('syl-card').hidden = soon || !usesSyllable;
   if (usesSyllable && !soon) renderSylPick();
   renderSounds();   // закладка активного звука обновляется вместе со всем
