@@ -811,9 +811,18 @@ class Handler(BaseHTTPRequestHandler):
                     scene = str(scene)
                     if scene and scene not in SCN.SCENES:
                         scene = None
-                t = T.build_track(sound, typ,
-                                  seed=as_int(data.get("seed"), 0),
-                                  scene=scene)
+                # Профиль ребёнка доведён до дорожки 08-23: без него стечения
+                # были запрещены наглухо («второй согласный не проверить»), а с
+                # ним проверять есть по чему — тем же способом, что на листе.
+                prof = S._expand_profile(",".join(data.get("profile") or []))
+                try:
+                    t = T.build_track(sound, typ,
+                                      seed=as_int(data.get("seed"), 0),
+                                      scene=scene, profile=prof)
+                except T.TrackError as exc:
+                    self._json({"ok": False, "kind": "engine",
+                                "message": str(exc)}, 200)
+                    return
                 self._json({
                     "ok": True,
                     "html": T.render_track(t, colour=bool(data.get("colour"))),

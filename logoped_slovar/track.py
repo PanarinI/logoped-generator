@@ -59,8 +59,14 @@ class TrackError(Exception):
     """Дорожку собрать нельзя — с человеческим объяснением."""
 
 
-# Типы слога, которые дорожка умеет: только «чистые», без второго согласного.
-TRACK_TYPES = ("direct", "reverse", "intervocal")
+# Типы слога, которые дорожка умеет. До 08-23 их было три: стечения были
+# запрещены наглухо — «в стечении есть второй согласный, а его чистоту без
+# словаря не проверить». Запрет снят решением автора: чистоту второго согласного
+# проверять ЕСТЬ по чему, если логопед сказал, каких звуков у ребёнка нет. Он
+# говорит это профилем на том же экране. Рамки стечений берутся из тех же слов
+# и тем же отбором, что у листа (`content.cluster_frames_for`), — то есть второй
+# согласный приходит из живого слова, прошедшего фильтр, а не из головы.
+TRACK_TYPES = ("direct", "reverse", "intervocal", "cluster_onset", "cluster_coda")
 
 COLS = 5           # кружков в ряду
 ROWS_DEFAULT = 6   # рядов на А4
@@ -94,7 +100,8 @@ def build_track(sound: str = "р",
                 syl_type: str = "direct",
                 rows: int = ROWS_DEFAULT,
                 seed: int = 0,
-                scene: Optional[str] = None) -> Dict[str, Any]:
+                scene: Optional[str] = None,
+                profile: Any = ()) -> Dict[str, Any]:
     """Кружки дорожки. Возвращает структуру, рендер — отдельно."""
     if sound not in C.WORDS_BY_SOUND:
         raise TrackError(
@@ -102,9 +109,7 @@ def build_track(sound: str = "р",
             f"{', '.join(sorted(C.WORDS_BY_SOUND))}")
     if syl_type not in TRACK_TYPES:
         raise TrackError(
-            f"дорожка строится на прямых, обратных и межгласных слогах; "
-            f"«{syl_type}» — со стечением, а в стечении есть второй согласный, "
-            f"и его чистоту без словаря не проверить")
+            f"дорожка такого слога не строит: «{syl_type}»")
     if not (3 <= rows <= 8):
         raise TrackError("рядов на дорожке — от 3 до 8")
     # Персонаж нужен уже здесь: фон — это КОНТЕКСТ ГЕРОЯ, и годность сцены
@@ -135,13 +140,31 @@ def build_track(sound: str = "р",
     # Целевой звук обязан уцелеть в печатной записи слога. У звонких в конце
     # слова оглушение обязательно: тропа на [Ж] печатала бы «аж · ож · ыж»,
     # а ребёнок читал бы [аш · ош · ыш] — то есть отрабатывал бы Ш вместо Ж.
-    probe = C.ortho(C._syllable_text(sound, vowels[0], syl_type))
-    if not C.syllable_keeps_sound(sound, probe):
+    # Проверка нужна ТОЛЬКО обратному слогу: оглушение работает на конце слова.
+    # ⚠ Без этой оговорки на стечениях `_syllable_text` без рамки возвращал
+    # голую гласную («а»), проверка её не узнавала и дорожка падала отказом про
+    # обратный слог там, где обратного слога нет вовсе. У стечений чистоту
+    # целевого звука гарантирует отбор слов, из которых взята рамка.
+    probe = C.ortho(C._syllable_text(sound, vowels[0], syl_type)) \
+        if syl_type == "reverse" else ""
+    if probe and not C.syllable_keeps_sound(sound, probe):
         raise TrackError(
             f"обратного слога у звука [{_P.sound_label(sound)}] не бывает: "
             f"звонкий согласный в конце слова оглушается, «{probe}» звучит "
             f"как [{_P.sound_label(_safe_last_phoneme(probe))}]. "
             f"Такая дорожка учила бы ребёнка не тому звуку. Возьмите прямой слог.")
+
+    # Стечения: рамку («кр», «рт») даёт словарь, отфильтрованный профилем
+    # ребёнка. Пусто — законных стечений у этого ребёнка нет, и молчать нельзя.
+    frames: List[str] = []
+    if syl_type in ("cluster_onset", "cluster_coda"):
+        frames = C.cluster_frames_for(sound, syl_type, profile, n_rows=4, seed=seed)
+        if not frames:
+            raise TrackError(
+                "стечений, чистых для этого ребёнка, в картотеке не набирается: "
+                "во всех найденных вторым согласным стоит звук, который вы "
+                "отметили как непоставленный. Снимите один звук справа или "
+                "возьмите прямой слог.")
 
     cells: List[Dict[str, Any]] = []
     n = rows * COLS
@@ -150,7 +173,8 @@ def build_track(sound: str = "р",
     while len(cells) < n:
         v = order[i % len(order)]
         i += 1
-        syl = C._syllable_text(sound, v, syl_type)
+        frame = frames[(i // len(order)) % len(frames)] if frames else ""
+        syl = C._syllable_text(sound, v, syl_type, frame)
         if syl == prev and len(vowels) > 1:      # два одинаковых подряд не даём
             continue
         prev = syl

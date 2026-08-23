@@ -3343,6 +3343,38 @@ def verify_crosscut(content: Dict[str, Any]) -> None:
 #  11. ГЛАВНАЯ ФУНКЦИЯ
 # ═══════════════════════════════════════════════════════════════════════
 
+def cluster_frames_for(sound: str, syl_type: str,
+                       profile: Iterable[str] = frozenset(),
+                       n_rows: int = 4, seed: int = 0) -> List[str]:
+    """Стечения, которые у ЭТОГО ребёнка законны, — для материалов БЕЗ слов.
+
+    Зачем. Дорожки слов не печатают, и до 08-23 стечения им были запрещены
+    наглухо: «в стечении есть второй согласный, а его чистоту без словаря не
+    проверить». Это было верно ровно до тех пор, пока логопед не сказал, каких
+    звуков у ребёнка нет, — а он говорит это на том же экране, профилем.
+    Слово автора 08-23: «мы же это выбирали на листе автоматизации, значит
+    здесь нужно это поле выбора».
+
+    Проверять есть по чему: берём те же слова и тот же отбор, каким пользуется
+    лист, и достаём из них те же рамки стечений. Второй согласный приходит не
+    из головы, а из живого слова, прошедшего фильтр по профилю, — то есть
+    ровно так же честно, как на листе.
+
+    Пусто — законных стечений нет; звать материал не о чем.
+    """
+    if syl_type not in ("cluster_onset", "cluster_coda"):
+        return []
+    profile = frozenset(profile)
+    banned = banned_phonemes(sound, profile)
+    rnd = random.Random(f"frames|{sound}|{syl_type}|{sorted(profile)}|{seed}")
+    rows = load_words(_words_path(sound, None))
+    groups, _rejected, _left = _select_words(
+        sound, syl_type, banned, rows, 16, 1, rnd, None, 1)
+    if not groups:
+        return []
+    return _cluster_frames(groups, syl_type, n_rows, [])
+
+
 def build_content(sound: str = "р",
                   syl_type: str = "direct",
                   profile: Iterable[str] = frozenset(),
