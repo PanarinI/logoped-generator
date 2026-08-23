@@ -834,6 +834,12 @@ async function load() {
     if (res.games && res.games.printed) S.game = res.games.printed;
   }
   if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
+  // Пределы дорожки со стечениями — это ДАННЫЕ, а не жанр: законна ли рамка,
+  // решает профиль ребёнка. Конфиг считается один раз и на пустом профиле,
+  // поэтому кнопки горели все пять, что бы логопед ни отметил. Спрашиваем
+  // отдельной дешёвой ручкой и правим конфиг на месте — закон 12 требует
+  // объявлять пределы ЗАРАНЕЕ, а не отказом после нажатия.
+  if (S.tab === 'track') refreshTrackTypes(profile);
   if (S.tab === 'story' && res.stats && res.stats.kind === 'story') {
     S.themes = res.stats.themes || [];
     S.themeUsed = res.stats.theme;
@@ -854,6 +860,29 @@ async function load() {
   // Вопрос о профиле — только ПОСЛЕ первого материала и только там, где он
   // на что-то влияет. На дорожке и в прописях слов нет, убирать нечего.
   $('ask').hidden = !USES_PROFILE.has(S.tab);
+}
+
+/* Что дорожка умеет ДЛЯ ЭТОГО ребёнка. Ответ кладётся прямо в S.cfg, откуда
+   его берут и ряд кнопок, и строка причин, — один дом у правды о пределах. */
+async function refreshTrackTypes(profile) {
+  let r;
+  try {
+    r = await post('/api/track_types',
+      { sound: S.sound, profile: [...profile] });
+  } catch (e) { return; }
+  if (!r || !r.ok || !r.types) return;
+  const list = S.cfg.syllables[S.sound] || [];
+  let changed = false;
+  list.forEach((t) => {
+    const got = r.types[t.typ];
+    if (!got || !t.materials || !t.materials.track) return;
+    if (t.materials.track.ok !== got.ok) changed = true;
+    t.materials.track.ok = got.ok;
+    t.materials.track.why = got.why;
+  });
+  // Перерисовываем только когда правда изменилась: лишний кадр на каждом листе
+  // не нужен, а мигание ряда кнопок логопед заметит.
+  if (changed) renderSylPick();
 }
 
 function showError(res) {

@@ -795,6 +795,35 @@ class Handler(BaseHTTPRequestHandler):
                     colour=bool(data.get("colour")),
                 ))
 
+            elif path == "/api/track_types":
+                # Какие типы слога дорожка умеет ДЛЯ ЭТОГО РЕБЁНКА.
+                #
+                # Зачем отдельная ручка. `/api/config` считается один раз при
+                # загрузке и на ПУСТОМ профиле: до 08-23 это было безвредно —
+                # пределы дорожки были чисто жанровыми. Со стечениями предел
+                # стал ДАННЫМИ: законна ли рамка, решает профиль ребёнка. Кнопки
+                # при этом продолжали гореть все пять, что бы логопед ни отметил
+                # («выбрал кучу звуков, а где звук в слоге везде есть» — автор).
+                # Это прямое нарушение закона 12: пределы объявляются ЗАРАНЕЕ.
+                # Конфиг целиком пересчитывать на каждый чип нельзя — он собирает
+                # пробные листы по всем звукам; здесь считается только дорожка.
+                sound = str(data.get("sound", "р"))
+                if sound not in C.WORDS_BY_SOUND:
+                    self._json({"ok": False, "kind": "input",
+                                "message": f"звука [{sound}] в генераторе нет"}, 400)
+                    return
+                prof = S._expand_profile(",".join(data.get("profile") or []))
+                types: Dict[str, Any] = {}
+                for typ in C.SYL_TYPES:
+                    reason = CAP.block_reason("track", sound, typ)
+                    if not reason and typ in ("cluster_onset", "cluster_coda"):
+                        if not C.cluster_frames_for(sound, typ, prof):
+                            reason = "no_clean_cluster"
+                    types[typ] = {"ok": not reason,
+                                  "why": human.why_syllable(
+                                      reason, CAP.probe_syllable(sound, typ), "track")}
+                self._json({"ok": True, "types": types})
+
             elif path == "/api/track":
                 sound = str(data.get("sound", "р"))
                 typ = str(data.get("typ", "direct"))

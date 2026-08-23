@@ -173,7 +173,11 @@ def build_track(sound: str = "р",
     while len(cells) < n:
         v = order[i % len(order)]
         i += 1
-        frame = frames[(i // len(order)) % len(frames)] if frames else ""
+        # Рамка меняется ПО РЯДАМ, как на листе: ряд «кра-кро-кру», следующий
+        # «гра-гро-гру». Здесь стояло деление на длину очереди гласных — она
+        # длиннее всей дорожки, и на бумагу выходила ОДНА рамка на весь лист
+        # («почему именно КРЭ КРА КРУ? а не трэ-тра? гре-гра?» — автор, 08-23).
+        frame = frames[(len(cells) // COLS) % len(frames)] if frames else ""
         syl = C._syllable_text(sound, v, syl_type, frame)
         if syl == prev and len(vowels) > 1:      # два одинаковых подряд не даём
             continue

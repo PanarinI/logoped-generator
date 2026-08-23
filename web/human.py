@@ -236,6 +236,9 @@ def why_syllable(reason: str, syllable: str = "", material: str = "") -> str:
     if reason == "devoiced":
         return (f"Звонкий в конце слова оглушается: {syl} прочтётся с другим "
                 f"звуком. Такого слога у этого звука не бывает.")
+    if reason == "no_clean_cluster":
+        return ("Стечений, чистых для этого ребёнка, нет: во всех вторым "
+                "согласным стоит звук, который вы отметили как непоставленный.")
     if reason == "no_words":
         where = f"на {syl}" if syl != "такой слог" else "с таким слогом"
         return (f"Чистых слов {where} в картотеке не набирается — собирать "
