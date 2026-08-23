@@ -338,6 +338,22 @@ function firstTypFor(tab) {
   return (t || list[0] || {}).typ || 'direct';
 }
 
+/* Выбранный рассказ и выбранная тема — свойство ЗВУКА И ПРОФИЛЯ, а не сессии:
+   их список приходит ВМЕСТЕ с материалом, потому что зависит от того, какие
+   звуки у этого ребёнка не поставлены. Сменился звук или профиль — прошлый
+   выбор относился к прошлому ребёнку, и просить его у движка нельзя: рассказа
+   «r-01» на [Л] не существует (id рассказов по звукам не пересекаются вовсе),
+   а темы «музыка» на [Л] нет. Прежде выбор переживал смену звука, лист упирался
+   в отказ «текста „r-02“ для этого профиля нет», и выхода из отказа не было:
+   на экране стояли кнопки текстов ПРОШЛОГО звука, нажатие на любую снова просило
+   чужой текст, и лечило только обновление страницы (поймано автором 08-23).
+   Природа та же, что у фона: он тоже относится к герою звука и сбрасывается при
+   смене — только его список известен заранее, и чистит его renderScenePick. */
+function forgetPicks() {
+  S.textId = null; S.textUsed = null; S.textOptions = [];
+  S.theme = null;  S.themeUsed = null; S.themes = [];
+}
+
 function pickMaterial(it) {
   if (it.soon) { S.tab = it.tab; show('result'); renderTabs(); showSoon(it.tab); return; }
   S.tab = it.tab;
@@ -356,6 +372,7 @@ function pickMaterial(it) {
   // (фильтр по непоставленным звукам) сбрасывался незаметно для логопеда.
   S.prev = null;
   S.games = null;
+  forgetPicks();
   $('ask').hidden = true;        // профиль спрашиваем после первого материала
   $('warn').hidden = true;
   $('moat').innerHTML = '';
@@ -448,8 +465,14 @@ function renderTabs() {
   $('stage-step').hidden = (S.tab !== 'propisi');
   $('scene-card').hidden = (S.tab !== 'track');
   $('story-mode-card').hidden = (S.tab !== 'story');
-  $('theme-card').hidden = !(S.tab === 'story' && S.storyMode === 'compose');
-  $('text-card').hidden = !(S.tab === 'story' && S.storyMode === 'retell');
+  // Списки тем и текстов приходят С МАТЕРИАЛОМ, поэтому карточка стоит только
+  // когда список описывает то, что сейчас на экране. Иначе между нажатием и
+  // ответом логопед видел бы пустую коробку с подписью «на этом звуке пока
+  // один текст» — фразой про звук, который уже сменился.
+  $('theme-card').hidden = !(S.tab === 'story' && S.storyMode === 'compose'
+                             && (S.themes || []).length);
+  $('text-card').hidden = !(S.tab === 'story' && S.storyMode === 'retell'
+                            && (S.textOptions || []).length);
   $('game-card').hidden = (S.tab !== 'sheet');
   // Ров есть только там, где ему есть что сказать ЧИСЛОМ. На дорожках он
   // пересказывал очевидное — «30 кружков и такие-то гласные», — что логопед и
@@ -836,6 +859,8 @@ function showError(res) {
   $('moat-box').hidden = true;
   $('scene-card').hidden = true;
   $('game-card').hidden = true;
+  $('text-card').hidden = true;
+  $('theme-card').hidden = true;
   $('frame').style.visibility = 'hidden';
   $('frame').srcdoc = '';
   $('print').disabled = true;
@@ -1141,6 +1166,7 @@ function renderChips() {
         if (S.profile.has(o.key)) S.profile.delete(o.key);
         else S.profile.add(o.key);
         S.sheetNo = 1;
+        forgetPicks();
         renderChips();
         load();
       };
