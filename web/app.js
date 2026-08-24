@@ -21,6 +21,11 @@ const S = {
   // лист логопеду ближе), а ч/б берётся кнопкой — он же нужен тем, у кого
   // принтер без цвета. Набор слов от кнопки не меняется, только рисунки.
   colour: true,
+  // Формат кнопки «Скачать». Выбор из меню ЗАПОМИНАЕТСЯ (решение автора 08-25,
+  // как в его же расширении ExportGPT): логопед складывает листы в одну папку
+  // и формат меняет редко, поэтому спрашивать каждый раз — лишний клик.
+  // Умолчание — PDF: он печатается ровно так, как выглядит на экране.
+  saveFmt: 'pdf',
   game: 'one_many',   // умолчание — «Один — много» (решение автора 08-10)
   games: null,     // какие игры живы на ТЕКУЩЕМ листе — приходит с листом
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
@@ -109,6 +114,22 @@ if (URLQ.get('embed') === '1') document.body.classList.add('embed');
 const $ = (id) => document.getElementById(id);
 
 /* Слог, который сейчас выбран, — подписью для человека («КЛА»). */
+/* Тип слога СЛОВАМИ: «звук между гласными», а не глиф «АСЯ». Глиф хорош на
+   кнопке, где он показывает форму, и плох в фразе, где читается как слово. */
+function curTypLabel() {
+  const t = ((S.cfg && S.cfg.syllables[S.sound]) || [])
+    .find((x) => x.typ === S.typ);
+  const label = t && t.label ? String(t.label) : '';
+  if (!label) return 'на этом слоге';
+  // «прямые слоги» → «на прямом слоге»; длинные имена оставляем как есть
+  const SHORT = {
+    'прямые слоги': 'на прямом слоге',
+    'обратные слоги': 'на обратном слоге',
+    'звук между гласными': 'со звуком между гласными',
+  };
+  return SHORT[label] || ('на ступени «' + label + '»');
+}
+
 function curSyllable() {
   if (S.syllable) return S.syllable.toUpperCase();
   const t = ((S.cfg && S.cfg.syllables[S.sound]) || [])
@@ -151,6 +172,10 @@ async function boot() {
   S.cfg = await (await fetch('/api/config')).json();
   renderSounds();
   bindActions();
+  sheetsGot = parseInt(lsGet(OTZYV_KEY), 10) || 0;
+  bindOtzyv();
+  S.saveFmt = FMT_LABEL[lsGet(FMT_KEY)] ? lsGet(FMT_KEY) : 'pdf';
+  renderSaveFmt();
   // Решение автора 08-19: лист приходит СОБРАННЫМ. Экрана выбора звука перед
   // листом нет и промежуточного экрана «что делаем» нет — логопед видит бумагу,
   // а не следующий вопрос. Звук и материал остаются переключателями рядом с листом
@@ -937,10 +962,16 @@ function showError(res) {
   const wrap = el('div', 'engine-error' + (res.kind === 'unsupported' ? ' calm' : ''));
   wrap.appendChild(el('h3', null,
     res.kind === 'unsupported'
-      ? `${THING[0].toUpperCase()}${THING.slice(1)} на слоге ${curSyllable()} не делается`
+      ? `${THING[0].toUpperCase()}${THING.slice(1)} ${curTypLabel()} не делается`
       : title));
-  // Текст уже переведён на человеческий на сервере — показываем как есть.
-  wrap.appendChild(el('p', 'way-out', res.message));
+  // ⚠ 08-25, слово автора: вторую строку с текстом сервера здесь не показываем.
+  // Она повторяла заголовок и называла тип слога его глифом — «слов на „АСЯ" не
+  // набирается». «АСЯ» это не слово и не имя: так у нас подписана КНОПКА типа
+  // слога, а тип называется «звук между гласными». Ту же причину логопед видит
+  // подсказкой на самой погашенной кнопке, дублировать её на пол-экрана незачем.
+  if (res.kind !== 'unsupported') {
+    wrap.appendChild(el('p', 'way-out', res.message));
+  }
   // Отказ по устройству материала — не тупик: рядом стоят слоги, на которых
   // этот материал собирается, и логопед переходит к ним одним нажатием.
   if (res.kind === 'unsupported' && (res.options || []).length) {
@@ -1072,8 +1103,13 @@ function makeEditable(f) {
    Печати она не мешает: `@media print` её убирает. */
 /* Намёк, что лист правится — ОДИН раз за сессию и без единого слова на экране
    настроек. Слово автора: «можно как-то бы намекнуть впервые пользователю, что
-   можно редактировать — но ненавязчиво». Поэтому плашка живёт внутри листа,
-   уходит от первого же прикосновения и больше не возвращается: узнал — забыли.
+   можно редактировать — но ненавязчиво». Поэтому плашка живёт внутри листа.
+
+   ⚠ Правка 08-25 по слову автора: «появляется и почти сразу пропадает — уверен,
+   остаётся незаметной». Было: низ справа, показ 6 секунд, потом само уходит.
+   Стало: ВЕРХ справа — там пусто и туда смотрят, когда лист только появился, —
+   и никакого таймера: плашка ждёт, пока человек не тронет лист. Уходит от
+   первого прикосновения и больше не возвращается: узнал — забыли.
    В печать не идёт (`@media print`). */
 let HINT_SHOWN = false;
 
@@ -1082,10 +1118,11 @@ function editHint(d) {
   HINT_SHOWN = true;
   const st = d.createElement('style');
   st.textContent = `
-    #edit-hint { position: fixed; right: 10px; bottom: 10px; z-index: 8;
+    #edit-hint { position: fixed; right: 12px; top: 12px; z-index: 8;
       font: 500 12px/1 -apple-system, system-ui, sans-serif;
-      padding: 7px 11px; border-radius: 999px;
-      background: rgba(35,35,31,.82); color: #fff;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(35,35,31,.86); color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
       opacity: 0; transition: opacity .5s; pointer-events: none; }
     #edit-hint.on { opacity: 1; }
     @media print { #edit-hint { display: none !important; } }
@@ -1097,8 +1134,11 @@ function editHint(d) {
   d.body.appendChild(h);
   const gone = () => { h.classList.remove('on'); setTimeout(() => h.remove(), 600); };
   setTimeout(() => h.classList.add('on'), 400);
-  setTimeout(gone, 6000);
+  // Таймера нет намеренно: плашка снимается ДЕЙСТВИЕМ, а не временем. Считается
+  // любое прикосновение к листу — мышью, пальцем или клавишей.
   d.addEventListener('mousedown', gone, { once: true });
+  d.addEventListener('touchstart', gone, { once: true });
+  d.addEventListener('keydown', gone, { once: true });
 }
 
 function accentChip(d) {
@@ -1510,7 +1550,7 @@ function renderWarnings(w) {
     d.appendChild(ul);
     // Решение всё равно за логопедом — но с названной причиной, а не молча.
     const anyway = el('button', 'btn ghost small', 'всё равно распечатать');
-    anyway.onclick = () => { if ($('save')) $('save').disabled = false; savePdf(); };
+    anyway.onclick = () => { if ($('save')) $('save').disabled = false; fmtRun(); };
     d.appendChild(anyway);
     box.appendChild(d);
     if ($('save')) $('save').disabled = true;
@@ -1549,6 +1589,7 @@ function sheetHtml() {
 }
 
 function download(blob, ext) {
+  gotSheet();
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = saveName() + '.' + ext;
@@ -1683,9 +1724,229 @@ function saveName() {
 }
 
 function doPrint() {
+  gotSheet();
   const f = $('frame');
   f.contentWindow.focus();
   f.contentWindow.print();
+}
+
+/* ── ОБРАТНАЯ СВЯЗЬ (08-25) ───────────────────────────────────────────
+   Инструмент вышел к живым логопедам, и дальше он растёт только с их слов:
+   весь нынешний лист вырос из переписки с одним человеком. Значит канал должен
+   стоять ДО прихода людей — мнение, которому некуда деться, не возвращается.
+
+   Два входа, разные по цене для человека:
+     · тихая ссылка «Что не так с листом?» — всегда на месте, ничего не
+       перекрывает, открывается свободным полем;
+     · один вопрос ПОСЛЕ ВТОРОГО полученного листа — «Вы дадите этот лист
+       ребёнку?» (формулировка автора). Спрашиваем про действие, а не про
+       оценку: «оцените нас» даёт эмоцию, а не то, с чем можно работать.
+
+   Почему после второго, а не первого: на первом листе человек ещё смотрит, что
+   это вообще такое. Второй лист он собрал НАМЕРЕННО — значит уже понял, нужен
+   ли ему инструмент, и вопрос попадает в готовый ответ.
+
+   Спрашиваем ОДИН раз на устройство. Полоса закрывается и не возвращается —
+   `lz.asked` в localStorage. Тихая ссылка при этом остаётся навсегда.
+
+   localStorage может быть недоступен (приватный режим, iframe со сторонними
+   куками) — тогда счётчик живёт в памяти вкладки, и это нормально: канал не
+   имеет права падать из-за хранилища. */
+
+const OTZYV_KEY = 'lz.saves';
+const OTZYV_ASKED = 'lz.asked';
+let sheetsGot = 0;              // запасной счётчик, когда хранилище закрыто
+
+function lsGet(key) {
+  try { return window.localStorage.getItem(key); } catch (e) { return null; }
+}
+function lsSet(key, value) {
+  try { window.localStorage.setItem(key, value); } catch (e) { /* закрыто — не беда */ }
+}
+
+/* Контекст отзыва. Без него отзыв нечитаем: «мало материала» на [Щ] и на [С] —
+   это разные новости, а «оформление» на лабиринте и на дорожке — разные места. */
+function otzyvContext() {
+  return {
+    sound: S.sound || '',
+    material: S.tab || '',
+    profile: [...(S.profile || [])].join(','),
+    saves: sheetsGot,
+  };
+}
+
+async function sendOtzyv(body) {
+  try {
+    await fetch('/api/otzyv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign(otzyvContext(), body)),
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* Лист получен — скачан или отправлен на печать. Для человека это одно
+   событие: у него на руках материал. */
+function gotSheet() {
+  sheetsGot = (parseInt(lsGet(OTZYV_KEY), 10) || 0) + 1;
+  lsSet(OTZYV_KEY, String(sheetsGot));
+  if (sheetsGot >= 2 && !lsGet(OTZYV_ASKED)) {
+    // Пауза не для красоты: сразу после клика на экране появляется диалог
+    // сохранения файла, и полоса ушла бы под него незамеченной.
+    setTimeout(showAskBar, 1200);
+  }
+}
+
+function showAskBar() {
+  const bar = $('ask-bar');
+  if (!bar || !bar.hidden) return;
+  if (lsGet(OTZYV_ASKED)) return;
+  bar.hidden = false;
+}
+
+function closeAskBar(remember) {
+  const bar = $('ask-bar');
+  if (bar) bar.hidden = true;
+  if (remember) lsSet(OTZYV_ASKED, '1');
+}
+
+function askThanks(text) {
+  const bar = $('ask-bar');
+  if (!bar) return;
+  bar.innerHTML = '<p class="ask-done">' + text + '</p>';
+  lsSet(OTZYV_ASKED, '1');
+  setTimeout(() => { bar.hidden = true; }, 2600);
+}
+
+function bindOtzyv() {
+  const open = $('otzyv-open');
+  const win = $('otzyv-win');
+  const back = $('otzyv-back');
+  const area = $('otzyv-text');
+
+  const closeWin = () => {
+    win.hidden = true;
+    back.hidden = true;
+  };
+
+  if (open) {
+    open.onclick = () => {
+      win.hidden = false;
+      back.hidden = false;
+      area.focus();
+    };
+  }
+  if (back) back.onclick = closeWin;
+  if ($('otzyv-cancel')) $('otzyv-cancel').onclick = closeWin;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && win && !win.hidden) closeWin();
+  });
+
+  if ($('otzyv-send')) {
+    $('otzyv-send').onclick = async () => {
+      const text = (area.value || '').trim();
+      if (!text) { area.focus(); return; }
+      const btn = $('otzyv-send');
+      btn.disabled = true;
+      btn.textContent = 'Отправляем…';
+      await sendOtzyv({ text, contact: ($('otzyv-contact').value || '').trim() });
+      // «Спасибо» показываем всегда: если письмо не дошло по сети, виноват не
+      // человек, и сообщать ему об этом нечестно — он уже сделал свою часть.
+      win.innerHTML = '<h2>Спасибо</h2><p class="hint">Прочитаю всё. '
+                    + 'Если оставили контакт — отвечу.</p>';
+      setTimeout(closeWin, 2200);
+    };
+  }
+
+  const bar = $('ask-bar');
+  if (!bar) return;
+
+  if ($('ask-close')) $('ask-close').onclick = () => closeAskBar(true);
+
+  const chosen = new Set();
+  const reasons = $('ask-reasons');
+  if (reasons) {
+    reasons.onclick = (e) => {
+      const b = e.target.closest('button[data-r]');
+      if (!b) return;
+      const key = b.dataset.r;
+      if (chosen.has(key)) { chosen.delete(key); b.classList.remove('is-on'); }
+      else { chosen.add(key); b.classList.add('is-on'); }
+    };
+  }
+
+  const yesno = $('ask-yesno');
+  if (yesno) {
+    yesno.onclick = (e) => {
+      const b = e.target.closest('button[data-a]');
+      if (!b) return;
+      if (b.dataset.a === 'yes') {
+        sendOtzyv({ answer: 'yes' });
+        askThanks('Спасибо.');
+        return;
+      }
+      // «Нет» сам по себе — уже ответ; отправляем его сразу, чтобы не потерять,
+      // если человек закроет полосу, не дойдя до причин.
+      sendOtzyv({ answer: 'no' });
+      $('ask-q').textContent = 'Что не так?';
+      yesno.hidden = true;
+      $('ask-why').hidden = false;
+    };
+  }
+
+  if ($('ask-send')) {
+    $('ask-send').onclick = async () => {
+      const btn = $('ask-send');
+      btn.disabled = true;
+      btn.textContent = 'Отправляем…';
+      await sendOtzyv({
+        answer: 'no',
+        reasons: [...chosen],
+        text: ($('ask-text').value || '').trim(),
+      });
+      askThanks('Спасибо. Это и есть то, из чего он растёт.');
+    };
+  }
+}
+
+/* ── ФОРМАТ СОХРАНЕНИЯ ────────────────────────────────────────────────
+   Кнопка одна, форматов три. Выбранный формат живёт в localStorage и
+   показывается прямо на кнопке: логопед видит, что произойдёт, до нажатия
+   (закон 12 проекта — кнопка не должна предлагать одно, а делать другое). */
+
+const FMT_KEY = 'lz.fmt';
+const FMT_LABEL = { pdf: 'Скачать PDF', doc: 'Скачать Word', print: 'Печать' };
+const FMT_TITLE = {
+  pdf: 'Скачать PDF — вместе с вашими правками',
+  doc: 'Скачать Word — если надо доправить текст в редакторе',
+  print: 'Открыть окно печати',
+};
+
+function fmtRun() {
+  ({ pdf: savePdf, doc: saveDoc, print: doPrint }[S.saveFmt] || savePdf)();
+}
+
+function renderSaveFmt() {
+  const btn = $('save');
+  if (btn) {
+    btn.textContent = FMT_LABEL[S.saveFmt] || FMT_LABEL.pdf;
+    btn.title = FMT_TITLE[S.saveFmt] || FMT_TITLE.pdf;
+  }
+  const menu = $('save-menu');
+  if (!menu) return;
+  menu.querySelectorAll('button[data-fmt]').forEach((b) => {
+    b.classList.toggle('is-on', b.dataset.fmt === S.saveFmt);
+  });
+}
+
+function setSaveFmt(fmt) {
+  if (!FMT_LABEL[fmt]) return;
+  S.saveFmt = fmt;
+  lsSet(FMT_KEY, fmt);
+  renderSaveFmt();
 }
 
 /* ── методика по кнопке ──────────────────────────────────── */
@@ -1776,7 +2037,7 @@ function bindActions() {
   // была бы ложью: предвыбрать PDF в окне печати программно нельзя ни в одном
   // браузере, и обе кнопки открывали бы одно и то же окно. Про PDF сказано в
   // подсказке кнопки — там это не занимает места на экране.
-  $('save').onclick = savePdf;
+  $('save').onclick = fmtRun;
   const more = $('save-more');
   const menu = $('save-menu');
   if (more && menu) {
@@ -1805,7 +2066,8 @@ function bindActions() {
       const b = e.target.closest('button[data-fmt]');
       if (!b) return;
       close();
-      ({ pdf: savePdf, doc: saveDoc, print: doPrint }[b.dataset.fmt] || savePdf)();
+      setSaveFmt(b.dataset.fmt);
+      fmtRun();
     };
     // Закрываем по клику МИМО — но не по клику в саму кнопку и не в список.
     document.addEventListener('click', (e) => {

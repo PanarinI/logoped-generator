@@ -126,6 +126,12 @@
           </button>
         </div>
 
+        <!-- ТИХИЙ КАНАЛ ОБРАТНОЙ СВЯЗИ (08-25). Ссылка, а не кнопка: она не
+             спорит со «Скачать» и ничего не перекрывает. Висит всегда — пишет
+             тот, кто сам захотел. Второй вход (вопрос после второго
+             скачивания) живёт внизу страницы полосой. -->
+        <button class="link-quiet" id="otzyv-open" type="button">Что не так с листом?</button>
+
         <!-- Строка «16 слов из 159» и заголовок «Этот лист» сняты 08-22 по
              слову автора: число ниже кнопки печати логопеду ничего не решает,
              а заголовок называл то, что и так очевидно — панель стоит у листа. -->
@@ -248,6 +254,46 @@
     <div class="method-legend" id="method-legend"></div>
     <div class="method-body" id="method-body"></div>
   </aside>
+
+  <!-- ОТЗЫВ СВОБОДНЫМ ТЕКСТОМ — по тихой ссылке -->
+  <div class="otzyv-back" id="otzyv-back" hidden></div>
+  <div class="otzyv-win" id="otzyv-win" hidden role="dialog"
+       aria-label="написать про лист">
+    <h2>Что не так с листом?</h2>
+    <p class="hint">Пишите как есть — читает автор. Он не логопед, и каждое
+       замечание специалиста тут на вес золота.</p>
+    <textarea id="otzyv-text" rows="5"
+      placeholder="Например: на [Щ] мало слов · лабиринт печатается бледно · не хватает задания на дифференциацию"></textarea>
+    <input id="otzyv-contact" type="text" maxlength="200"
+      placeholder="Телеграм или почта, если хотите ответ — по желанию">
+    <div class="otzyv-foot">
+      <button class="btn ghost" id="otzyv-cancel" type="button">Закрыть</button>
+      <button class="btn primary" id="otzyv-send" type="button">Отправить</button>
+    </div>
+  </div>
+
+  <!-- ОДИН ВОПРОС — после второго полученного листа. Полоса, а не окно:
+       перекрывать лист в момент, когда человек его разглядывает, нельзя.
+       Формулировка автора 08-24: спрашиваем про действие, не про оценку. -->
+  <div class="ask-bar" id="ask-bar" hidden>
+    <button class="ask-close" id="ask-close" type="button" aria-label="Закрыть">×</button>
+    <p class="ask-q" id="ask-q">Вы дадите этот лист ребёнку?</p>
+    <div class="ask-row" id="ask-yesno">
+      <button class="btn small" type="button" data-a="yes">Да</button>
+      <button class="btn small" type="button" data-a="no">Нет</button>
+    </div>
+    <div class="ask-why" id="ask-why" hidden>
+      <div class="ask-chips" id="ask-reasons">
+        <button class="chip" type="button" data-r="words">слова не те</button>
+        <button class="chip" type="button" data-r="few">мало материала</button>
+        <button class="chip" type="button" data-r="look">оформление</button>
+        <button class="chip" type="button" data-r="task">не то задание</button>
+        <button class="chip" type="button" data-r="other">другое</button>
+      </div>
+      <textarea id="ask-text" rows="2" placeholder="Если есть время — напишите словами"></textarea>
+      <button class="btn primary small" id="ask-send" type="button">Отправить</button>
+    </div>
+  </div>
 
 </div>
 

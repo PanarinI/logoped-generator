@@ -576,3 +576,81 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   display: flex; margin: 0; flex: 0 0 auto;
 }
 .step-row .seg .seg-btn { padding: 6px 12px; min-width: 34px; }
+
+/* ── ОБРАТНАЯ СВЯЗЬ (08-25) ───────────────────────────────────────────
+   Два входа с разной ценой для человека. Тихая ссылка ничем не выделяется:
+   она не должна конкурировать со «Скачать» — её задача быть на месте, когда
+   логопеду ЕСТЬ что сказать. Полоса с одним вопросом приходит снизу и лист
+   не закрывает: перекрыть материал в момент, когда его разглядывают, значит
+   получить закрытие окна вместо ответа. */
+
+.link-quiet {
+  display: inline-block; margin: var(--s2) 0 0;
+  padding: 0; border: 0; background: none;
+  font: inherit; font-size: 12px; color: var(--ink-3);
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link-quiet:hover { color: var(--accent); }
+
+.otzyv-back {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(22,25,29,.28);
+}
+.otzyv-win {
+  position: fixed; z-index: 41; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, calc(100vw - 32px));
+  padding: var(--s5); background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+.otzyv-win h2 { margin: 0 0 var(--s2); font-size: 1.05rem; }
+.otzyv-win .hint { margin: 0 0 var(--s3); }
+.otzyv-win textarea,
+.otzyv-win input,
+.ask-why textarea {
+  width: 100%; font: inherit; color: var(--ink);
+  padding: 10px 12px; background: var(--paper);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  resize: vertical;
+}
+.otzyv-win input { margin-top: var(--s2); font-size: 0.92rem; }
+.otzyv-win textarea:focus,
+.otzyv-win input:focus,
+.ask-why textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.otzyv-foot {
+  display: flex; justify-content: flex-end; gap: var(--s2);
+  margin-top: var(--s3);
+}
+
+.ask-bar {
+  position: fixed; z-index: 35; left: 50%; bottom: 18px;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px));
+  padding: var(--s3) var(--s5) var(--s3) var(--s4);
+  background: var(--card); border: 1px solid var(--line-2);
+  border-radius: var(--r); box-shadow: var(--shadow);
+}
+.ask-q { margin: 0 0 var(--s2); font-size: 0.95rem; }
+.ask-row { display: flex; gap: var(--s2); }
+.ask-close {
+  position: absolute; top: 6px; right: 8px;
+  padding: 2px 6px; border: 0; background: none;
+  font-size: 18px; line-height: 1; color: var(--ink-3); cursor: pointer;
+}
+.ask-close:hover { color: var(--ink); }
+.ask-why { margin-top: var(--s3); }
+.ask-chips { display: flex; flex-wrap: wrap; gap: var(--s1); margin-bottom: var(--s2); }
+.ask-chips .chip { padding: 5px 10px; font-size: 12px; }
+.ask-why textarea { font-size: 0.92rem; }
+.ask-why #ask-send { margin-top: var(--s2); }
+.ask-done { margin: 0; font-size: 0.95rem; color: var(--accent); }
+/* Кнопки окна не тянутся: общий `.btn` в колонке панели растянут на всю
+   ширину, а здесь их две в ряд, и «Отправить» шириной в окно читается как
+   единственное действие. */
+.otzyv-foot .btn { flex: 0 0 auto; width: auto; }
+
+/* Выбранный формат в меню сохранения — видно, что кнопка сделает по нажатию. */
+.menu button.is-on { background: #EDF3EF; font-weight: 600; }
+.menu button.is-on::after { content: '✓'; float: right; color: var(--accent); }

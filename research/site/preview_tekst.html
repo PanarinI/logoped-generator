@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<title>Макет текста о сервисе — Логозвук</title>
+<style>
+  :root{
+    --ink:#1c1b19; --dim:#6b665e; --line:#e3e1dc; --paper:#fdfcfa;
+    --accent:#2f6b4f; --mark:#c2553d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f2f0ec;color:var(--ink);
+       font:17px/1.62 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;}
+  .page{max-width:820px;margin:0 auto;background:var(--paper);
+        padding:40px 50px 70px;border-left:1px solid var(--line);border-right:1px solid var(--line);}
+  .note{background:#fff7e8;border:1px solid #e8d9b5;border-radius:8px;
+        padding:14px 18px;font-size:14px;line-height:1.5;color:#6a5a38;margin:0 0 34px}
+  .note b{color:#4a3f26}
+  h1{font-size:31px;line-height:1.25;margin:0 0 8px;letter-spacing:-.01em}
+  h2{font-size:21px;margin:44px 0 14px;letter-spacing:-.01em}
+  h2 .num{color:var(--dim);font-weight:400;font-size:15px;margin-right:8px}
+  p{margin:0 0 15px}
+  .lead{font-size:19px;color:#2a2823}
+  ol,ul{margin:0 0 15px;padding-left:22px}
+  li{margin-bottom:5px}
+  table.data{border-collapse:collapse;width:100%;margin:18px 0 22px;font-size:15px}
+  table.data th,table.data td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
+  table.data th{font-weight:600;color:var(--dim);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+  table.data td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.data tr:last-child td{border-bottom:none}
+
+  /* ── фрагменты снимков: режем CSS, файлы не трогаем ── */
+  figure.shot{margin:24px 0 26px}
+  .crop{position:relative;overflow:hidden;background:#fff;
+        border:1px solid var(--line);border-radius:7px;
+        box-shadow:0 1px 3px rgba(0,0,0,.05);
+        width:calc(var(--sw) * var(--k) * 1px);
+        height:calc(var(--sh) * var(--k) * 1px)}
+  .crop img{position:absolute;max-width:none;
+        width:calc(848 * var(--k) * 1px);
+        left:calc(var(--sx) * var(--k) * -1px);
+        top:calc(var(--sy) * var(--k) * -1px)}
+  .ring{position:absolute;border:2.5px solid var(--mark);border-radius:50%;
+        left:calc((var(--rx) - var(--sx)) * var(--k) * 1px);
+        top:calc((var(--ry) - var(--sy)) * var(--k) * 1px);
+        width:calc(var(--rw) * var(--k) * 1px);
+        height:calc(var(--rh) * var(--k) * 1px)}
+  figcaption{font-size:14px;color:var(--dim);margin-top:9px;line-height:1.45}
+  figcaption em{color:var(--mark);font-style:normal}
+  .pair{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .pair figcaption{max-width:230px}
+  .ui{width:100%;border:1px solid var(--line);border-radius:7px;background:#fff;display:block}
+
+  .widget-slot{border:1.5px dashed #c9c5bd;border-radius:9px;padding:26px;text-align:center;
+        color:var(--dim);font-size:15px;margin:0 0 30px;background:#fff}
+  .cta{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;
+       padding:11px 22px;border-radius:7px;font-size:16px;font-weight:500;margin:6px 0 20px}
+  .draft{border-left:3px solid #d8d4cc;padding-left:16px;color:#3c3a35}
+  .draft-tag{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#a1907a;
+             display:block;margin-bottom:6px}
+  footer.meta{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+              font-size:14px;color:var(--dim)}
+</style>
+<div class="page">
+
+<div class="note">
+  <b>Это макет, а не страница сайта.</b> Проза — целиком твоя, из <code>TEKST.md</code>.
+  Моё здесь три вещи: фрагменты снимков вырезаны и обведены, вставлены таблицы с замерами,
+  и <b>подписи под фрагментами — черновые</b> (их по канону пишешь ты, я поставил рабочие).
+  Порядок пунктов — канонный: «чем отличается» поднят наверх, как требует разбор Зуева.
+</div>
+
+<div class="widget-slot">здесь виджет — он уже стоит на этой странице, выше текста</div>
+
+<h1>Автоматизация звука</h1>
+
+<h2><span class="num">1</span>Что это такое</h2>
+<p class="lead">Логозвук собирает печатный лист на автоматизацию звука. Выбираете звук, отмечаете,
+каких звуков у ребёнка ещё нет — и получаете готовый А4. Сейчас работают одиннадцать звуков
+и шесть видов материала.</p>
+
+<h2><span class="num">2</span>Какую проблему решает</h2>
+<p>В циклограмме логопеда детского сада есть строка «Изготовление пособий» — час каждый день.</p>
+<p>Время уходит на то, чтобы найти материал на нужный звук и «подогнать» его под ребёнка.
+Подгонять приходится всегда. Альбом на звук [Р] рассчитан на ребёнка, у которого всё остальное
+уже стоит, — а часто на приём приходят дети с дизартрией и ОНР, где нарушено полсписка.
+В слове «рубашка» есть [ш], в «дыре» — [д]. Ребёнку, у которого этих звуков нет, такое слово
+не помогает, а мешает.</p>
+
+<figure class="shot" style="--sx:62;--sy:296;--sw:752;--sh:190;--k:.9">
+  <div class="crop">
+    <img src="../../web/img/list-r.png" alt="блок слов на листе [Р]">
+    <span class="ring" style="--rx:448;--ry:419;--rw:110;--rh:34"></span>
+  </div>
+  <figcaption>Блок слов обычного листа на [Р]. <em>«Рубашка»</em> — со [Ш]:
+  ребёнку, у которого [Ш] не поставлен, это слово мешает работать над [Р].</figcaption>
+</figure>
+
+<h2><span class="num">3</span>Как это работает</h2>
+<p>Три шага.</p>
+<ol>
+  <li>Выбираете звук</li>
+  <li>Отмечаете, какие ещё звуки у ребёнка не поставлены</li>
+  <li>Печатаете</li>
+</ol>
+
+<figure class="shot">
+  <iframe class="ui" src="frag_profil.html" style="height:218px" title="выбор звуков" scrolling="no"></iframe>
+  <figcaption>Шаг 2.</figcaption>
+</figure>
+
+<p>Что происходит на втором шаге.</p>
+<p>Например, выбрали звук [Р]. В картотеке звука [Р] 168 слов. Девять уходят сразу и без
+вопросов — это слова с [Л], его путают с [Р] почти всегда. Остаётся 159.</p>
+<p>Отметили, что не поставлены [Ш] и [Ж], — остаётся 135. Отметили ещё [С] и [З] — остаётся 105.
+Полсотни слов, которые ребёнку сейчас не по силам, на лист не попадут, и вам не придётся
+вычёркивать их карандашом.</p>
+
+<figure class="shot">
+  <iframe class="ui" src="frag_rov.html" style="height:292px" title="из чего собран лист" scrolling="no"></iframe>
+  <figcaption>Тот же счёт виден на экране: сколько было, что убрано и почему, сколько осталось.</figcaption>
+</figure>
+
+<div class="pair">
+  <figure class="shot" style="--sx:442;--sy:302;--sw:192;--sh:188;--k:1">
+    <div class="crop">
+      <img src="../../web/img/list-r.png" alt="колонка Ру, ничего не отмечено">
+      <span class="ring" style="--rx:448;--ry:419;--rw:110;--rh:34"></span>
+    </div>
+    <figcaption>Ничего не отмечено: <em>рубашка</em> в колонке.</figcaption>
+  </figure>
+  <figure class="shot" style="--sx:442;--sy:302;--sw:192;--sh:188;--k:1">
+    <div class="crop">
+      <img src="../../web/img/list-r-profil.png" alt="колонка Ру, отмечены Ш и Ж">
+      <span class="ring" style="--rx:450;--ry:437;--rw:92;--rh:33"></span>
+    </div>
+    <figcaption>Отметили [Ш] и [Ж]: на её месте <em>ручей</em>.</figcaption>
+  </figure>
+</div>
+
+<p>Мягкие пары отмечать не нужно: отметили [Л] — уйдёт и [Ль].</p>
+
+
+<h2><span class="num">4</span>Чем отличается от готовой картотеки</h2>
+<p>У бумажного альбома есть то, чего нет здесь: тексты, выверенные десятилетиями, рисунки
+художника, и он не сломается и не «не загрузится». Если у вас есть хороший альбом — он и дальше
+будет хорошим.</p>
+<p>Отличие одно. Альбом напечатан один раз и на всех детей. Здесь материал собирается под того
+ребёнка, который сидит перед вами: слова со звуками, которых у него ещё нет, на лист не попадают.</p>
+
+<table class="data">
+  <tr><th></th><th>бумажный альбом</th><th>Логозвук</th></tr>
+  <tr><td>подбор под ребёнка</td><td>один материал на всех детей</td><td>слова со звуками, которых у ребёнка нет, на лист не попадают</td></tr>
+  <tr><td>сколько звуков</td><td>отдельное издание на каждый звук</td><td>одиннадцать звуков в одном месте</td></tr>
+  <tr><td>второе занятие на тот же звук</td><td>те же страницы</td><td>кнопка — и набор слов другой</td></tr>
+  <tr><td>сколько стоит</td><td>покупается</td><td>бесплатно</td></tr>
+</table>
+
+<h2><span class="num">5</span>В каких ситуациях помогает</h2>
+<div>
+  <p><b>Занятие на двоих.</b> У одного ребёнка не поставлены [Ш] и [Ж], у второго к ним ещё [С]
+  и [З]. Отмечаете все четыре — и остаётся материал, который оба произнесут без спотыкания.
+  Один лист вместо двух.</p>
+  <p><b>Ребёнок с дизартрией.</b> Простая дислалия почти не приходит: приходят дизартрия и ОНР,
+  где нарушено полсписка. Альбом на [Р] у такого ребёнка наполовину состоит из слов, которые он
+  сейчас не выговорит. Здесь их не будет: на этом профиле от 168 слов картотеки остаётся 105.</p>
+  <p><b>Лист домой.</b> Тот же материал печатается домашним листом — рядом с каждым упражнением
+  написано, что делать взрослому, который не логопед.</p>
+</div>
+
+<figure class="shot" style="--sx:62;--sy:125;--sw:752;--sh:140;--k:.9">
+  <div class="crop"><img src="../../web/img/list-r-doma.png" alt="разминка на домашнем листе"></div>
+  <figcaption>Домашний лист: под каждым упражнением написано, что делать — «Лошадка — пощёлкай
+  языком, как лошадка цокает».</figcaption>
+</figure>
+
+<h2><span class="num">6</span>Для кого</h2>
+<p>Сервис для логопеда: в детском саду, в частной практике, для дефектолога. Родителю он тоже
+пригодится.</p>
+
+<h2><span class="num">7</span>Какие есть материалы</h2>
+<p>Шесть материалов, все на один и тот же звук и один и тот же профиль ребёнка.</p>
+
+<p><b>Занятие</b> — составной лист: гимнастика, изолированный звук, слоги, слова, предложения,
+чистоговорка. Один лист закрывает занятие целиком.</p>
+<figure class="shot" style="--sx:62;--sy:672;--sw:752;--sh:264;--k:.9">
+  <div class="crop"><img src="../../web/img/list-r.png" alt="блок предложений"></div>
+  <figcaption>Предложения на том же листе: три слова, четыре, пять — ступенями.</figcaption>
+</figure>
+
+<p><b>Звуковая дорожка</b> — ребёнок ведёт пальцем по линии и тянет звук. Три линии — три задачи
+голосу: тянуть слитно, вести выше и ниже, произносить отрывисто.</p>
+<figure class="shot" style="--sx:70;--sy:235;--sw:750;--sh:312;--k:.9">
+  <div class="crop"><img src="../../web/img/zvukovaya-r.png" alt="две звуковые дорожки"></div>
+  <figcaption>Слог один и тот же, задача голосу разная — её задаёт форма линии.</figcaption>
+</figure>
+
+<p><b>Слоговая дорожка</b> — слоги по тропе, с фоном.</p>
+<figure class="shot" style="--sx:62;--sy:100;--sw:752;--sh:428;--k:.86">
+  <div class="crop"><img src="../../web/img/dorozhka-l.png" alt="фрагмент слоговой дорожки на звук Л"></div>
+  <figcaption>Герой звука ведёт по тропе: на каждом кружке — шаг и слог вслух.</figcaption>
+</figure>
+
+<p><b>Словосочетания</b> — прилагательное и существительное, оба со звуком.</p>
+<figure class="shot" style="--sx:70;--sy:230;--sw:740;--sh:272;--k:.9">
+  <div class="crop"><img src="../../web/img/frazy-r.png" alt="фрагмент словосочетаний"></div>
+  <figcaption>Ступень между словом и фразой: звук держится в двух словах подряд.</figcaption>
+</figure>
+
+<p><b>Лабиринт</b> — ход по картинкам, звук в нужной позиции слова.</p>
+<figure class="shot" style="--sx:76;--sy:97;--sw:478;--sh:478;--k:.86">
+  <div class="crop"><img src="../../web/img/labirint-r.png" alt="четыре клетки лабиринта"></div>
+  <figcaption>Ребёнку показывают картинку, а не слово: он её называет и делает ход.</figcaption>
+</figure>
+
+<p><b>Рассказы</b> — готовый текст для пересказа и лист «сочини сам» по опорным словам.</p>
+<figure class="shot" style="--sx:70;--sy:200;--sw:740;--sh:245;--k:.9">
+  <div class="crop"><img src="../../web/img/rasskaz-r.png" alt="начало рассказа"></div>
+  <figcaption>Текст читает взрослый, ребёнок отвечает и пересказывает.</figcaption>
+</figure>
+
+<p>Картинки свои: 979 рисунков, по одному на каждое слово, которое может попасть в клетку.</p>
+
+<table class="data">
+  <tr><th>в картотеке</th><th style="text-align:right">сколько</th></tr>
+  <tr><td>звуков</td><td class="n">11</td></tr>
+  <tr><td>слов-существительных</td><td class="n">1 595</td></tr>
+  <tr><td>глаголов</td><td class="n">356</td></tr>
+  <tr><td>прилагательных</td><td class="n">253</td></tr>
+  <tr><td>текстов для пересказа</td><td class="n">31</td></tr>
+  <tr><td>своих рисунков</td><td class="n">979</td></tr>
+</table>
+
+<h2><span class="num">8</span>Сколько стоит</h2>
+<p>Бесплатно. Регистрации нет.</p>
+
+<h2><span class="num">9</span>С чем работает</h2>
+<p>Обычный А4, чёрно-белый принтер подойдёт — цветной лист есть отдельной кнопкой.
+Работает в браузере на телефоне и на компьютере.</p>
+
+<h2><span class="num">10</span>Что в планах</h2>
+<p>Впереди: три вида заданий — «четвёртый лишний», зашумлённые картинки и обводка.
+Ручная проверка материалов.</p>
+
+<footer class="meta">
+  Макет собран 2026-08-24 · текст — <code>TEKST.md</code> · снимки — <code>web/img/</code>,
+  сняты с живого сервера · фрагменты интерфейса — настоящая разметка виджета с его же
+  <code>app.css</code>, не картинки.
+</footer>
+</div>
+</html>

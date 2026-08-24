@@ -142,3 +142,37 @@ body {
   .site h1 { font-size: 1.55rem; }
   .widget { height: min(86vh, 760px); }
 }
+
+/* ── ФРАГМЕНТЫ СНИМКОВ (08-25) ────────────────────────────────────────
+   Целый лист на странице не работает: он и так виден в виджете выше, а мелким
+   его всё равно не прочесть. Показываем ВЫРЕЗКУ и обводим то место, о котором
+   идёт речь (решение автора 08-24).
+
+   Режем средствами CSS поверх целого PNG: окно задаётся четырьмя числами
+   (--sx/--sy/--sw/--sh) в координатах исходного снимка, --k — масштаб. Сами
+   файлы не трогаются, значит пересъёмка листов не ломает вырезки, а сдвинуть
+   рамку можно правкой одной цифры. */
+.site .crop {
+  position: relative; overflow: hidden; background: #fff;
+  border: 1px solid var(--line); border-radius: 8px;
+  width: calc(var(--sw) * var(--k) * 1px);
+  height: calc(var(--sh) * var(--k) * 1px);
+  max-width: 100%;
+}
+.site .crop img {
+  position: absolute; max-width: none; margin: 0; border: 0; border-radius: 0;
+  width: calc(848 * var(--k) * 1px);
+  left: calc(var(--sx) * var(--k) * -1px);
+  top: calc(var(--sy) * var(--k) * -1px);
+}
+.site .ring {
+  position: absolute; border: 2.5px solid #c2553d; border-radius: 50%;
+  left: calc((var(--rx) - var(--sx)) * var(--k) * 1px);
+  top: calc((var(--ry) - var(--sy)) * var(--k) * 1px);
+  width: calc(var(--rw) * var(--k) * 1px);
+  height: calc(var(--rh) * var(--k) * 1px);
+}
+.site .pair { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: flex-start; }
+.site .pair figure { margin: 0; }
+.site .pair figcaption { max-width: 230px; }
+.site .mark { color: #c2553d; }

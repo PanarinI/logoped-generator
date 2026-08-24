@@ -46,6 +46,10 @@ JOBS: Tuple[Tuple[str, str, Dict[str, Any]], ...] = (
     ("list-r-profil", "/api/sheet",   {"sound": "р", "typ": "direct",
                                        "audience": "lesson", "profile": "ш,ж,л"}),
     ("dorozhka-r",    "/api/track",   {"sound": "р", "typ": "direct"}),
+    # Слоговая дорожка на [Л] — снимок для сайта (решение автора 08-24): на [Р]
+    # фон вышел неудачным, а герой в кадр иллюстрации не попадал. Звук другой,
+    # материал тот же, зато видно и героя, и спрайты сцены.
+    ("dorozhka-l",    "/api/track",   {"sound": "л", "typ": "direct"}),
     ("zvukovaya-r",   "/api/propisi", {"sound": "р", "typ": "direct"}),
     ("frazy-r",       "/api/phrases", {"sound": "р"}),
     ("labirint-r",    "/api/maze",    {"sound": "р", "position": "initial", "colour": True}),
