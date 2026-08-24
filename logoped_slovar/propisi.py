@@ -130,7 +130,16 @@ ROWS_DEFAULT = 4
 PAGE_W, PAGE_H = 210.0, 297.0
 MARGIN_L, MARGIN_R = 16.0, 12.0
 LINE_W = PAGE_W - MARGIN_L - MARGIN_R      # рабочая ширина
-ROW_H = 34.0                                # высота одной строки-дорожки
+# ⚠ 2026-08-24, слово автора: «мне не нравится этот формат». Разбор на глаз:
+# лист был пуст больше чем наполовину — три строки вверху, треть страницы белого
+# поля, — и герой печатался ТРИЖДЫ подряд, один и тот же. Читалось как черновик.
+# У Поповой на её же слайдах щенок ОДИН слева, а линии идут на весь лист.
+# Отсюда две правки разом: герой вынесен в колонку слева на все три дорожки,
+# строка выросла с 34 до 62 мм — линиям есть куда изгибаться, лист заполнен.
+ROW_H = 58.0                                # высота одной строки-дорожки
+TRACK_H = 40.0                              # высота САМОЙ линии; остаток — воздух
+#   между дорожками. Без этого зазора подпись одной строки слипалась с «р-р-р»
+#   следующей, и три задания читались как одно (поймано глазами 08-24).
 
 
 # ── ГЕОМЕТРИЯ: единый закон для всех линий ──────────────────────────
@@ -508,12 +517,19 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         task_html = ('<p class="task">Веди пальцем по дорожке и тяни звук, а в '
                      "конце скажи слог целиком: <b>" + _e(syll) + "</b>. " + _tail)
 
+    # Герой один на весь лист: он и рисуется один раз. Размер крупнее прежнего —
+    # колонка своя, тесниться не с чем.
+    hero_once = ('<div class="hero-box">'
+                 + (CH.character_svg(m["image_name"], 32.0, 2.4, colour=colour)
+                    or "<span>" + _e(m["image_name"] or label) + "</span>")
+                 + "</div>")
+
     rows: List[str] = []
     for i, ln in enumerate(p["lines"], 1):
         # Длина у всех строк одна: она больше ничего не кодирует. Нарастает
         # речевая задача, и её несёт форма линии (см. LADDER).
         w = LINE_W - 46.0
-        d = ln["_fn"](w, ROW_H - 8.0)
+        d = ln["_fn"](w, TRACK_H)
         # Прерывистой печатается ТОЛЬКО та строка, где инструкция — «отрывисто».
         dash = ' stroke-dasharray="4.2 2.6"' if ln["dashed"] else ''
         # ПОРЯДОК СЛЕВА НАПРАВО = ПОРЯДОК ЗВУЧАНИЯ. Поймано автором 08-09:
@@ -522,10 +538,8 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         # на обратный слог учил прямому. Прямой слог: тянем звук → приходим к
         # гласной. Обратный: сказали гласную → тянем звук до персонажа.
         # У изолированной ступени порядка нет: гласной там не существует.
-        _hero_html = ('<div class="hero"><div class="hero-box">'
-                      + (CH.character_svg(m["image_name"], 30.0, 2.4, colour=colour)
-                         or "<span>" + _e(m["image_name"] or label) + "</span>")
-                      + "</div></div>")
+        # Герой рисуется НЕ здесь: он один на все три дорожки и стоит колонкой
+        # слева (см. ROW_H). Ребёнок встречает одно существо, а не три копии.
         # ⚠ У финиша печатается СЛОГ, а не фонемная гласная. До 08-23 здесь стоял
         # `vowel.upper()` — фонема, — и на 22 сочетаниях из 55 ребёнок видел у
         # финиша букву, которой в его слоге нет: заголовок «слог СЁ», а у финиша
@@ -541,23 +555,22 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         # Точка старта — первая точка самой линии (см. контракт геометрии).
         _m = re.match(r"M\s+(-?[\d.]+)\s+(-?[\d.]+)", d)
         _sx = float(_m.group(1)) if _m else 1.2
-        _sy = float(_m.group(2)) if _m else (ROW_H - 8.0) / 2
+        _sy = float(_m.group(2)) if _m else TRACK_H / 2
         rows.append(f"""
   <div class="row">
-    {_vowel_html if _reverse else _hero_html}
     <div class="track-wrap">
       <div class="utter">{_e(utter)}</div>
       <div class="track-row">
-        <svg class="track" viewBox="0 0 {w:.1f} {ROW_H - 8.0:.1f}"
-             width="{w:.1f}mm" height="{ROW_H - 8.0:.1f}mm"
+        <svg class="track" viewBox="0 0 {w:.1f} {TRACK_H:.1f}"
+             width="{w:.1f}mm" height="{TRACK_H:.1f}mm"
              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="{d}" fill="none" stroke="#000" stroke-width="1.1"
                 stroke-linecap="round" stroke-linejoin="round"{dash}/>
           <circle cx="{_sx:.1f}" cy="{_sy:.1f}" r="1.1" fill="#000"/>
-          {f'<circle cx="{w - 1.2:.1f}" cy="{(ROW_H - 8.0) / 2:.1f}" r="1.1" fill="#000"/>'
+          {f'<circle cx="{w - 1.2:.1f}" cy="{TRACK_H / 2:.1f}" r="1.1" fill="#000"/>'
            if isolated else ''}
         </svg>
-        {_hero_html if _reverse else _vowel_html}
+        {_vowel_html}
       </div>
       <div class="hint">{i}. <b>{_e(ln['task_label'])}</b> — {_e(ln['hint'])}</div>
     </div>
@@ -583,25 +596,27 @@ body {{ background:#f2f2f2; padding:10px; }}
 h1 {{ font-size:14pt; margin:5mm 0 1mm; font-weight:700; }}
 h1 b {{ font-size:20pt; }}
 .task {{ font-size:12pt; margin:0 0 6mm; }}
-.row {{ display:flex; align-items:center; gap:3mm; height:{ROW_H + 6}mm; }}
+.row {{ display:flex; align-items:flex-start; height:{ROW_H}mm; }}
 /* Пока своей картинки нет, у старта стоит НАЗВАННЫЙ образ звука — крупно и
    чёрным, как полноценный элемент листа, а не как пустая рамка-заглушка.
    Образ канонный (Фомичёва / Спивак), поэтому он честен сам по себе: ребёнок
    узнаёт мотор со слов взрослого. Рамка снята — она объявляла материал
    недоделанным. Картинка встанет на то же место. */
-.hero {{ width:32mm; flex:0 0 32mm; }}
-.hero-box {{ height:22mm; display:flex; align-items:center;
+.hero-box {{ height:34mm; display:flex; align-items:center;
    justify-content:center; text-align:center; padding:1mm;
    font-size:13pt; font-weight:700; color:#000; line-height:1.15; }}
 .track-wrap {{ flex:1 1 auto; }}
 .utter {{ font-size:11pt; font-weight:700; letter-spacing:.04em;
-   margin:0 0 0.5mm 6mm; }}
+   margin:0 0 1.5mm 6mm; }}
 .track-row {{ display:flex; align-items:center; gap:2mm; }}
 .track {{ display:block; flex:0 0 auto; }}
-.hint {{ font-size:8.5pt; color:#444; margin:0.5mm 0 0 6mm; }}
+.hint {{ font-size:8.5pt; color:#444; margin:2mm 0 0 6mm; }}
 .finish {{ font-size:20pt; font-weight:700; line-height:1; }}
 .adult {{ margin-top:6mm; padding-top:2mm; border-top:0.4pt solid #000;
    font-size:9.5pt; line-height:1.45; }}
+.board {{ display:flex; align-items:center; gap:4mm; }}
+.hero-col {{ width:34mm; flex:0 0 34mm; }}
+.tracks {{ flex:1 1 auto; }}
 </style></head><body><div class="page">
 
 <div class="doc">
@@ -614,7 +629,10 @@ h1 b {{ font-size:20pt; }}
 {f'<h1>Звуковая дорожка · звук <b>[{_e(label)}]</b></h1>' if isolated
  else f'<h1>Звуковая дорожка · слог <b>{_e(syll.upper())}</b></h1>'}
 {task_html}
-{''.join(rows)}
+<div class="board">
+  <div class="hero-col">{hero_once}</div>
+  <div class="tracks">{''.join(rows)}</div>
+</div>
 
 <div class="adult">
 {f'''  <b>Взрослому.</b> Это ступень <b>до слога</b>: ребёнок тянет один звук
