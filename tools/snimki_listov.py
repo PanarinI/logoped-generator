@@ -75,7 +75,11 @@ def embed_images(base: str, html: str, cache: Dict[str, bytes]) -> Tuple[str, in
         n += 1
         return f'{attr}="data:image/png;base64,{base64.b64encode(cache[path]).decode()}"'
 
-    return re.sub(r'\b(src|href|xlink:href)="(/geroi/[^"]+)"', sub, html), n
+    # ⚠ 2026-08-24: вшивались ТОЛЬКО герои. Спрайты сцены приходят по `/fony/`,
+    # и на снимке слоговой дорожки вместо них печатались битые иконки — а глазами
+    # это читалось как «картинки не сделаны». Пока спрайтов было три, беда не
+    # попадалась на глаза. Список путей теперь один и полный.
+    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony)/[^"]+)"', sub, html), n
 
 
 def shoot(html_path: str, png_path: str) -> bool:
