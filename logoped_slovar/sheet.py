@@ -279,12 +279,24 @@ def _syl_columns(syl: Dict[str, Any]) -> int:
     return 2 if need <= (CONTENT_W - 9.0) / 2 else 1
 
 
-def _cols_by_width(longest_chars: int, extra_chars: int = 0) -> int:
+def _cols_by_width(longest_chars: int, extra_chars: int = 0,
+                   want: int = 0) -> int:
     """Сколько колонок влезает по ширине: перенос запрещён, значит колонка
-    обязана вместить самое длинное слово целиком (плюс метку яруса «а) »)."""
+    обязана вместить самое длинное слово целиком (плюс метку яруса «а) »).
+
+    ⚠ 2026-08-24. Потолок был жёстко MAX_WORD_COLS = 4, и у мягких звуков пятая
+    колонка падала отдельной строкой: на листе [Ль] групп ПЯТЬ (Лё Лю Ли Ле Ля),
+    и «Ля» висела внизу одна. Поймано автором на PDF.
+
+    Потолок «четыре» защищал читаемость при ДЛИННЫХ словах, а не число колонок
+    само по себе. Поэтому теперь: сколько групп просят — столько и пробуем, если
+    по ширине помещается. Ширина остаётся судьёй, потолок стал подвижным.
+    Абсолютный предел шесть: дальше колонка уже́ самого длинного слова у любого
+    звука, и сетка начнёт рвать слова.
+    """
     need_mm = ((longest_chars + extra_chars) * METRICS["fs_speech"] * CHAR_W * PT_MM
                + 2.0)
-    n = MAX_WORD_COLS
+    n = max(MAX_WORD_COLS, min(want or 0, 6))
     while n > 1 and (CONTENT_W - 4.0 * (n - 1)) / n < need_mm:
         n -= 1
     return n
@@ -324,7 +336,7 @@ def word_segments(words: Dict[str, Any]) -> Tuple[int, List[Dict[str, Any]], boo
     show_marks = len(letters - {""}) > 1
     longest = max((len(_word_text(x["item"])) for s in plain for x in s["items"]),
                   default=0)
-    ncol = _cols_by_width(longest, 3 if show_marks else 0)
+    ncol = _cols_by_width(longest, 3 if show_marks else 0, want=len(plain))
 
     # разрезать самую глубокую колонку, пока есть свободные колонки
     segs = [dict(s) for s in plain]

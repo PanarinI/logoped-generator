@@ -35,9 +35,11 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
+import re
 import urllib.parse
 import urllib.request
 import sys
@@ -459,8 +461,48 @@ GOTENBERG = os.environ.get(
     "GOTENBERG_URL", "https://export-gpt.duckdns.org/forms/chromium/convert/html")
 
 
+# Соответствие адреса и папки на диске — то же, каким сервер отдаёт картинки
+# по сети (`_hero`, `_bank`). Один факт, один дом.
+_PICT_DIRS = {"geroi/colour": "geroi", "geroi/bw": "geroi_bw", "fony": "fony"}
+
+
+def _embed_pictures(html: str) -> str:
+    """Вшить картинки в сам HTML перед отправкой на печать.
+
+    Gotenberg живёт на ДРУГОМ хосте и наших относительных адресов («/geroi/…»,
+    «/fony/…») не видит: он честно идёт по ним к себе и получает ничего. В PDF
+    на месте героя выходил битый значок — поймано автором 08-24 на листе [Ль].
+    Ровно та же беда была у снимков листов и лечилась так же: не адресом, а
+    содержимым. Файл читается с диска, а не выкачивается по сети у самого себя.
+    """
+    root = os.path.abspath(os.path.join(HERE, "..", "pictures"))
+
+    def sub(m):
+        attr, url = m.group(1), m.group(2)
+        # Имя в адресе URL-кодировано («самолёт.png» → «%D1%81…»), а на диске
+        # оно кириллицей. Без раскодирования файл не находится и картинка молча
+        # остаётся адресом — то есть битой на чужом хосте.
+        rel = urllib.parse.unquote(url.strip("/"))
+        folder, name = ("", "")
+        for key, disk in _PICT_DIRS.items():
+            if rel.startswith(key + "/"):
+                folder, name = disk, rel[len(key) + 1:]
+                break
+        if not folder:
+            return m.group(0)
+        path = os.path.abspath(os.path.join(root, folder, name))
+        if os.path.dirname(path) != os.path.join(root, folder) or not os.path.isfile(path):
+            return m.group(0)
+        with open(path, "rb") as fh:
+            data = base64.b64encode(fh.read()).decode()
+        return attr + '="data:image/png;base64,' + data + '"'
+
+    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony)/[^"]+)"', sub, html)
+
+
 def to_pdf(html: str) -> bytes:
     """Лист → PDF. Multipart руками: ставить зависимость ради одной формы незачем."""
+    html = _embed_pictures(html)
     boundary = "----logozvuk-" + hashlib.sha1(html[:200].encode()).hexdigest()[:16]
     parts: List[bytes] = []
 
