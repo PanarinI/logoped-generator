@@ -95,8 +95,20 @@
 
 
         <div class="actions">
-          <button class="btn primary" id="print"
-                  title="Откроется окно печати. Там же выбирается «Сохранить как PDF» — файл выйдет тот же, что на бумаге">Печать</button>
+          <button class="btn primary" id="save"
+                  title="Скачать лист файлом. Открывается в Word и в Google Документах — вместе с вашими правками">Сохранить</button>
+          <button class="btn icon" id="print"
+                  title="Окно печати. Там же выбирается «Сохранить как PDF»"
+                  aria-label="Печать">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 9V4h10v5" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linejoin="round"/>
+              <rect x="3.5" y="9" width="17" height="7.5" rx="1.6" fill="none"
+                    stroke="currentColor" stroke-width="1.8"/>
+              <path d="M7 14h10v6H7z" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linejoin="round"/>
+            </svg>
+          </button>
           <button class="btn dice" id="reroll" title="Собрать другой набор слов"
                   aria-label="Собрать другой набор слов">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -180,7 +192,10 @@
         <!-- Ступень звуковой дорожки. Изолированный звук идёт ДО слога:
              сначала ребёнок держит один звук, потом добавляется гласная. -->
         <div class="set toggles" id="stage-step" hidden>
-          <button class="alt-btn" id="propisi-mode-btn"><span class="box"></span>Только звук</button>
+          <button class="alt-btn" id="propisi-mode-btn"><span class="box"></span>Со слогом</button>
+          <!-- Гласная выбирается ТОЛЬКО когда включён слог: без слога её нет
+               на бумаге вовсе. До 08-24 гласную молча крутил кубик. -->
+          <div class="seg" id="vowel-pick" hidden></div>
         </div>
 
         <!-- КАК ПЕЧАТАТЬ. Отделено от смысловых настроек по слову автора 08-22:

@@ -25,7 +25,10 @@ const S = {
   games: null,     // какие игры живы на ТЕКУЩЕМ листе — приходит с листом
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
   sceneUsed: null, // какой фон реально встал на лист — приходит с материалом
-  propisiMode: 'syllable', // ступень звуковой дорожки: только звук / звук + слог
+  // Умолчание — «только звук»: это ПЕРВАЯ ступень приёма, изолированный звук
+  // отрабатывается ДО слога (решение автора 08-24; порядок канонический).
+  propisiMode: 'isolated',
+  vowel: null,     // гласная слога звуковой дорожки; null = движок берёт первую
   theme: null,     // тема листа «сочини рассказ»; null = движок берёт самую полную
   storyMode: 'retell', // рассказы: пересказ готового текста | сочини сам
   textId: null,    // выбранный текст пересказа; null = первый чистый
@@ -534,7 +537,7 @@ function renderTabs() {
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
-  if (S.tab === 'propisi') renderPropisiMode();
+  if (S.tab === 'propisi') { renderPropisiMode(); renderVowelPick(); }
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
   $('moat-summary').textContent = {
@@ -694,8 +697,32 @@ function renderScenePick() {
 }
 
 
+/* Гласная слога звуковой дорожки. Ряд приходит С ЛИСТОМ: у мягкой цели он свой
+   («я ё ю и е»), у твёрдой свой («а о у ы э»), и держать его вторым списком в
+   интерфейсе значило бы дать ему разойтись с движком.
+   Показывается ТОЛЬКО когда включён слог: без слога гласной на бумаге нет. */
+function renderVowelPick() {
+  const box = $('vowel-pick');
+  if (!box) return;
+  const list = (S.tab === 'propisi' && S.propisiMode === 'syllable')
+    ? (S.vowelOptions || []) : [];
+  box.hidden = !list.length;
+  box.innerHTML = '';
+  list.forEach((v) => {
+    const b = el('button', 'seg-btn', v.toUpperCase());
+    b.classList.toggle('is-on', v === S.vowelUsed);
+    b.addEventListener('click', () => {
+      if (v === S.vowelUsed) return;
+      S.vowel = v;
+      load();
+    });
+    box.appendChild(b);
+  });
+}
+
 function renderPropisiMode() {
-  $('propisi-mode-btn').classList.toggle('is-on', S.propisiMode === 'isolated');
+  // Кнопка называет то, что ВКЛЮЧАЕТ: отжата — звук, нажата — слог.
+  $('propisi-mode-btn').classList.toggle('is-on', S.propisiMode === 'syllable');
 }
 
 function positionList() {
@@ -751,7 +778,7 @@ function showSoon(key) {
   $('stage').classList.remove('is-busy');
   $('stage').classList.add('is-msg');
   $('frame').style.visibility = 'hidden';
-  $('print').disabled = true;
+  $('print').disabled = true; if ($('save')) $('save').disabled = true;
   const wrap = el('div', 'engine-error calm');
   wrap.appendChild(el('h3', null, `${s.title} — готовится`));
   wrap.appendChild(el('p', null, s.what));
@@ -765,7 +792,7 @@ async function load() {
   if (SOON[S.tab]) { showSoon(S.tab); return; }
   const my = ++TICKET;
   $('stage').classList.add('is-busy');
-  $('print').disabled = true;          // пока летит — печатать нечего
+  $('print').disabled = true; if ($('save')) $('save').disabled = true;          // пока летит — печатать нечего
 
   const profile = [...S.profile];
   let res;
@@ -793,7 +820,7 @@ async function load() {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
       res = await post('/api/propisi',
         { sound: S.sound, typ: S.typ, mode: S.propisiMode, seed: S.sheetNo - 1,
-          colour: S.colour });
+          colour: S.colour, ...(S.vowel ? { vowel: S.vowel } : {}) });
     } else if (S.tab === 'phrases') {
       // Здесь профиль работает на ОБЕ части пары: и на существительное,
       // и на прилагательное. Тип слога на словосочетания не влияет.
@@ -835,6 +862,10 @@ async function load() {
     if (res.games && res.games.printed) S.game = res.games.printed;
   }
   if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
+  if (S.tab === 'propisi' && res.stats) {
+    S.vowelOptions = res.stats.vowels || [];
+    S.vowelUsed = res.stats.vowel || '';
+  }
   // Пределы дорожки со стечениями — это ДАННЫЕ, а не жанр: законна ли рамка,
   // решает профиль ребёнка. Конфиг считается один раз и на пустом профиле,
   // поэтому кнопки горели все пять, что бы логопед ни отметил. Спрашиваем
@@ -944,7 +975,7 @@ function showError(res) {
   $('theme-card').hidden = true;
   $('frame').style.visibility = 'hidden';
   $('frame').srcdoc = '';
-  $('print').disabled = true;
+  $('print').disabled = true; if ($('save')) $('save').disabled = true;
   $('warn').hidden = true;
   $('warn').innerHTML = '';
   $('moat').innerHTML = '';
@@ -1091,7 +1122,11 @@ function putAccent() {
   const d = $('frame').contentDocument;
   if (!d || !LAST_RANGE) return;
   const r = LAST_RANGE.cloneRange();
-  r.deleteContents();
+  // ⚠ 2026-08-24. Здесь стояло `r.deleteContents()`, и при ВЫДЕЛЕННОМ фрагменте
+  // ударение съедало выделенное слово целиком (поймал автор). Ударение ничего
+  // не заменяет — оно ставится НА букву; поэтому выделение просто схлопываем
+  // к его концу, к последней букве, над которой знак и должен встать.
+  if (!r.collapsed) r.collapse(false);
   const node = d.createTextNode('\u0301');
   r.insertNode(node);
   r.setStartAfter(node);
@@ -1407,7 +1442,7 @@ function renderWarnings(w) {
   const blocking = (w && w.blocking) || [];
   const notes = (w && w.notes) || [];
 
-  $('print').disabled = false;
+  $('print').disabled = false; if ($('save')) $('save').disabled = false;
 
   if (!blocking.length && !notes.length) { box.hidden = true; return; }
   box.hidden = false;
@@ -1420,10 +1455,10 @@ function renderWarnings(w) {
     d.appendChild(ul);
     // Решение всё равно за логопедом — но с названной причиной, а не молча.
     const anyway = el('button', 'btn ghost small', 'всё равно распечатать');
-    anyway.onclick = () => { $('print').disabled = false; doPrint(); };
+    anyway.onclick = () => { $('print').disabled = false; if ($('save')) $('save').disabled = false; doPrint(); };
     d.appendChild(anyway);
     box.appendChild(d);
-    $('print').disabled = true;
+    $('print').disabled = true; if ($('save')) $('save').disabled = true;
   }
 
   if (notes.length) {
@@ -1438,6 +1473,49 @@ function renderWarnings(w) {
 }
 
 /* ── действия ────────────────────────────────────────────── */
+
+/* СОХРАНИТЬ ЛИСТ ФАЙЛОМ.
+   Слово автора 08-24: «сохранить в ворд/пдф ценнее намного, чем распечатать».
+   Верно: логопед готовит материал заранее, а печатает потом и не всегда там же.
+
+   Почему .doc, а не .pdf. Настоящий PDF браузер отдать не даёт: «Сохранить как
+   PDF» живёт внутри окна печати, и предвыбрать его нельзя ни одним вызовом —
+   это защита от подмены, а не наша лень. Сделать PDF на сервере значит написать
+   ВТОРОЙ отрисовщик листа (у нас колонки, сетка, SVG и растр с точностью до
+   миллиметра) — он будет вечно расходиться с первым.
+   А .doc с HTML внутри Word открывает и правит, и из Word же кладёт в PDF одним
+   действием. То есть эта кнопка даёт оба формата — просто вторым шагом.
+
+   Берём документ РАМКИ, а не ответ сервера: в рамке живут правки логопеда, и
+   уходить в файл они обязаны вместе с листом. */
+function doSave() {
+  const d = $('frame').contentDocument;
+  if (!d || !d.documentElement) return;
+  // Word понимает HTML, но хочет знать кодировку и не любит внешних ссылок:
+  // у нас их и нет — стили встроены, картинки приходят адресом с того же хоста.
+  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+    + 'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+    + d.documentElement.innerHTML + '</html>';
+  const blob = new Blob(['\ufeff', html],
+    { type: 'application/msword;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = saveName() + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* Имя файла — по-человечески: «занятие-Р», «слоговая-дорожка-Рь». Логопед
+   складывает листы в папку, и «list(3).doc» ему там не поможет. */
+function saveName() {
+  const mat = { sheet: 'занятие', propisi: 'звуковая-дорожка',
+                track: 'слоговая-дорожка', phrases: 'словосочетания',
+                maze: 'лабиринт', story: 'рассказ' }[S.tab] || 'лист';
+  const snd = (soundLabel() || '').replace(/\s+/g, '');
+  return snd ? mat + '-' + snd : mat;
+}
 
 function doPrint() {
   const f = $('frame');
@@ -1534,6 +1612,8 @@ function bindActions() {
   // браузере, и обе кнопки открывали бы одно и то же окно. Про PDF сказано в
   // подсказке кнопки — там это не занимает места на экране.
   $('print').onclick = doPrint;
+  const _sv = $('save');
+  if (_sv) _sv.onclick = doSave;
   $('reroll').onclick = () => { S.sheetNo += 1; load(); };
   // возврат к выбору слога живёт в крошке «слог РА» сверху — отдельной
   // кнопки для того же действия больше нет
@@ -1562,6 +1642,7 @@ function bindActions() {
 
   $('propisi-mode-btn').onclick = () => {
     S.propisiMode = S.propisiMode === 'isolated' ? 'syllable' : 'isolated';
+    S.vowel = null;
     renderPropisiMode();   // на изолированной ступени крошка «слог» уходит
     load();
   };

@@ -1028,6 +1028,8 @@ class Handler(BaseHTTPRequestHandler):
                     "warnings": {"blocking": [], "notes": notes},
                     "stats": {"kind": "propisi",
                               "mode": p["meta"]["mode"],
+                              "vowel": p["meta"]["vowel"],
+                              "vowels": p["meta"].get("vowels") or [],
                               "rows": p["meta"]["n_rows"],
                               "type_label": p["meta"]["type_label"],
                               "syllable": p["meta"]["syllable"],

@@ -477,6 +477,10 @@ def build_propisi(sound: str = "р",
             "syl_type": syl_type,
             "type_label": C.SYL_TYPE_LABEL.get(syl_type, syl_type),
             "vowel": vowel,
+            # Весь ряд гласных, из которого логопед выбирает. До 08-24 гласную
+            # молча крутил кубик, и выбора у логопеда не было вовсе — он видел
+            # «переключаются гласные» и не понимал, чем управляет.
+            "vowels": vowels,
             "syllable": syllable,
             "syllable_phon": phon,
             "utterance": image["utterance"],
