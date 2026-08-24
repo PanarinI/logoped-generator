@@ -39,6 +39,7 @@ import hashlib
 import json
 import os
 import urllib.parse
+import urllib.request
 import sys
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -451,6 +452,43 @@ def position_buttons() -> Dict[str, List[Dict[str, Any]]]:
 #  HTTP
 # ═══════════════════════════════════════════════════════════════════════
 
+# Сервис превращения HTML в PDF. Свой, автора: тот же, что обслуживает его
+# расширение save-chatgpt-as-pdf. Адрес — окружением, чтобы не вшивать в код
+# чужой хост и чтобы его можно было заменить, не трогая программу.
+GOTENBERG = os.environ.get(
+    "GOTENBERG_URL", "https://export-gpt.duckdns.org/forms/chromium/convert/html")
+
+
+def to_pdf(html: str) -> bytes:
+    """Лист → PDF. Multipart руками: ставить зависимость ради одной формы незачем."""
+    boundary = "----logozvuk-" + hashlib.sha1(html[:200].encode()).hexdigest()[:16]
+    parts: List[bytes] = []
+
+    def field(name: str, value: str) -> None:
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"'
+                     f'\r\n\r\n{value}\r\n'.encode("utf-8"))
+
+    parts.append(
+        f'--{boundary}\r\nContent-Disposition: form-data; name="files"; '
+        f'filename="index.html"\r\nContent-Type: text/html\r\n\r\n'.encode("utf-8")
+        + html.encode("utf-8") + b"\r\n")
+    # A4 в дюймах. Поля нулевые: они уже заданы внутри листа через @page, и
+    # вторые поля поверх первых сдвинули бы всю вёрстку.
+    for k, v in (("paperWidth", "8.27"), ("paperHeight", "11.69"),
+                 ("marginTop", "0"), ("marginBottom", "0"),
+                 ("marginLeft", "0"), ("marginRight", "0"),
+                 ("printBackground", "true")):
+        field(k, v)
+    parts.append(f"--{boundary}--\r\n".encode("utf-8"))
+    body = b"".join(parts)
+
+    req = urllib.request.Request(
+        GOTENBERG, data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    with urllib.request.urlopen(req, timeout=90) as r:
+        return r.read()
+
+
 CONFIG_CACHE: Dict[str, Any] = {}
 
 
@@ -819,6 +857,41 @@ class Handler(BaseHTTPRequestHandler):
                     game=str(data.get("game") or ""),
                     colour=bool(data.get("colour")),
                 ))
+
+            elif path == "/api/pdf":
+                # НАСТОЯЩИЙ PDF, а не окно печати.
+                #
+                # Браузер не даёт выбрать «Сохранить как PDF» программно — это
+                # защита от подмены, одинаковая везде. Ставить headless Chrome в
+                # наш образ дорого (+300 МБ и другой тариф), писать свой
+                # отрисовщик — значит завести ВТОРУЮ вёрстку листа, вечно
+                # расходящуюся с первой.
+                #
+                # Выход нашёл автор 08-24: у него уже работает свой Gotenberg —
+                # тот, что обслуживает расширение save-chatgpt-as-pdf. Это
+                # Chromium под капотом, то есть лист печатается ровно тем же
+                # движком, что и в браузере, и вёрстка одна на всё.
+                #
+                # HTML приходит ОТ КЛИЕНТА, из документа рамки, — значит в PDF
+                # уходят и правки логопеда. Пересобирать лист на сервере нельзя:
+                # правок он не знает.
+                html = str(data.get("html") or "")
+                if not html.strip():
+                    self._json({"ok": False, "kind": "input",
+                                "message": "нечего сохранять"}, 400)
+                    return
+                try:
+                    pdf = to_pdf(html)
+                except Exception as exc:
+                    self._json({"ok": False, "kind": "network",
+                                "message": human.pdf_failed(str(exc))}, 200)
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "application/pdf")
+                self.send_header("Content-Length", str(len(pdf)))
+                self.end_headers()
+                self.wfile.write(pdf)
+                return
 
             elif path == "/api/track_types":
                 # Какие типы слога дорожка умеет ДЛЯ ЭТОГО РЕБЁНКА.

@@ -59,7 +59,12 @@ const USES_WORDS = new Set(['sheet', 'maze', 'phrases', 'story']);
 // неверным: seed не участвовал в отборе ВООБЩЕ (перемешивание гасила сортировка,
 // где последним ключом стояло само слово), а пулы не узкие — у [с] в начале
 // 63 слова на 8 клеток. Разобрано и исправлено в maze.py.
-const REROLLABLE = new Set(['sheet', 'track', 'propisi', 'phrases', 'story', 'maze']);
+// ⚠ 2026-08-24. `propisi` отсюда снят: на звуковой дорожке кубик не менял
+// НИЧЕГО. Гласную он крутил раньше — теперь она выбирается кнопками; линии
+// заданы лестницей Поповой и не перебираются; слов на этом листе нет вовсе.
+// Кнопка, которая выглядит рабочей и ничего не делает, — та же ложь, что
+// погашенная кнопка без причины (закон 12, поймано автором).
+const REROLLABLE = new Set(['sheet', 'track', 'phrases', 'story', 'maze']);
 
 
 /* ── адрес страницы говорит, с чем открыть виджет ──────────
@@ -778,7 +783,7 @@ function showSoon(key) {
   $('stage').classList.remove('is-busy');
   $('stage').classList.add('is-msg');
   $('frame').style.visibility = 'hidden';
-  $('print').disabled = true; if ($('save')) $('save').disabled = true;
+  if ($('save')) $('save').disabled = true;
   const wrap = el('div', 'engine-error calm');
   wrap.appendChild(el('h3', null, `${s.title} — готовится`));
   wrap.appendChild(el('p', null, s.what));
@@ -792,7 +797,7 @@ async function load() {
   if (SOON[S.tab]) { showSoon(S.tab); return; }
   const my = ++TICKET;
   $('stage').classList.add('is-busy');
-  $('print').disabled = true; if ($('save')) $('save').disabled = true;          // пока летит — печатать нечего
+  if ($('save')) $('save').disabled = true;          // пока летит — печатать нечего
 
   const profile = [...S.profile];
   let res;
@@ -975,7 +980,7 @@ function showError(res) {
   $('theme-card').hidden = true;
   $('frame').style.visibility = 'hidden';
   $('frame').srcdoc = '';
-  $('print').disabled = true; if ($('save')) $('save').disabled = true;
+  if ($('save')) $('save').disabled = true;
   $('warn').hidden = true;
   $('warn').innerHTML = '';
   $('moat').innerHTML = '';
@@ -996,7 +1001,8 @@ function writeFrame(html) {
   // только необходимое, а кубик и есть «собрать заново» — логопед нажал его сам.
   S.edited = false;
   LAST_RANGE = null;
-  f.onload = () => { makeEditable(f); fitFrame(); setTimeout(fitFrame, 120); };
+  f.onload = () => { makeEditable(f); editHint(f.contentDocument);
+                     fitFrame(); setTimeout(fitFrame, 120); };
   f.srcdoc = html;
 }
 
@@ -1041,6 +1047,20 @@ function makeEditable(f) {
       hideAccent(d);
     }
   });
+  // ⚠ 2026-08-24. Плашка не уходила с листа после нажатия (поймал автор).
+  // Причина: `selectionchange` живёт ВНУТРИ рамки, и когда логопед кликал
+  // мимо — по панели или по вкладке, — курсор в рамке никуда не девался,
+  // событие не приходило, и плашка висела. Ловим уход фокуса из самой рамки
+  // и клик по родительской странице: снаружи листа плашке делать нечего.
+  f.contentWindow.addEventListener('blur', () => hideAccent(d));
+  if (!ACCENT_OUTSIDE) {
+    ACCENT_OUTSIDE = true;
+    document.addEventListener('mousedown', () => {
+      const fr = $('frame');
+      const dd = fr && fr.contentDocument;
+      if (dd) hideAccent(dd);
+    });
+  }
 }
 
 /* Кнопка ударения живёт ВНУТРИ листа, у самого курсора.
@@ -1050,6 +1070,37 @@ function makeEditable(f) {
    место раньше: «логичнее было бы где-то внутри листа рядом с курсором», и
    опасение «навязчиво висеть» снимается тем, что кнопки нет, пока нет курсора.
    Печати она не мешает: `@media print` её убирает. */
+/* Намёк, что лист правится — ОДИН раз за сессию и без единого слова на экране
+   настроек. Слово автора: «можно как-то бы намекнуть впервые пользователю, что
+   можно редактировать — но ненавязчиво». Поэтому плашка живёт внутри листа,
+   уходит от первого же прикосновения и больше не возвращается: узнал — забыли.
+   В печать не идёт (`@media print`). */
+let HINT_SHOWN = false;
+
+function editHint(d) {
+  if (HINT_SHOWN) return;
+  HINT_SHOWN = true;
+  const st = d.createElement('style');
+  st.textContent = `
+    #edit-hint { position: fixed; right: 10px; bottom: 10px; z-index: 8;
+      font: 500 12px/1 -apple-system, system-ui, sans-serif;
+      padding: 7px 11px; border-radius: 999px;
+      background: rgba(35,35,31,.82); color: #fff;
+      opacity: 0; transition: opacity .5s; pointer-events: none; }
+    #edit-hint.on { opacity: 1; }
+    @media print { #edit-hint { display: none !important; } }
+  `;
+  d.head.appendChild(st);
+  const h = d.createElement('div');
+  h.id = 'edit-hint';
+  h.textContent = 'Текст на листе можно править';
+  d.body.appendChild(h);
+  const gone = () => { h.classList.remove('on'); setTimeout(() => h.remove(), 600); };
+  setTimeout(() => h.classList.add('on'), 400);
+  setTimeout(gone, 6000);
+  d.addEventListener('mousedown', gone, { once: true });
+}
+
 function accentChip(d) {
   let c = d.getElementById('acc-chip');
   if (c) return c;
@@ -1091,6 +1142,10 @@ function hideAccent(d) {
   const c = d.getElementById('acc-chip');
   if (c) c.hidden = true;
 }
+
+// Слушатель «клик мимо листа» вешается на родительскую страницу один раз:
+// рамка перерисовывается на каждый лист, а документ живёт всю сессию.
+let ACCENT_OUTSIDE = false;
 
 // Где стоял курсор в листе в последний раз: нажатие на кнопку в панели — это
 // клик ВНЕ рамки, и родное выделение к моменту обработчика уже не годится.
@@ -1442,7 +1497,7 @@ function renderWarnings(w) {
   const blocking = (w && w.blocking) || [];
   const notes = (w && w.notes) || [];
 
-  $('print').disabled = false; if ($('save')) $('save').disabled = false;
+  if ($('save')) $('save').disabled = false;
 
   if (!blocking.length && !notes.length) { box.hidden = true; return; }
   box.hidden = false;
@@ -1455,10 +1510,10 @@ function renderWarnings(w) {
     d.appendChild(ul);
     // Решение всё равно за логопедом — но с названной причиной, а не молча.
     const anyway = el('button', 'btn ghost small', 'всё равно распечатать');
-    anyway.onclick = () => { $('print').disabled = false; if ($('save')) $('save').disabled = false; doPrint(); };
+    anyway.onclick = () => { if ($('save')) $('save').disabled = false; savePdf(); };
     d.appendChild(anyway);
     box.appendChild(d);
-    $('print').disabled = true; if ($('save')) $('save').disabled = true;
+    if ($('save')) $('save').disabled = true;
   }
 
   if (notes.length) {
@@ -1474,41 +1529,79 @@ function renderWarnings(w) {
 
 /* ── действия ────────────────────────────────────────────── */
 
-/* СОХРАНИТЬ ЛИСТ ФАЙЛОМ.
-   Слово автора 08-24: «сохранить в ворд/пдф ценнее намного, чем распечатать».
-   Верно: логопед готовит материал заранее, а печатает потом и не всегда там же.
+/* СКАЧАТЬ ЛИСТ.
+   Слово автора 08-24: «сохранить в PDF ценнее намного, чем распечатать» —
+   логопед готовит материал заранее, а печатает потом и не всегда там же.
 
-   Почему .doc, а не .pdf. Настоящий PDF браузер отдать не даёт: «Сохранить как
-   PDF» живёт внутри окна печати, и предвыбрать его нельзя ни одним вызовом —
-   это защита от подмены, а не наша лень. Сделать PDF на сервере значит написать
-   ВТОРОЙ отрисовщик листа (у нас колонки, сетка, SVG и растр с точностью до
-   миллиметра) — он будет вечно расходиться с первым.
-   А .doc с HTML внутри Word открывает и правит, и из Word же кладёт в PDF одним
-   действием. То есть эта кнопка даёт оба формата — просто вторым шагом.
+   PDF собирает СЕРВЕР через Gotenberg (см. `server.to_pdf`): браузер не даёт
+   выбрать «Сохранить как PDF» программно, а служба автора печатает тем же
+   Chromium, что и браузер, — вёрстка остаётся одна на всё.
 
-   Берём документ РАМКИ, а не ответ сервера: в рамке живут правки логопеда, и
-   уходить в файл они обязаны вместе с листом. */
-function doSave() {
+   Word (.doc с HTML внутри) оставлен вторым пунктом: формат он держит плохо,
+   и это сказано автору прямо; годится, когда надо доправить текст в привычном
+   редакторе, а не печатать.
+
+   HTML всегда берём из РАМКИ, а не пересобираем на сервере: в рамке живут
+   правки логопеда, и уходить в файл они обязаны вместе с листом. */
+function sheetHtml() {
   const d = $('frame').contentDocument;
-  if (!d || !d.documentElement) return;
-  // Word понимает HTML, но хочет знать кодировку и не любит внешних ссылок:
-  // у нас их и нет — стили встроены, картинки приходят адресом с того же хоста.
-  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
-    + 'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
-    + d.documentElement.innerHTML + '</html>';
-  const blob = new Blob(['\ufeff', html],
-    { type: 'application/msword;charset=utf-8' });
+  return (d && d.documentElement) ? d.documentElement.outerHTML : '';
+}
+
+function download(blob, ext) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = saveName() + '.doc';
+  a.download = saveName() + '.' + ext;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
+async function savePdf() {
+  const html = sheetHtml();
+  if (!html) return;
+  const btn = $('save');
+  const was = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Собираем…';
+  try {
+    const r = await fetch('/api/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html }),
+    });
+    if (!r.ok || (r.headers.get('Content-Type') || '').indexOf('pdf') < 0) {
+      let msg = '';
+      try { msg = (await r.json()).message; } catch (e) { msg = ''; }
+      showError({ kind: 'network', message: msg
+        || 'PDF сейчас не собрать. Лист никуда не делся — сохраните его в Word '
+         + 'или через окно печати.' });
+      return;
+    }
+    download(await r.blob(), 'pdf');
+  } catch (e) {
+    showError({ kind: 'network',
+                message: 'Не дозвонились до службы печати. Лист на месте — '
+                       + 'сохраните его в Word или через окно печати.' });
+  } finally {
+    btn.disabled = false;
+    btn.textContent = was;
+  }
+}
+
+function saveDoc() {
+  const d = $('frame').contentDocument;
+  if (!d || !d.documentElement) return;
+  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+    + 'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+    + d.documentElement.innerHTML + '</html>';
+  download(new Blob(['\ufeff', html],
+    { type: 'application/msword;charset=utf-8' }), 'doc');
+}
+
 /* Имя файла — по-человечески: «занятие-Р», «слоговая-дорожка-Рь». Логопед
-   складывает листы в папку, и «list(3).doc» ему там не поможет. */
+   складывает листы в папку, и «list(3).pdf» ему там не поможет. */
 function saveName() {
   const mat = { sheet: 'занятие', propisi: 'звуковая-дорожка',
                 track: 'слоговая-дорожка', phrases: 'словосочетания',
@@ -1611,9 +1704,45 @@ function bindActions() {
   // была бы ложью: предвыбрать PDF в окне печати программно нельзя ни в одном
   // браузере, и обе кнопки открывали бы одно и то же окно. Про PDF сказано в
   // подсказке кнопки — там это не занимает места на экране.
-  $('print').onclick = doPrint;
-  const _sv = $('save');
-  if (_sv) _sv.onclick = doSave;
+  $('save').onclick = savePdf;
+  const more = $('save-more');
+  const menu = $('save-menu');
+  if (more && menu) {
+    // ⚠ Список форматов ПЕРЕЕЗЖАЕТ В BODY. У панели настроек `overflow:auto`,
+    // и выпадающий список, лежа внутри неё, обрезался её краем — открывался и
+    // был не виден. Позиция считается от кнопки при каждом открытии.
+    document.body.appendChild(menu);
+    menu.style.position = 'fixed';
+    const place = () => {
+      const r = more.getBoundingClientRect();
+      menu.style.top = (r.bottom + 6) + 'px';
+      menu.style.left = 'auto';
+      menu.style.right = (window.innerWidth - r.right) + 'px';
+    };
+    const close = () => {
+      menu.hidden = true;
+      more.setAttribute('aria-expanded', 'false');
+    };
+    more.onclick = (e) => {
+      e.stopPropagation();
+      if (menu.hidden) { place(); menu.hidden = false;
+                         more.setAttribute('aria-expanded', 'true'); }
+      else close();
+    };
+    menu.onclick = (e) => {
+      const b = e.target.closest('button[data-fmt]');
+      if (!b) return;
+      close();
+      ({ pdf: savePdf, doc: saveDoc, print: doPrint }[b.dataset.fmt] || savePdf)();
+    };
+    // Закрываем по клику МИМО — но не по клику в саму кнопку и не в список.
+    document.addEventListener('click', (e) => {
+      if (menu.hidden) return;
+      if (e.target.closest('#save-menu') || e.target.closest('#save-more')) return;
+      close();
+    });
+    window.addEventListener('resize', () => { if (!menu.hidden) place(); });
+  }
   $('reroll').onclick = () => { S.sheetNo += 1; load(); };
   // возврат к выбору слога живёт в крошке «слог РА» сверху — отдельной
   // кнопки для того же действия больше нет

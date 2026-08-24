@@ -539,15 +539,40 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   .panel { order: 3; max-height: none; overflow: visible; }
 }
 
-/* Иконки рядом с главной кнопкой: принтер и ударение. Ростом с кубик — они
-   одного рода, вспомогательные действия при листе. Ударение появляется, только
-   когда курсор стоит в листе, поэтому места в ряду не занимает заранее. */
-.btn.icon {
-  flex: 0 0 auto;
-  width: 46px; padding: 0;
+/* ── кнопка «Скачать» с выбором формата ───────────────────────────────
+   Главное действие названо словом, остальные форматы — под стрелкой. Так
+   у логопеда один очевидный ход и ни одной лишней кнопки в ряду (закон 13). */
+.split { position: relative; display: flex; flex: 1 1 auto; min-width: 0; }
+.split #save { flex: 1 1 auto; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.split .caret {
+  flex: 0 0 auto; width: 42px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  border-top-left-radius: 0; border-bottom-left-radius: 0;
+  box-shadow: inset 1px 0 0 rgba(255,255,255,.35);
 }
-.btn.icon svg { width: 21px; height: 21px; }
-.btn.icon:hover { border-color: var(--green, #2F6B4F); color: var(--green, #2F6B4F); }
-.acc-glyph { font-size: 1.15rem; line-height: 1; font-weight: 600; }
+.split .caret svg { width: 18px; height: 18px; }
+.menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+  min-width: 168px; padding: 5px;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.14);
+}
+.menu button {
+  display: block; width: 100%; text-align: left;
+  font: inherit; font-size: 0.95rem;
+  padding: 9px 12px; border: 0; border-radius: 7px;
+  background: none; color: var(--ink); cursor: pointer;
+}
+.menu button:hover { background: #F2EFE9; }
+
+/* Ряд «Со слогом» и гласные — ОДНОЙ строкой.
+   Общий `.seg` — это СЕТКА в две колонки: пять гласных она рвала на три ряда,
+   и рядом с кнопкой-чекбоксом всё расползалось по высоте (поймано автором
+   08-24: «кнопка некрасиво растягивается, рядом пять кнопок тоже растянуты»).
+   Здесь сетка не нужна: гласных пять, они короткие и ложатся в строку. */
+.step-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.step-row .alt-btn { margin: 0; }
+.step-row .seg {
+  display: flex; margin: 0; flex: 0 0 auto;
+}
+.step-row .seg .seg-btn { padding: 6px 12px; min-width: 34px; }

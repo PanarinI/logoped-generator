@@ -346,3 +346,17 @@ def error_message(text: str, thing: str = "лист") -> str:
     cleaned = _ENGINE_JARGON.sub("", t)
     cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" ·;,—-")
     return cleaned or f"Такой {thing} не собирается."
+
+
+def pdf_failed(raw: str) -> str:
+    """Почему PDF не собрался — словами, а не кодом ошибки.
+
+    Локальный закон 3: на экране нет ни одного слова, которое существует только
+    у нас в коде. `HTTPError 502` логопеду не говорит ничего.
+    """
+    low = (raw or "").lower()
+    if "timed out" in low or "timeout" in low:
+        return ("Не дождались PDF: служба печати не ответила. Попробуйте ещё раз "
+                "или сохраните лист через окно печати.")
+    return ("PDF сейчас не собрать: служба печати не отвечает. Лист никуда не "
+            "делся — сохраните его в Word или через окно печати.")
