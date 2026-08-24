@@ -95,7 +95,24 @@
 
 
         <div class="actions">
-          <button class="btn primary" id="print">Печать</button>
+          <button class="btn primary" id="print"
+                  title="Откроется окно печати — выберите в нём «Сохранить как PDF»">Сохранить в PDF</button>
+          <button class="btn icon" id="printer" title="Печать на принтере"
+                  aria-label="Печать на принтере">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 9V4h10v5" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linejoin="round"/>
+              <rect x="3.5" y="9" width="17" height="7.5" rx="1.6" fill="none"
+                    stroke="currentColor" stroke-width="1.8"/>
+              <path d="M7 14h10v6H7z" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="btn icon" id="accent" hidden
+                  title="Ударение: поставьте курсор сразу после ударной гласной"
+                  aria-label="Поставить ударение">
+            <span class="acc-glyph">а&#x0301;</span>
+          </button>
           <button class="btn dice" id="reroll" title="Собрать другой набор слов"
                   aria-label="Собрать другой набор слов">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -106,18 +123,6 @@
             </svg>
           </button>
         </div>
-
-        <!-- Две тихие строки под кнопкой печати. Кнопок для них НЕ заводим:
-             «сохранить в PDF» живёт внутри окна печати любого браузера и даёт
-             ровно тот же файл, что уходит на бумагу, — отдельная кнопка была бы
-             вторым путём к тому же (закон 13: элемент управления имеет цену).
-             Про правку логопед узнаёт тем же способом: одной строкой, а не
-             переключателем режима. -->
-        <p class="hint act-hint">Лист правится прямо здесь — щёлкните по слову.
-          <button type="button" class="mini" id="accent" disabled
-                  title="Поставьте курсор сразу после ударной гласной и нажмите">ударе́ние</button></p>
-        <p class="hint act-hint">В окне печати есть «Сохранить в PDF».</p>
-        <p class="hint act-note" id="edit-note" hidden></p>
 
         <!-- Строка «16 слов из 159» и заголовок «Этот лист» сняты 08-22 по
              слову автора: число ниже кнопки печати логопеду ничего не решает,

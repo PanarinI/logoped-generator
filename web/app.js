@@ -960,11 +960,13 @@ function writeFrame(html) {
   // обязаны: молча стирать чужую работу — та же болезнь, что чинили 08-23,
   // только с другой стороны. Кубик рядом и есть «собрать заново», то есть
   // отмена правок уже существует и отдельной кнопки не требует.
-  if (S.edited) {
-    S.edited = false;
-    const n = $('edit-note');
-    if (n) { n.textContent = 'Лист собран заново — ваши правки сброшены.'; n.hidden = false; }
-  }
+  // Лист собран заново — прежние правки растворились вместе с документом.
+  // Строки об этом на экране НЕТ по слову автора 08-24: экран настроек несёт
+  // только необходимое, а кубик и есть «собрать заново» — логопед нажал его сам.
+  S.edited = false;
+  LAST_RANGE = null;
+  const _hide = $('accent');
+  if (_hide) _hide.hidden = true;
   f.onload = () => { makeEditable(f); fitFrame(); setTimeout(fitFrame, 120); };
   f.srcdoc = html;
 }
@@ -993,17 +995,27 @@ function makeEditable(f) {
   d.head.appendChild(style);
   d.addEventListener('input', () => { markEdited(d); }, { once: false });
 
-  // Кнопка «ударе́ние» живёт только пока курсор В ЛИСТЕ. Причина, по которой она
-  // вообще есть, — первый пример автора: «может, ударение поставить в слове».
-  // Знак ударения это U+0301, комбинируемый акут; с клавиатуры логопед его не
-  // наберёт никак, а движок им же и печатает («дыра́»). Без этой кнопки правка
-  // руками умеет меньше, чем сам генератор, — то есть врёт о своих пределах.
-  const btn = $('accent');
-  if (btn) {
-    d.addEventListener('selectionchange', () => { btn.disabled = false; });
-    d.addEventListener('focusout', () => { btn.disabled = true; });
-  }
+  // Кнопка ударения появляется ТОЛЬКО когда курсор реально стоит в листе — это
+  // и есть сигнал «с листом работают». Пока логопед смотрит, её нет: на экране
+  // настроек лишних кнопок и слов быть не должно (закон 13, слово автора 08-24).
+  //
+  // ⚠ Кнопка не работала мышью, хотя работала в пробе кодом. Причин две сразу:
+  // нажатие уводило фокус из рамки, и выделение внутри неё пропадало ДО того,
+  // как срабатывал onclick. Поэтому последний курсор запоминаем на каждое
+  // движение, а у самой кнопки гасим mousedown — фокус из листа не уходит вовсе.
+  d.addEventListener('selectionchange', () => {
+    const sel = d.getSelection();
+    if (sel && sel.rangeCount && d.body.contains(sel.anchorNode)) {
+      LAST_RANGE = sel.getRangeAt(0).cloneRange();
+      const btn = $('accent');
+      if (btn) btn.hidden = false;
+    }
+  });
 }
+
+// Где стоял курсор в листе в последний раз: нажатие на кнопку в панели — это
+// клик ВНЕ рамки, и родное выделение к моменту обработчика уже не годится.
+let LAST_RANGE = null;
 
 /* Правка руками ЛОМАЕТ ОБЕЩАНИЕ ЛИСТА, и молчать об этом нельзя.
    Подвал рассказа говорит дословно: «Слова подобраны так, чтобы в них не было
@@ -1025,19 +1037,22 @@ function markEdited(d) {
   foot.appendChild(note);
 }
 
-/* Поставить ударение над буквой СЛЕВА от курсора: акут комбинируется с
-   предыдущим знаком, поэтому вставляется просто после него. */
+/* Ударение — комбинируемый акут U+0301: он «садится» на предыдущую букву,
+   поэтому просто вставляется после неё. Работаем по ЗАПОМНЕННОМУ курсору. */
 function putAccent() {
   const d = $('frame').contentDocument;
-  if (!d) return;
-  const sel = d.getSelection();
-  if (!sel || !sel.rangeCount) return;
-  const r = sel.getRangeAt(0);
+  if (!d || !LAST_RANGE) return;
+  const r = LAST_RANGE.cloneRange();
   r.deleteContents();
-  r.insertNode(d.createTextNode('\u0301'));
-  sel.collapseToEnd();
-  S.edited = true;
-  d.body.focus();
+  const node = d.createTextNode('\u0301');
+  r.insertNode(node);
+  r.setStartAfter(node);
+  r.collapse(true);
+  const sel = d.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(r);
+  LAST_RANGE = r.cloneRange();
+  markEdited(d);
 }
 
 function fitFrame() {
@@ -1462,9 +1477,18 @@ function bindActions() {
     if (e.key === 'Escape' && !$('method-drawer').hidden) closeMethod();
   });
 
+  // Обе кнопки открывают ОДНО окно печати: выбрать в нём принтер или «Сохранить
+  // как PDF» может только человек — предвыбрать программно нельзя ни в одном
+  // браузере. Имена и иконки разные потому, что логопед ищет глазами то, что
+  // хочет получить; окно у этого одно, и об этом сказано в подсказке кнопки.
   $('print').onclick = doPrint;
-  const _acc = $('accent');
-  if (_acc) _acc.onclick = putAccent;
+  const _pr = $('printer');
+  if (_pr) _pr.onclick = doPrint;
+  const _ac = $('accent');
+  if (_ac) {
+    _ac.addEventListener('mousedown', (e) => e.preventDefault());
+    _ac.onclick = putAccent;
+  }
   $('reroll').onclick = () => { S.sheetNo += 1; load(); };
   // возврат к выбору слога живёт в крошке «слог РА» сверху — отдельной
   // кнопки для того же действия больше нет
