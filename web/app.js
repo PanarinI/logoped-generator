@@ -29,6 +29,7 @@ const S = {
   theme: null,     // тема листа «сочини рассказ»; null = движок берёт самую полную
   storyMode: 'retell', // рассказы: пересказ готового текста | сочини сам
   textId: null,    // выбранный текст пересказа; null = первый чистый
+  edited: false,   // логопед правил лист руками — сказать, когда правки сбросятся
 };
 
 // Материалы, у которых пересборка реально меняет выдачу. Лабиринта нет намеренно:
@@ -955,8 +956,88 @@ function writeFrame(html) {
   // srcdoc, а не document.write: так рамка остаётся нормальным документом
   // (её видно в скриншотах и она корректно уходит в печать).
   const f = $('frame');
-  f.onload = () => { fitFrame(); setTimeout(fitFrame, 120); };
+  // Правки логопеда живут до следующей ПЕРЕСБОРКИ листа. Сказать об этом
+  // обязаны: молча стирать чужую работу — та же болезнь, что чинили 08-23,
+  // только с другой стороны. Кубик рядом и есть «собрать заново», то есть
+  // отмена правок уже существует и отдельной кнопки не требует.
+  if (S.edited) {
+    S.edited = false;
+    const n = $('edit-note');
+    if (n) { n.textContent = 'Лист собран заново — ваши правки сброшены.'; n.hidden = false; }
+  }
+  f.onload = () => { makeEditable(f); fitFrame(); setTimeout(fitFrame, 120); };
   f.srcdoc = html;
+}
+
+/* Лист правится ПРЯМО НА МЕСТЕ, без кнопки «режим правки».
+   Зачем. Слово автора 08-24: «лист может быть на 95% хороший, и 5% будут всё
+   портить». Логопед, который не может поправить эти 5%, не напечатает лист
+   вовсе — проще собрать своё. Ставим ударение, убираем лишнее слово, вписываем
+   своё — прямо в бумаге, которую видим.
+   Почему без кнопки: печать идёт из ЭТОГО документа (`f.contentWindow.print()`),
+   значит правка уходит в печать даром, а кубик рядом уже означает «собрать
+   заново». Переключатель режима был бы третьей сущностью там, где хватает нуля
+   (локальный закон 4). */
+function makeEditable(f) {
+  const d = f.contentDocument;
+  if (!d || !d.body) return;
+  d.body.contentEditable = 'true';
+  d.body.spellcheck = false;
+  // Курсор-текст только там, где текст: на пустом поле листа он сбивал бы с толку.
+  const style = d.createElement('style');
+  style.textContent = `
+    body { caret-color: #2F6B4F; }
+    [contenteditable] :focus { outline: 1px dashed #2F6B4F; outline-offset: 2px; }
+    @media print { [contenteditable] :focus { outline: none !important; } }
+  `;
+  d.head.appendChild(style);
+  d.addEventListener('input', () => { markEdited(d); }, { once: false });
+
+  // Кнопка «ударе́ние» живёт только пока курсор В ЛИСТЕ. Причина, по которой она
+  // вообще есть, — первый пример автора: «может, ударение поставить в слове».
+  // Знак ударения это U+0301, комбинируемый акут; с клавиатуры логопед его не
+  // наберёт никак, а движок им же и печатает («дыра́»). Без этой кнопки правка
+  // руками умеет меньше, чем сам генератор, — то есть врёт о своих пределах.
+  const btn = $('accent');
+  if (btn) {
+    d.addEventListener('selectionchange', () => { btn.disabled = false; });
+    d.addEventListener('focusout', () => { btn.disabled = true; });
+  }
+}
+
+/* Правка руками ЛОМАЕТ ОБЕЩАНИЕ ЛИСТА, и молчать об этом нельзя.
+   Подвал рассказа говорит дословно: «Слова подобраны так, чтобы в них не было
+   звуков, которые у ребёнка сейчас не получаются» (`rasskaz.py`). Как только
+   логопед вписал своё слово, генератор за него не отвечает — а обещание
+   остаётся напечатанным. Это ровно тот класс лжи, на котором 08-23 попались
+   17 текстов из 31: материал утверждал больше, чем движок проверил.
+   Поэтому первая же правка дописывает в подвал оговорку, и она уходит в печать
+   вместе с листом. Один раз — повторно не добавляем. */
+function markEdited(d) {
+  if (S.edited) return;
+  S.edited = true;
+  const foot = d.querySelector('.foot');
+  if (!foot) return;
+  const note = d.createElement('div');
+  note.className = 'hand-edit';
+  note.style.cssText = 'margin-top:4px;font-style:italic';
+  note.textContent = 'Лист правлен вручную: изменённое генератор не проверял.';
+  foot.appendChild(note);
+}
+
+/* Поставить ударение над буквой СЛЕВА от курсора: акут комбинируется с
+   предыдущим знаком, поэтому вставляется просто после него. */
+function putAccent() {
+  const d = $('frame').contentDocument;
+  if (!d) return;
+  const sel = d.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  const r = sel.getRangeAt(0);
+  r.deleteContents();
+  r.insertNode(d.createTextNode('\u0301'));
+  sel.collapseToEnd();
+  S.edited = true;
+  d.body.focus();
 }
 
 function fitFrame() {
@@ -1382,6 +1463,8 @@ function bindActions() {
   });
 
   $('print').onclick = doPrint;
+  const _acc = $('accent');
+  if (_acc) _acc.onclick = putAccent;
   $('reroll').onclick = () => { S.sheetNo += 1; load(); };
   // возврат к выбору слога живёт в крошке «слог РА» сверху — отдельной
   // кнопки для того же действия больше нет

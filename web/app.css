@@ -538,3 +538,20 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   .paper { order: 2; }
   .panel { order: 3; max-height: none; overflow: visible; }
 }
+
+/* ── тихие строки под кнопкой печати ──────────────────────────────────
+   Заменяют собой две кнопки, которых нет: «PDF» (он внутри окна печати) и
+   «режим правки» (лист правится всегда). Тон — подсказка, не призыв. */
+.act-hint { margin: var(--s2) 0 0; }
+.act-note { margin: var(--s1) 0 0; color: #8A5A2B; }
+
+/* Кнопка «ударе́ние» — тихая, размером со слово: она нужна одну секунду и
+   только когда курсор в листе. Погашена, пока курсора там нет (закон 12). */
+.mini {
+  font: inherit; font-size: 0.86em; line-height: 1;
+  padding: 3px 8px; margin-left: 4px;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: #fff; color: var(--ink); cursor: pointer;
+}
+.mini:disabled { opacity: 0.4; cursor: default; }
+.mini:not(:disabled):hover { border-color: var(--accent, #2F6B4F); }
