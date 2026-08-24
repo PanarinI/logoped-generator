@@ -965,8 +965,6 @@ function writeFrame(html) {
   // только необходимое, а кубик и есть «собрать заново» — логопед нажал его сам.
   S.edited = false;
   LAST_RANGE = null;
-  const _hide = $('accent');
-  if (_hide) _hide.hidden = true;
   f.onload = () => { makeEditable(f); fitFrame(); setTimeout(fitFrame, 120); };
   f.srcdoc = html;
 }
@@ -1007,10 +1005,60 @@ function makeEditable(f) {
     const sel = d.getSelection();
     if (sel && sel.rangeCount && d.body.contains(sel.anchorNode)) {
       LAST_RANGE = sel.getRangeAt(0).cloneRange();
-      const btn = $('accent');
-      if (btn) btn.hidden = false;
+      showAccent(d, LAST_RANGE);
+    } else {
+      hideAccent(d);
     }
   });
+}
+
+/* Кнопка ударения живёт ВНУТРИ листа, у самого курсора.
+   Слово автора 08-24: «ударение точно не должно располагаться на этой линии» —
+   то есть не в ряду с печатью и кубиком. Там оно и правда чужое: печать и кубик
+   про весь лист, а ударение — про одну букву под курсором. Он же назвал верное
+   место раньше: «логичнее было бы где-то внутри листа рядом с курсором», и
+   опасение «навязчиво висеть» снимается тем, что кнопки нет, пока нет курсора.
+   Печати она не мешает: `@media print` её убирает. */
+function accentChip(d) {
+  let c = d.getElementById('acc-chip');
+  if (c) return c;
+  const st = d.createElement('style');
+  st.textContent = `
+    #acc-chip { position: absolute; z-index: 9; transform: translate(-50%, -100%);
+      font: 600 13px/1 -apple-system, system-ui, sans-serif;
+      padding: 5px 9px; border: 1px solid #C9C0B4; border-radius: 7px;
+      background: #fff; color: #23231F; cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,.12); user-select: none; }
+    #acc-chip:hover { border-color: #2F6B4F; color: #2F6B4F; }
+    @media print { #acc-chip { display: none !important; } }
+  `;
+  d.head.appendChild(st);
+  c = d.createElement('button');
+  c.id = 'acc-chip';
+  c.type = 'button';
+  c.textContent = 'ударе\u0301ние';
+  c.title = 'Поставьте курсор сразу после ударной гласной';
+  // Гасим mousedown: иначе курсор в листе пропадёт раньше, чем сработает нажатие.
+  c.addEventListener('mousedown', (e) => e.preventDefault());
+  c.addEventListener('click', putAccent);
+  d.body.appendChild(c);
+  return c;
+}
+
+function showAccent(d, range) {
+  const r = range.getBoundingClientRect();
+  // Схлопнутый курсор в пустом узле даёт нулевой прямоугольник — берём слово.
+  const box = (r.width || r.height) ? r
+    : (range.startContainer.parentElement || d.body).getBoundingClientRect();
+  const c = accentChip(d);
+  c.style.left = (box.left + box.width / 2 + d.documentElement.scrollLeft) + 'px';
+  c.style.top = (box.top - 6 + d.documentElement.scrollTop) + 'px';
+  c.hidden = false;
+}
+
+function hideAccent(d) {
+  const c = d.getElementById('acc-chip');
+  if (c) c.hidden = true;
 }
 
 // Где стоял курсор в листе в последний раз: нажатие на кнопку в панели — это
@@ -1481,14 +1529,11 @@ function bindActions() {
   // как PDF» может только человек — предвыбрать программно нельзя ни в одном
   // браузере. Имена и иконки разные потому, что логопед ищет глазами то, что
   // хочет получить; окно у этого одно, и об этом сказано в подсказке кнопки.
+  // Кнопка одна и называется «Печать» — честно. Отдельная «Сохранить в PDF»
+  // была бы ложью: предвыбрать PDF в окне печати программно нельзя ни в одном
+  // браузере, и обе кнопки открывали бы одно и то же окно. Про PDF сказано в
+  // подсказке кнопки — там это не занимает места на экране.
   $('print').onclick = doPrint;
-  const _pr = $('printer');
-  if (_pr) _pr.onclick = doPrint;
-  const _ac = $('accent');
-  if (_ac) {
-    _ac.addEventListener('mousedown', (e) => e.preventDefault());
-    _ac.onclick = putAccent;
-  }
   $('reroll').onclick = () => { S.sheetNo += 1; load(); };
   // возврат к выбору слога живёт в крошке «слог РА» сверху — отдельной
   // кнопки для того же действия больше нет
