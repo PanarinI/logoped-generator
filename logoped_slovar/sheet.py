@@ -1711,7 +1711,12 @@ def build_content(sound: str = "р", typ: str = "direct", profile: str = "",
     game_items: List[str] = []
     game_example = None
     for a, _o in all_pairs:
-        pl = (by_word.get(a.word) or {}).get("plural")
+        card = by_word.get(a.word) or {}
+        pl = card.get("plural")
+        # Счётность размечена руками в карточке (см. content._countable):
+        # у вещественных «много» даёт сорта, у омонимов — другое слово.
+        if card.get("countable") is False:
+            continue
         if not pl or not clean(pl):
             continue
         if game_example is None:
