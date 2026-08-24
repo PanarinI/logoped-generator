@@ -1590,12 +1590,84 @@ async function savePdf() {
   }
 }
 
+/* ── ЛИСТ → WORD ──────────────────────────────────────────────────────
+   Word почти не понимает CSS-сетку и колонки: всё, что у нас разложено
+   `display:grid` и `column-count`, он сваливает в один столбик — слово автора
+   08-24: «ворд не держит строки, все списком уходит».
+   Таблицы он держит хорошо и держал всегда. Поэтому перед выгрузкой мы
+   перекладываем сеточные блоки в настоящие `<table>` — на КОПИИ документа,
+   так что на экране и в PDF ничего не меняется.
+   Это не второй отрисовщик: перекладывается расположение, а не содержимое. */
+
+/* Сколько колонок у сеточного блока — спрашиваем у самого браузера, а не
+   вычитываем из разметки: он уже посчитал `repeat(N,1fr)` за нас. */
+function gridCols(el) {
+  const t = getComputedStyle(el).gridTemplateColumns;
+  const n = (t && t !== 'none') ? t.trim().split(/\s+/).length : 0;
+  return n || el.children.length || 1;
+}
+
+/* Сетка → таблица. `byColumn` для `column-count`: там поток идёт СВЕРХУ ВНИЗ по
+   первой колонке, потом по второй, а не слева направо. */
+function toTable(doc, el, cols, byColumn) {
+  const kids = [...el.children];
+  if (!kids.length) return;
+  const rows = Math.ceil(kids.length / cols);
+  const t = doc.createElement('table');
+  t.setAttribute('width', '100%');
+  t.setAttribute('cellspacing', '0');
+  t.setAttribute('cellpadding', '0');
+  t.style.borderCollapse = 'collapse';
+  for (let r = 0; r < rows; r++) {
+    const tr = doc.createElement('tr');
+    for (let c = 0; c < cols; c++) {
+      const i = byColumn ? (c * rows + r) : (r * cols + c);
+      const td = doc.createElement('td');
+      td.setAttribute('valign', 'top');
+      td.style.width = Math.floor(100 / cols) + '%';
+      td.style.paddingRight = '4mm';
+      if (kids[i]) td.appendChild(kids[i]);
+      tr.appendChild(td);
+    }
+    t.appendChild(tr);
+  }
+  el.textContent = '';
+  el.appendChild(t);
+}
+
+function wordHtml() {
+  const src = $('frame').contentDocument;
+  if (!src || !src.documentElement) return '';
+  const doc = src.cloneNode(true);
+  // Считать колонки надо по ЖИВОМУ документу: у копии нет вёрстки, и
+  // getComputedStyle вернул бы пустоту.
+  const live = [...src.querySelectorAll('.wcols, .game, .sent')];
+  const copy = [...doc.querySelectorAll('.wcols, .game, .sent')];
+  copy.forEach((el, i) => toTable(doc, el, gridCols(live[i] || el), false));
+  // Ряд слогов: у него `column-count: 2`, поток по колонкам.
+  doc.querySelectorAll('.syl').forEach((el) => toTable(doc, el, 2, true));
+  // Флексы — просто строки: сколько детей, столько ячеек.
+  doc.querySelectorAll('.artic, .ticks, .doc-row').forEach((el) => {
+    toTable(doc, el, el.children.length || 1, false);
+  });
+  // Сами правила сетки в стилях остаются — Word их не понимает и просто
+  // пропустит, но в браузере они бы спорили с таблицей. Гасим их одной
+  // припиской: расположение теперь несёт таблица, а не сетка.
+  const off = doc.createElement('style');
+  off.textContent = '.wcols,.game,.sent,.artic,.ticks,.doc-row'
+    + '{display:block !important}'
+    + '.syl{column-count:1 !important}'
+    + 'table{border-collapse:collapse}';
+  doc.head.appendChild(off);
+  return '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+    + 'xmlns:w="urn:schemas-microsoft-com:office:word" '
+    + 'xmlns="http://www.w3.org/TR/REC-html40">'
+    + doc.documentElement.innerHTML + '</html>';
+}
+
 function saveDoc() {
-  const d = $('frame').contentDocument;
-  if (!d || !d.documentElement) return;
-  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
-    + 'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
-    + d.documentElement.innerHTML + '</html>';
+  const html = wordHtml();
+  if (!html) return;
   download(new Blob(['\ufeff', html],
     { type: 'application/msword;charset=utf-8' }), 'doc');
 }
