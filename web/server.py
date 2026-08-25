@@ -637,7 +637,18 @@ class Handler(BaseHTTPRequestHandler):
         ua = (self.headers.get("User-Agent") or "").strip()
         low = ua.lower()
         who = next((m for m in self.BOT_MARKS if m in low), "")
-        mark = f"  [{who}]" if who else ("" if ua else "  [без UA]")
+        if who:
+            mark = f"  [{who}]"
+        elif not ua:
+            mark = "  [без UA]"
+        elif not self.headers.get("Accept-Language"):
+            # Незнакомый робот. Браузер всегда говорит, на каком языке хочет
+            # страницу; тот, кто молчит, — программа. Показываем его имя целиком:
+            # иначе в логе видно, что кто-то обошёл весь сайт, и не видно кто
+            # (08-25: два таких обхода подряд, и опознать было нечем).
+            mark = "  [%s]" % ua[:70]
+        else:
+            mark = ""
         sys.stderr.write("  %s%s\n" % (fmt % args, mark))
 
     # Кэш разведён по смыслу ответа, а не задан одной строкой на всё.
