@@ -691,7 +691,16 @@ class Handler(BaseHTTPRequestHandler):
             ".svg": "image/svg+xml; charset=utf-8",
         }.get(os.path.splitext(name)[1], "application/octet-stream")
         with open(path, "rb") as fh:
-            self._cached(fh.read(), ctype, self.CACHE_CODE)
+            data = fh.read()
+        # В экран виджета счётчик вставляется на лету: файл лежит в репозитории,
+        # а номер счётчика — учётная запись автора и живёт в окружении.
+        # `in_frame_guard=True` обязателен: виджет открывается ещё и в рамке
+        # страницы сайта, и без оговорки один заход считался бы дважды.
+        if name == "index.html":
+            code = SITE.analytics(in_frame_guard=True)
+            if code:
+                data = data.replace(b"</head>", code.encode("utf-8") + b"</head>", 1)
+        self._cached(data, ctype, self.CACHE_CODE)
 
     # Герои отдаются ФАЙЛОМ, а не встраиваются в лист base64. Причина в весе:
     # ч/б герой весит 2-3 КБ и встраивается даром, а цветной 73-229 КБ —

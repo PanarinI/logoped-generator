@@ -76,6 +76,64 @@ PROJECT: Dict[str, str] = {
     "social": "https://t.me/logo_konspekt",
 }
 
+# ─── счётчики ───────────────────────────────────────────────────────────────
+# Канон ШАГа 6 требует четыре аналитики: Search Console, Google Analytics,
+# Яндекс.Вебмастер, Яндекс.Метрика. Две последние — про поведение, и именно они
+# отвечают на вопрос автора «приходят ли новые и возвращаются ли старые».
+# Вебмастер и Search Console счётчика на странице не требуют — они
+# подтверждаются файлом или мета-тегом, поэтому здесь их нет.
+#
+# Номера приходят ОКРУЖЕНИЕМ, а не лежат в коде: счётчик — учётная запись
+# автора, и в публичном репозитории ему не место. Нет переменной — нет и кода
+# на странице: пустой сайт не должен грузить чужие скрипты.
+#
+# ⚠ Вебвизор (запись действий) намеренно НЕ включён: он пишет, что человек
+# делал на странице, а для вопроса «новые или вернувшиеся» этого не нужно.
+# Понадобится — включается в кабинете Метрики, без правки кода.
+# Номер счётчика Метрики не секрет: он виден в коде любой страницы, где стоит.
+# Поэтому он живёт прямо здесь, а не в переменной кабинета — иначе перенос сайта
+# на другой хостинг тихо терял бы статистику. Переменной его всё равно можно
+# перебить: удобно, когда сайт поднимают копией для проверки.
+METRIKA_ID = os.environ.get("METRIKA_ID", "111927540").strip()
+GA_ID = os.environ.get("GA_ID", "").strip()
+
+
+def analytics(in_frame_guard: bool = False) -> str:
+    """Код счётчиков. Пусто, если номера не заданы.
+
+    `in_frame_guard` — для ВИДЖЕТА. Виджет живёт в iframe страницы сайта, и без
+    этой оговорки один заход считался бы дважды: страницей и рамкой внутри неё.
+    Поэтому в рамке счётчик молчит, а на прямом заходе на /app/ работает.
+    """
+    if not (METRIKA_ID or GA_ID):
+        return ""
+    parts = []
+    if METRIKA_ID:
+        parts.append(
+            "<script>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){"
+            "(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();"
+            "for(var j=0;j<e.scripts.length;j++){if(e.scripts[j].src===r){return;}}"
+            "k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,"
+            "a.parentNode.insertBefore(k,a)})"
+            '(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");'
+            f'ym({METRIKA_ID},"init",{{clickmap:true,trackLinks:true,'
+            "accurateTrackBounce:true}});</script>"
+            f'<noscript><div><img src="https://mc.yandex.ru/watch/{METRIKA_ID}" '
+            'style="position:absolute;left:-9999px" alt=""></div></noscript>')
+    if GA_ID:
+        parts.append(
+            f'<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>'
+            "<script>window.dataLayer=window.dataLayer||[];"
+            "function gtag(){dataLayer.push(arguments);}gtag('js',new Date());"
+            f"gtag('config','{GA_ID}');</script>")
+    code = "\n".join(parts)
+    if in_frame_guard:
+        # Считаем только прямой заход: внутри рамки страница уже посчитана.
+        code = ("<script>if(window.top===window.self){document.write("
+                + json.dumps(code) + ");}</script>")
+    return code + "\n"
+
+
 # ─── реестр страниц ─────────────────────────────────────────────────────────
 # Карта собрана по канону ШАГов 3-4-7: главная → категории → вложенные страницы.
 # Звук — КАТЕГОРИЯ, а не тег: лист бывает либо на Р, либо на Л, категории
@@ -497,6 +555,7 @@ def render(page: Page) -> bytes:
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
         '<link rel="stylesheet" href="/site.css">\n'
         f'<script type="application/ld+json">{_jsonld(page)}</script>\n'
+        f"{analytics()}"
         "</head>\n"
         "<body>\n"
         f"{_widget(page)}\n"
