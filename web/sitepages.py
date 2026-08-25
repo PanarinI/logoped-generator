@@ -104,34 +104,50 @@ def analytics(in_frame_guard: bool = False) -> str:
     `in_frame_guard` — для ВИДЖЕТА. Виджет живёт в iframe страницы сайта, и без
     этой оговорки один заход считался бы дважды: страницей и рамкой внутри неё.
     Поэтому в рамке счётчик молчит, а на прямом заходе на /app/ работает.
+
+    ⚠ 08-25: сначала оговорка делалась через `document.write` со строкой кода —
+    и в левом верхнем углу виджета вылезли символы `');}`. Причина въедливая:
+    браузер обрывает `<script>` на ПЕРВОМ же `</script>`, даже если тот стоит
+    внутри строки в кавычках. Поэтому теперь оборачивается сам код, а не текст
+    кода, и никаких строк со скриптами внутри строк здесь больше нет.
     """
     if not (METRIKA_ID or GA_ID):
         return ""
-    parts = []
+
+    js: List[str] = []
     if METRIKA_ID:
-        parts.append(
-            "<script>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){"
+        js.append(
+            "(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){"
             "(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();"
             "for(var j=0;j<e.scripts.length;j++){if(e.scripts[j].src===r){return;}}"
             "k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,"
             "a.parentNode.insertBefore(k,a)})"
             '(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");'
             f'ym({METRIKA_ID},"init",{{clickmap:true,trackLinks:true,'
-            "accurateTrackBounce:true}});</script>"
-            f'<noscript><div><img src="https://mc.yandex.ru/watch/{METRIKA_ID}" '
-            'style="position:absolute;left:-9999px" alt=""></div></noscript>')
+            "accurateTrackBounce:true});")
     if GA_ID:
-        parts.append(
-            f'<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>'
-            "<script>window.dataLayer=window.dataLayer||[];"
+        js.append(
+            "window.dataLayer=window.dataLayer||[];"
             "function gtag(){dataLayer.push(arguments);}gtag('js',new Date());"
-            f"gtag('config','{GA_ID}');</script>")
-    code = "\n".join(parts)
+            f"gtag('config','{GA_ID}');")
+
+    code = "".join(js)
     if in_frame_guard:
-        # Считаем только прямой заход: внутри рамки страница уже посчитана.
-        code = ("<script>if(window.top===window.self){document.write("
-                + json.dumps(code) + ");}</script>")
-    return code + "\n"
+        code = "if(window.top===window.self){" + code + "}"
+
+    out = ""
+    if GA_ID:
+        # Загрузчик GA — отдельным тегом; в рамке он не нужен, но и не вредит:
+        # без вызова `config` ничего не отправляется.
+        out += (f'<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}">'
+                "</script>\n")
+    out += "<script>" + code + "</script>\n"
+    if METRIKA_ID and not in_frame_guard:
+        # Картинка для тех, у кого выключен JS. В рамке она не ставится: там
+        # заход уже посчитан страницей.
+        out += (f'<noscript><div><img src="https://mc.yandex.ru/watch/{METRIKA_ID}" '
+                'style="position:absolute;left:-9999px" alt=""></div></noscript>\n')
+    return out
 
 
 # ─── реестр страниц ─────────────────────────────────────────────────────────
