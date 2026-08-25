@@ -1676,10 +1676,142 @@ function toTable(doc, el, cols, byColumn) {
   el.appendChild(t);
 }
 
-function wordHtml() {
+/* ── ГРАФИКА ДЛЯ WORD: SVG → PNG (08-25) ──────────────────────────────
+   Автор прислал два снимка из Word: на звуковой дорожке пропали сами линии и
+   герой, на слоговой — кружки и тропа, а слоги слиплись в сплошную строку
+   «РЫРЭРУРОРА…». Причина одна: ВЕСЬ наш рисунок — inline `<svg>`, а Word его
+   не отображает вовсе, и текст, живший внутри картинки, вываливается потоком.
+
+   Поэтому перед выгрузкой каждый `<svg>` отрисовывается в canvas и заменяется
+   растровой картинкой. Печатный материал от этого не теряет ничего: рисунок и
+   так не редактируется, а Word нужен, когда надо доправить ТЕКСТ рядом.
+
+   Две тонкости, обе стоили бы пустого листа:
+     · размер берём у ЖИВОГО элемента (`getBoundingClientRect`), а не из
+       атрибутов: там миллиметры, и в пикселях они не совпадут с экраном;
+     · `<image href="/geroi/…">` внутри SVG вшивается в data:-URI ЗАРАНЕЕ.
+       SVG, отрисованный через `<img>`, внешние ресурсы не грузит — иначе герой
+       вышел бы пустым квадратом. Та же грабля, что ловили 08-22 в снимках
+       листов для сайта.
+
+   ⚠ Если Word когда-нибудь откажется показывать data:-картинки, следующий шаг
+   не «вернуть SVG», а собрать MHTML с вложениями. */
+
+async function inlineSvgHrefs(svg) {
+  const imgs = [...svg.querySelectorAll('image')];
+  await Promise.all(imgs.map(async (im) => {
+    const href = im.getAttribute('href') || im.getAttribute('xlink:href') || '';
+    if (!href || href.indexOf('data:') === 0) return;
+    try {
+      const blob = await (await fetch(href)).blob();
+      const data = await new Promise((res) => {
+        const fr = new FileReader(); fr.onload = () => res(fr.result);
+        fr.readAsDataURL(blob);
+      });
+      im.setAttribute('href', data);
+      im.removeAttribute('xlink:href');
+    } catch (e) { /* не дотянулись — лист уйдёт без этой картинки, но уйдёт */ }
+  }));
+}
+
+async function svgToPng(liveSvg, scale = 3) {
+  const box = liveSvg.getBoundingClientRect();
+  const w = Math.max(1, Math.round(box.width));
+  const h = Math.max(1, Math.round(box.height));
+  const copy = liveSvg.cloneNode(true);
+  copy.setAttribute('width', String(w));
+  copy.setAttribute('height', String(h));
+  await inlineSvgHrefs(copy);
+  const xml = new XMLSerializer().serializeToString(copy);
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+  });
+  const c = document.createElement('canvas');
+  c.width = w * scale; c.height = h * scale;
+  const ctx = c.getContext('2d');
+  // Белый фон обязателен: PNG с прозрачностью Word кладёт на серую подложку.
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return { data: c.toDataURL('image/png'), w, h };
+}
+
+async function wordHtml() {
   const src = $('frame').contentDocument;
   if (!src || !src.documentElement) return '';
   const doc = src.cloneNode(true);
+
+  // Рисунки — первыми: дальше документ перекладывается в таблицы, и порядок
+  // элементов в копии меняться не должен.
+  const liveSvg = [...src.querySelectorAll('svg')];
+  const copySvg = [...doc.querySelectorAll('svg')];
+  for (let i = 0; i < copySvg.length; i += 1) {
+    const live = liveSvg[i];
+    if (!live) continue;
+    try {
+      const png = await svgToPng(live);
+      const im = doc.createElement('img');
+      im.setAttribute('src', png.data);
+      im.setAttribute('width', String(png.w));
+      im.setAttribute('height', String(png.h));
+      im.setAttribute('alt', '');
+      im.setAttribute('style', 'display:block;max-width:100%');
+      // класс переносим: по нему ниже узнаётся слой стрелок лабиринта
+      if (copySvg[i].getAttribute('class')) {
+        im.setAttribute('class', copySvg[i].getAttribute('class'));
+      }
+      copySvg[i].replaceWith(im);
+    } catch (e) { /* один рисунок не дался — остальной лист всё равно уходит */ }
+  }
+  /* ЛАБИРИНТ. Девять клеток стоят АБСОЛЮТНО (`left/top` в миллиметрах), а слой
+     стрелок лежит поверх них отдельным SVG во всю сетку. Word ни того, ни
+     другого не держит: на снимке автора клетки вытянулись в один столбик.
+     Пересобираем клетки в настоящую таблицу 3×3, читая координаты из них же.
+
+     Стрелки в Word не переносятся сознательно: наложить слой поверх таблицы
+     нечем, а лежащая рядом картинка со стрелками в пустоте читалась бы как
+     брак. Порядок хода при этом не теряется — он есть номерами под клетками
+     и словами в «Заданиях взрослому». В PDF и на печати стрелки на месте. */
+  const maze = doc.querySelector('.maze');
+  if (maze) {
+    const mm = (el, prop) => {
+      const m = (el.getAttribute('style') || '').match(
+        new RegExp(prop + ':\\s*([\\d.]+)mm'));
+      return m ? parseFloat(m[1]) : 0;
+    };
+    const cells = [...maze.querySelectorAll('.cell')];
+    if (cells.length) {
+      const rows = [...new Set(cells.map((c) => mm(c, 'top')))].sort((a, b) => a - b);
+      const cols = [...new Set(cells.map((c) => mm(c, 'left')))].sort((a, b) => a - b);
+      const table = doc.createElement('table');
+      table.setAttribute('border', '1');
+      table.setAttribute('cellpadding', '4');
+      table.setAttribute('style', 'border-collapse:collapse;width:100%');
+      rows.forEach((top) => {
+        const tr = doc.createElement('tr');
+        cols.forEach((left) => {
+          const td = doc.createElement('td');
+          td.setAttribute('style', 'text-align:center;vertical-align:top;width:'
+            + Math.floor(100 / cols.length) + '%');
+          const cell = cells.find((c) => mm(c, 'top') === top && mm(c, 'left') === left);
+          if (cell) {
+            cell.removeAttribute('style');
+            td.appendChild(cell);
+          }
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+      maze.replaceWith(table);
+    }
+  }
+  // Слой стрелок (к этому месту он уже картинка) — снимаем.
+  const arrows = doc.querySelector('img.arrows, svg.arrows');
+  if (arrows) arrows.remove();
+
   // Считать колонки надо по ЖИВОМУ документу: у копии нет вёрстки, и
   // getComputedStyle вернул бы пустоту.
   const live = [...src.querySelectorAll('.wcols, .game, .sent')];
@@ -1698,7 +1830,15 @@ function wordHtml() {
   off.textContent = '.wcols,.game,.sent,.artic,.ticks,.doc-row'
     + '{display:block !important}'
     + '.syl{column-count:1 !important}'
-    + 'table{border-collapse:collapse}';
+    + 'table{border-collapse:collapse}'
+    // Клетки лабиринта переехали в ячейки таблицы, но правило `.cell` в стилях
+    // листа осталось абсолютным — без этой приписки картинки сваливаются кучей
+    // поверх текста (поймано глазами 08-25 на пробной выгрузке).
+    + '.cell{position:static !important;width:auto !important;'
+    + 'height:auto !important;border:0 !important;display:block !important;'
+    + 'overflow:visible !important}'
+    + '.cell img,.pic img{max-width:100% !important;height:auto !important}'
+    + '.pic-wrap{display:block !important}';
   doc.head.appendChild(off);
   return '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
     + 'xmlns:w="urn:schemas-microsoft-com:office:word" '
@@ -1706,8 +1846,16 @@ function wordHtml() {
     + doc.documentElement.innerHTML + '</html>';
 }
 
-function saveDoc() {
-  const html = wordHtml();
+async function saveDoc() {
+  const btn = $('save');
+  const was = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Собираем…'; }
+  let html = '';
+  try {
+    html = await wordHtml();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = was; }
+  }
   if (!html) return;
   download(new Blob(['\ufeff', html],
     { type: 'application/msword;charset=utf-8' }), 'doc');
@@ -1736,7 +1884,7 @@ function doPrint() {
    стоять ДО прихода людей — мнение, которому некуда деться, не возвращается.
 
    Два входа, разные по цене для человека:
-     · тихая ссылка «Нашли ошибку?» — всегда на месте, ничего не
+     · тихая ссылка «На листе что-то не так?» — всегда на месте, ничего не
        перекрывает, открывается свободным полем;
      · один вопрос ПОСЛЕ ВТОРОГО полученного листа — «Вы дадите этот лист
        ребёнку?» (формулировка автора). Спрашиваем про действие, а не про
