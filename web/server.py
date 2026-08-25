@@ -619,8 +619,26 @@ class Handler(BaseHTTPRequestHandler):
 
     # — служебное —
 
+    # Кто именно приходил — видно только по User-Agent, и без него лог
+    # бесполезен ровно там, где он нужнее всего. Поймано 08-25: Телеграм не
+    # строил превью ссылки, и по логам нельзя было понять, доходил ли его бот
+    # до нас вообще. Заодно теперь видно поисковых роботов — а их приход и есть
+    # первый признак, что сайт взяли в индекс.
+    #
+    # Пишем ТОЛЬКО имя робота, а не весь User-Agent: у браузера в нём версия
+    # системы и сборки, и складывать это в вечный лог незачем — обычные заходы
+    # остаются просто «браузер».
+    BOT_MARKS = ("telegrambot", "twitterbot", "googlebot", "yandexbot",
+                 "bingbot", "applebot", "facebookexternalhit", "whatsapp",
+                 "slackbot", "discordbot", "vkshare", "mail.ru_bot",
+                 "ahrefsbot", "semrushbot", "curl", "python-urllib")
+
     def log_message(self, fmt: str, *args: Any) -> None:
-        sys.stderr.write("  %s\n" % (fmt % args))
+        ua = (self.headers.get("User-Agent") or "").strip()
+        low = ua.lower()
+        who = next((m for m in self.BOT_MARKS if m in low), "")
+        mark = f"  [{who}]" if who else ("" if ua else "  [без UA]")
+        sys.stderr.write("  %s%s\n" % (fmt % args, mark))
 
     # Кэш разведён по смыслу ответа, а не задан одной строкой на всё.
     # Раньше «no-store» стоял и на api, и на статике, и на героях — и при каждом
