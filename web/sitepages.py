@@ -568,6 +568,18 @@ def render(page: Page) -> bytes:
         f'<meta property="og:description" content="{e(page["description"])}">\n'
         f'<meta property="og:url" content="{url}">\n'
         f'<meta property="og:locale" content="ru_RU">\n'
+        # Картинка предпросмотра. Без неё Телеграм и соцсети показывают голую
+        # ссылку — поймано 08-25, когда автор попробовал запостить в группу.
+        # Адрес ОБЯЗАТЕЛЬНО полный: относительный путь эти боты не разворачивают.
+        # 1200×630 — размер, который они ждут; на картинке настоящий лист, а не
+        # нарисованный макет, — тот же закон, что и для иллюстраций страниц.
+        f'<meta property="og:image" content="{SITE_URL}/img/og.png">\n'
+        '<meta property="og:image:width" content="1200">\n'
+        '<meta property="og:image:height" content="630">\n'
+        f'<meta property="og:image:alt" content="Лист на автоматизацию звука — '
+        f'{e(PROJECT["name"])}">\n'
+        '<meta name="twitter:card" content="summary_large_image">\n'
+        f'<meta name="twitter:image" content="{SITE_URL}/img/og.png">\n'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
         '<link rel="stylesheet" href="/site.css">\n'
         f'<script type="application/ld+json">{_jsonld(page)}</script>\n'
