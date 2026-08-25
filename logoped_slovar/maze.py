@@ -701,9 +701,20 @@ def estimate_tasks_mm(tasks: Dict[str, Any]) -> float:
     return 4.6 + per_col * _task_line_mm()              # 4.6 — заголовок блока
 
 
+# Запас, который модель не видит. Она считает строки по СРЕДНЕЙ ширине символа,
+# а настоящий перенос рвёт строку раньше: длинное слово целиком уходит вниз.
+# Поймано 08-25 на лабиринте [Р] «звук в начале»: модель обещала 77,5 мм при
+# бюджете 80,5 — то есть «влезает с запасом 3 мм», — а PDF выходил на ДВУХ
+# листах, и хватало снять одну надстроечную игру. Величина не угадана: с ней
+# прогнаны все 11 звуков × 3 позиции, и каждый лист печатается на одной
+# странице (проверка через настоящий PDF, а не через модель).
+FIT_SLACK_MM = 8.0
+
+
 def tasks_budget_mm(cell_mm: float) -> float:
     grid = GRID * cell_mm + (GRID - 1) * GAP_MM
-    return S.CONTENT_H - HEADER_MM - MAZE_TOP_MM - grid - TASKS_TOP_MM
+    return (S.CONTENT_H - HEADER_MM - MAZE_TOP_MM - grid - TASKS_TOP_MM
+            - FIT_SLACK_MM)
 
 
 def _fit_tasks(maze: Dict[str, Any]) -> None:

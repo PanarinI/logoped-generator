@@ -1714,10 +1714,30 @@ async function inlineSvgHrefs(svg) {
   }));
 }
 
+/* Размер картинки берём из АТРИБУТОВ svg, а не с экрана.
+   ⚠ 08-25: сначала брали `getBoundingClientRect`, и в файле автора герой
+   занятия вышел 18×13 мм вместо 32×22 — потому что лист на экране показан
+   уменьшенным, чтобы влезть в окно, и вместе с ним ужимался рисунок. Размер
+   листа задан в миллиметрах и от зума не зависит — его и берём. */
+function svgSizePx(svg) {
+  const K = { mm: 96 / 25.4, cm: 96 / 2.54, in: 96, pt: 96 / 72, px: 1 };
+  const val = (v) => {
+    const m = String(v || '').trim().match(/^([\d.]+)\s*(mm|cm|in|pt|px)?$/);
+    return m ? parseFloat(m[1]) * (K[m[2] || 'px'] || 1) : 0;
+  };
+  let w = val(svg.getAttribute('width'));
+  let h = val(svg.getAttribute('height'));
+  if (!w || !h) {
+    const r = svg.getBoundingClientRect();
+    w = w || r.width; h = h || r.height;
+  }
+  return { w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)) };
+}
+
 async function svgToPng(liveSvg, scale = 3) {
-  const box = liveSvg.getBoundingClientRect();
-  const w = Math.max(1, Math.round(box.width));
-  const h = Math.max(1, Math.round(box.height));
+  const size = svgSizePx(liveSvg);
+  const w = size.w;
+  const h = size.h;
   const copy = liveSvg.cloneNode(true);
   copy.setAttribute('width', String(w));
   copy.setAttribute('height', String(h));
@@ -1787,14 +1807,16 @@ async function wordHtml() {
       const rows = [...new Set(cells.map((c) => mm(c, 'top')))].sort((a, b) => a - b);
       const cols = [...new Set(cells.map((c) => mm(c, 'left')))].sort((a, b) => a - b);
       const table = doc.createElement('table');
-      table.setAttribute('border', '1');
       table.setAttribute('cellpadding', '4');
       table.setAttribute('style', 'border-collapse:collapse;width:100%');
       rows.forEach((top) => {
         const tr = doc.createElement('tr');
         cols.forEach((left) => {
           const td = doc.createElement('td');
-          td.setAttribute('style', 'text-align:center;vertical-align:top;width:'
+          // Тонкая рамка, как у клетки на бумаге: `border="1"` рисует грубую
+          // двойную линию, и лист в Word выглядит чужим.
+          td.setAttribute('style', 'text-align:center;vertical-align:top;'
+            + 'border:0.75pt solid #000;padding:3px;width:'
             + Math.floor(100 / cols.length) + '%');
           const cell = cells.find((c) => mm(c, 'top') === top && mm(c, 'left') === left);
           if (cell) {
