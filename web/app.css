@@ -218,9 +218,17 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 /* Закладки звуков и лист занимают обе строки; полоса вкладок стоит над панелью
    в её колонке. Так вкладки не отнимают высоту у листа — а лист ограничен
    именно высотой. */
-.rail   { grid-column: 1; grid-row: 1 / span 2; }
-.paper  { grid-column: 2; grid-row: 1 / span 2; min-width: 0; justify-self: center; }
-.tools  { grid-column: 3; grid-row: 1; }
+/* ⚡ 08-26. ЭТАП УЕХАЛ НАВЕРХ ВО ВСЮ ШИРИНУ. Разбор автора: «а вообще хорошо
+   ли, что выбор типа справа? возможно юзер поэтому и не поняла, где искать
+   разные виды листов». Справа лежали ДВЕ РАЗНЫЕ вещи разом — «что я делаю»
+   (этап) и «как это настроено» (профиль, гласные, стечения), — а слева стоит
+   тоже «что я делаю» (звук). Один вопрос был разорван по двум краям экрана, и
+   половина его пряталась в столбце настроек.
+   Теперь: звук слева, этап сверху, лист в центре, настройки справа. Настройки
+   влево НЕ переносим — риск назвал сам автор: их слишком много для колонки. */
+.rail   { grid-column: 1; grid-row: 2; }
+.paper  { grid-column: 2; grid-row: 2; min-width: 0; justify-self: center; }
+.tools  { grid-column: 1 / -1; grid-row: 1; }
 .panel  { grid-column: 3; grid-row: 2; }
 
 /* ЗАКЛАДКИ ЗВУКОВ — как у книги: узкий вертикальный ряд у самого края.
@@ -258,16 +266,19 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    страница ездила вбок. Поймано 08-12 замером на 375 px. */
 /* Полоса инструментов встала В КОЛОНКУ: «Занятие» отдельной кнопкой, под ним
    вопрос, под вопросом — ступени лестницы (08-26). */
-.tools { flex-direction: column; align-items: stretch; gap: var(--s2); }
-.tabs-title { font-size: 13px; font-weight: 600; color: var(--ink-2);
-              margin: 0; }
+/* Полоса этапа — горизонтальная лента над всем экраном: заголовок слева,
+   ступени за ним. Крупнее прежнего: на неё должно идти внимание (08-26). */
+.tools { flex-direction: row; align-items: center; gap: var(--s3); }
+.tabs-title { font-size: 13px; font-weight: 600; color: var(--ink-3);
+              margin: 0; white-space: nowrap;
+              text-transform: uppercase; letter-spacing: .06em; }
 /* «Все этапы» — ответ другого рода, чем одиночная ступень: не точка на
    лестнице, а вся лестница. Отличается тоном, но не спорит за первенство
    со «Скачать» — цвет тише акцентного (08-26). */
 .tab-whole { color: var(--accent); font-weight: 600; }
 .tab-whole:not(.is-on) { background: #e3ded4; }
 .tab-whole.is-on { background: var(--card); color: var(--accent); }
-.tabs { display: flex; gap: 2px; padding: 2px;
+.tabs { display: flex; gap: 3px; padding: 3px;
         background: #ece8e0; border-radius: var(--r-sm);
         max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
         scrollbar-width: none; -ms-overflow-style: none; }
@@ -280,8 +291,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 }
 /* Вкладка — только имя этапа. Жанр листа называет плашка в панели: два
    уровня внутри одной кнопки автор забраковал сразу, как увидел (08-26). */
-.tab { border: 0; background: none; cursor: pointer; font-size: 13px;
-       color: var(--ink-2); padding: 4px 9px; border-radius: 6px;
+.tab { border: 0; background: none; cursor: pointer; font-size: 16px;
+       font-weight: 600;
+       color: var(--ink-2); padding: 8px 18px; border-radius: 7px;
        flex: 0 0 auto; white-space: nowrap;
        transition: background .12s, color .12s; }
 .tab:hover { color: var(--ink); }
