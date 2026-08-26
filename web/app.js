@@ -281,15 +281,24 @@ const MATERIAL_TITLE = { track: 'слоговая дорожка', propisi: 'з�
    адреса, ссылки с сайта и вся логика ниже не тронуты. */
 const STAGE_MATERIALS = {
   lesson: ['sheet'],
+  zvuk:   ['propisi'],
   slog:   ['propisi', 'track'],
   slovo:  ['maze'],
   fraza:  ['phrases'],
   tekst:  ['story'],
 };
-const STAGE_OF = {};
-Object.keys(STAGE_MATERIALS).forEach((st) => {
-  STAGE_MATERIALS[st].forEach((m) => { STAGE_OF[m] = st; });
-});
+/* Ступень нельзя вычислить из одного материала: звуковая дорожка стоит и на
+   «Звуке», и на «Слоге» — её ступень решает `propisiMode`. Поэтому не таблица,
+   а функция. Остальные материалы однозначны. */
+const STAGE_OF_MATERIAL = {
+  sheet: 'lesson', track: 'slog', maze: 'slovo', phrases: 'fraza', story: 'tekst',
+};
+function stageNow() {
+  if (S.tab === 'propisi') return S.propisiMode === 'syllable' ? 'slog' : 'zvuk';
+  return STAGE_OF_MATERIAL[S.tab] || '';
+}
+/* Ступень задаёт материалу режим: «Звук» — изолированный, «Слог» — со слогом. */
+function modeForStage(st) { return st === 'slog' ? 'syllable' : 'isolated'; }
 const GENRE_LABEL = {
   sheet: 'лист занятия', propisi: 'звуковая дорожка', track: 'слоговая дорожка',
   maze: 'лабиринт', phrases: 'словосочетания', story: 'рассказы',
@@ -458,7 +467,16 @@ function forgetPicks() {
 function pickMaterial(it) {
   if (it.soon) { S.tab = it.tab; show('result'); renderTabs(); showSoon(it.tab); return; }
   S.tab = it.tab;
-  if (STAGE_OF[it.tab]) LAST_IN_STAGE[STAGE_OF[it.tab]] = it.tab;
+  // Ступень приходит С НАЖАТИЕМ: одна и та же дорожка на «Звуке» печатается
+  // без гласной, на «Слоге» — со слогом.
+  if (it.mode) {
+    S.propisiMode = it.mode;
+    S.vowel = null;
+    // Спираль слог не печатает — уходя на «Слог» с единицы, возвращаемся к трём.
+    if (it.mode === 'syllable' && S.rows === 1) S.rows = 3;
+  }
+  const _st = stageNow();
+  if (_st) LAST_IN_STAGE[_st] = it.tab;
   if (it.mode) S.propisiMode = it.mode;
   if (it.storyMode) S.storyMode = it.storyMode;
   S.typ = firstTypFor(it.tab);
@@ -519,11 +537,11 @@ function syncGroupTitle() {
 
 
 function renderTabs() {
-  const stageNow = STAGE_OF[S.tab] || '';
+  const stNow = stageNow();
   document.querySelectorAll('.tab').forEach((b) => {
     const st = b.dataset.stage || '';
     const mats = STAGE_MATERIALS[st] || [b.dataset.tab];
-    b.classList.toggle('is-on', st === stageNow);
+    b.classList.toggle('is-on', st === stNow);
     // Витрина видна всегда: она говорит не про слог, а про весь замысел.
     if (b.dataset.soon) { b.hidden = false; return; }
     // Материала на этом слоге нет — вкладки нет. Сначала она была серой с
@@ -591,7 +609,8 @@ function renderTabs() {
   // делает (закон 12), поэтому на спирали её нет вовсе.
   // ⚠ Это ЗАПЛАТКА, а не решение: спираль со слогом — законный материал,
   // которого у нас пока нет. Записано в STATE как открытый узел.
-  $('stage-step').hidden = (S.tab !== 'propisi') || (S.rows === 1);
+  // Ряд гласных — только там, где слог на бумаге есть.
+  $('stage-step').hidden = (S.tab !== 'propisi') || (S.propisiMode !== 'syllable');
   $('scene-card').hidden = (S.tab !== 'track');
   $('story-mode-card').hidden = (S.tab !== 'story');
   // Списки тем и текстов приходят С МАТЕРИАЛОМ, поэтому карточка стоит только
@@ -614,7 +633,7 @@ function renderTabs() {
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
   renderRows();
   renderFramePick();
-  if (S.tab === 'propisi') { renderPropisiMode(); renderVowelPick(); }
+  if (S.tab === 'propisi') renderVowelPick();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
   $('moat-summary').textContent = {
@@ -664,7 +683,7 @@ function renderDiceTitle() {
 function renderGenrePick() {
   const card = $('genre-card');
   if (!card) return;
-  const st = STAGE_OF[S.tab] || '';
+  const st = stageNow();
   const mats = (STAGE_MATERIALS[st] || []).filter((m) => materialOk(m, S.typ));
   // ⚠ 08-26, второй заход. Плашка стояла только там, где жанров больше одного.
   // Слово автора: «где есть выбор — там выбор, где выбора нет — просто
@@ -682,7 +701,7 @@ function renderGenrePick() {
     b.addEventListener('click', () => {
       if (m === S.tab) return;
       LAST_IN_STAGE[st] = m;
-      pickMaterial({ tab: m });
+      pickMaterial({ tab: m, mode: modeForStage(st) });
     });
     box.appendChild(b);
   });
@@ -873,7 +892,11 @@ function renderRows() {
   box.innerHTML = '';
   // ⛔ 08-26: четвёрка снята. Пока дорожки на листе одинаковые, «4» — не
   // экономия бумаги, а четыре копии одного задания (слово автора).
-  [1, 2, 3].forEach((n) => {
+  // ⚠ Спираль — цельная картинка из банка, печатать слог на ней негде
+  // (замер 08-26). На ступени «Слог» единицу не предлагаем вовсе: кнопка,
+  // которая обещает слог и не печатает его, — та же ложь (закон 12).
+  const nums = (S.propisiMode === 'syllable') ? [2, 3] : [1, 2, 3];
+  nums.forEach((n) => {
     const b = el('button', 'seg-btn', String(n));
     b.classList.toggle('is-on', n === S.rows);
     b.addEventListener('click', () => {
@@ -881,10 +904,6 @@ function renderRows() {
       S.rows = n;
       // Спираль слог не печатает — молча оставить включённым «Со слогом»
       // значило бы врать заголовком листа.
-      if (n === 1 && S.propisiMode === 'syllable') {
-        S.propisiMode = 'isolated';
-        S.vowel = null;
-      }
       renderRows();
       load();
     });
@@ -922,10 +941,8 @@ function renderFramePick() {
   });
 }
 
-function renderPropisiMode() {
-  // Кнопка называет то, что ВКЛЮЧАЕТ: отжата — звук, нажата — слог.
-  $('propisi-mode-btn').classList.toggle('is-on', S.propisiMode === 'syllable');
-}
+/* ⛔ 08-26: галочка «Со слогом» снята — ступень стала вкладкой. Функция
+   осталась пустой заглушкой ровно на один коммит и удалена. */
 
 function positionList() {
   return (S.cfg.positions_by_sound && S.cfg.positions_by_sound[S.sound])
@@ -2507,7 +2524,8 @@ function bindActions() {
         .filter((m) => materialOk(m, S.typ));
       // Возвращаемся туда, откуда ушли: этап помнит последний жанр.
       const want = mats.includes(LAST_IN_STAGE[st]) ? LAST_IN_STAGE[st] : mats[0];
-      pickMaterial({ tab: want || b.dataset.tab, soon: !!b.dataset.soon });
+      pickMaterial({ tab: want || b.dataset.tab, mode: modeForStage(st),
+                     soon: !!b.dataset.soon });
     };
   });
 
@@ -2523,12 +2541,6 @@ function bindActions() {
     load();
   };
 
-  $('propisi-mode-btn').onclick = () => {
-    S.propisiMode = S.propisiMode === 'isolated' ? 'syllable' : 'isolated';
-    S.vowel = null;
-    renderPropisiMode();   // на изолированной ступени крошка «слог» уходит
-    load();
-  };
 
   $('story-mode-btn').onclick = () => {
     S.storyMode = S.storyMode === 'compose' ? 'retell' : 'compose';
