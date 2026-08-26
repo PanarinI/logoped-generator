@@ -253,6 +253,12 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    девять, на телефоне они в строку не влезают, и без этого пять последних
    (в том числе вся витрина «готовится») уезжали за край недостижимыми, а вся
    страница ездила вбок. Поймано 08-12 замером на 375 px. */
+/* Полоса инструментов встала В КОЛОНКУ: «Занятие» отдельной кнопкой, под ним
+   вопрос, под вопросом — ступени лестницы (08-26). */
+.tools { flex-direction: column; align-items: stretch; gap: var(--s2); }
+.tabs-title { font-size: 13px; font-weight: 600; color: var(--ink-2);
+              margin: 0; }
+.tabs-whole { align-self: flex-start; }
 .tabs { display: flex; gap: 2px; padding: 2px;
         background: #ece8e0; border-radius: var(--r-sm);
         max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
