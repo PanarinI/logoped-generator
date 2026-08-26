@@ -161,11 +161,18 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    кнопке скачивания, и вариативность материала была на экране невидима:
    логопед из группы написал «только один вариант на каждый звук». Место
    осталось прежним (слово автора), сменился только цвет. */
-.btn.dice { padding: 7px 9px; line-height: 0; border-color: var(--accent); }
+/* ⚠ 08-26, вторая попытка. Первая красила только контур кубика в зелёный, и
+   автор сказал: «кубик так и не стал заметен». Тонкая зелёная обводка на белом
+   рядом с большой зелёной кнопкой «Скачать» не читается вовсе. Теперь кубик
+   ЗАЛИТ тем же зелёным: на панели он становится вторым цветным пятном, то есть
+   вторым действием, а не значком при кнопке скачивания. Это прямой ответ на
+   слова логопеда «только один вариант на каждый звук». */
+.btn.dice { padding: 7px 9px; line-height: 0;
+            background: var(--accent); border-color: var(--accent); }
 .btn.dice svg { width: 22px; height: 22px; display: block; }
-.btn.dice rect { fill: none; stroke: var(--accent); stroke-width: 1.6; }
-.btn.dice circle { fill: var(--accent); }
-.btn.dice:hover { background: var(--accent); }
+.btn.dice rect { fill: none; stroke: #fff; stroke-width: 1.6; }
+.btn.dice circle { fill: #fff; }
+.btn.dice:hover { background: #24543e; border-color: #24543e; }
 .btn.dice:hover rect { stroke: #fff; }
 .btn.dice:hover circle { fill: #fff; }
 
