@@ -17,6 +17,8 @@
      08-26). Тёплая охра — единственное второе пятно на панели, поэтому оно
      заметно, но не спорит с главным действием за первенство. */
   --dice: #b8701a;
+  /* Ширина ряда звуков: её же берёт угол двух осей над ним. */
+  --rail-w: 44px;
   --warn:   #9a5a18;
   --warn-bg:#fdf5ea;
   --stop:   #9d3535;
@@ -235,6 +237,7 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    Звук виден всегда и переключается одним нажатием; отдельного экрана выбора
    больше нет. */
 .rail { display: flex; flex-direction: column; gap: 2px;
+        width: var(--rail-w);
         padding: 2px; background: #ece8e0; border-radius: var(--r-sm);
         align-self: start;
         /* ⚠ min-width: 0 обязателен. Элемент сетки по умолчанию не может стать
@@ -249,7 +252,8 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
             padding: 8px 10px; min-width: 40px; border-radius: 6px;
             transition: background .12s, color .12s; }
 .rail-btn:hover { color: var(--ink); }
-.rail-btn.is-on { background: var(--card); color: var(--ink); }
+.rail-btn.is-on { background: var(--card); color: var(--accent); font-weight: 700;
+                  box-shadow: inset -2px 0 0 var(--accent); }
 
 /* Панель прокручивается сама, не утаскивая лист: лист стоит на месте, как у
    incompetech, где липкой держат колонку предпросмотра, а не настроек.
@@ -269,9 +273,20 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 /* Полоса этапа — горизонтальная лента над всем экраном: заголовок слева,
    ступени за ним. Крупнее прежнего: на неё должно идти внимание (08-26). */
 .tools { flex-direction: row; align-items: center; gap: var(--s3); }
-.tabs-title { font-size: 13px; font-weight: 600; color: var(--ink-3);
-              margin: 0; white-space: nowrap;
-              text-transform: uppercase; letter-spacing: .06em; }
+/* Обе оси названы одной ячейкой в их углу — как в таблицах (08-26).
+   Ширина равна ряду звуков, высота — ленте этапа: угол обязан стоять ровно
+   на пересечении, иначе он читается как отдельный значок. */
+/* ⚠ Угол имеет смысл ТОЛЬКО пока осей две. На узком экране раскладка
+   складывается в столбик, ряд звуков перестаёт быть вертикальной осью — и
+   угол читался бы случайным значком. Там его нет (правило ниже, media). */
+.axis-corner { flex: 0 0 var(--rail-w); width: var(--rail-w); height: 46px; }
+.axis-corner svg { display: block; width: 100%; height: 100%; }
+.axis-corner line { stroke: var(--line-2); stroke-width: 1; }
+.axis-corner .ax { font-size: 9px; fill: var(--ink-3); font-weight: 600;
+                  letter-spacing: .02em; }
+/* Подпись остаётся для читалок с экрана: угол им ничего не говорит. */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden;
+           clip: rect(0 0 0 0); white-space: nowrap; }
 /* «Все этапы» — ответ другого рода, чем одиночная ступень: не точка на
    лестнице, а вся лестница. Отличается тоном, но не спорит за первенство
    со «Скачать» — цвет тише акцентного (08-26). */
@@ -297,7 +312,14 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
        flex: 0 0 auto; white-space: nowrap;
        transition: background .12s, color .12s; }
 .tab:hover { color: var(--ink); }
-.tab.is-on { background: var(--card); color: var(--ink); font-weight: 600; }
+/* ВЫБРАННОЕ — АКЦЕНТОМ (08-26, слово автора: «на листе акцент только у кнопки
+   „скачать“, можно дать осям немного внимания»). Не заливкой: залитая вкладка
+   спорила бы со «Скачать» за первенство, а это выбор, а не действие. Поэтому
+   цвет уходит в БУКВУ, а положение на оси отмечает полоса в 2 px — у этапа
+   снизу, у звука со стороны листа. Две оси помечены одинаково и читаются как
+   пара. */
+.tab.is-on { background: var(--card); color: var(--accent); font-weight: 600;
+             box-shadow: inset 0 -2px 0 var(--accent); }
 /* Материал, который текущий слог не делает. Не заперт — виден и открывается,
    но обещать собранный лист не имеет права. */
 .tab.is-off { opacity: .45; }
@@ -585,6 +607,7 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
      виды листов». Прежде выбор материала стоял ПОД листом, и открывший
      виджет с телефона впервые мог не догадаться прокрутить до него. */
   .result { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
+  .axis-corner { display: none; }
   .rail, .paper, .tools, .panel { grid-column: 1; grid-row: auto; }
   .tools { order: 1; }
   .rail { flex-direction: row; overflow-x: auto; scrollbar-width: none;
