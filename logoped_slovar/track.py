@@ -415,7 +415,8 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
     # Отдаём ей занятые круги: сами кружки со слогами и коридор тропы.
     shape = shape_for(m.get("scene", ""))
     svg = [SC.scene_svg(m.get("scene", ""), _W, height,
-                        avoid=_occupied(rows, cols, len(cells), shape))] \
+                        avoid=_occupied(rows, cols, len(cells), shape),
+                        colour=bool(colour))] \
         if m.get("scene") else []
     svg += [f'<path d="{_route_path(rows, cols, shape)}" fill="none" stroke="#000" '
            f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']

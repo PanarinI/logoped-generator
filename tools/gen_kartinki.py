@@ -173,9 +173,17 @@ def build(item: Dict[str, Any]) -> Tuple[str, str]:
     box = item.get("box") or [25, 25]
     if item.get("raw"):
         return (item["prompt"], size_for(float(box[0]), float(box[1])))
+    # ЦВЕТ ПРЕДМЕТА — из словаря, а не из головы модели. Пришивается ПОСЛЕ
+    # стилевого блока и до него не относится: стиль говорит, КАК красить
+    # (плоско, чёрный контур), таблица — ЧЕМ. Первый цветной прогон 08-26 без
+    # этой строки дал 63% банка в жёлто-оранжевом и четыре неверных предмета.
     style = style_for(float(box[0]), float(box[1]),
                       bool(item.get("faded", True)),
                       bool(item.get("colour", False)))
+    hint = str(item.get("colour_hint") or "").strip()
+    if hint and item.get("colour"):
+        style += (" COLOURS OF THIS OBJECT, use exactly these and no others: "
+                  + hint + ".")
     return (f"{item['prompt']}\n\n{style}",
             size_for(float(box[0]), float(box[1])))
 

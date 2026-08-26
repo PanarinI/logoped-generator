@@ -5,7 +5,8 @@
    28
   ],
   "prompt": "A single fir tree seen from the side: a tall and very narrow triangular silhouette, its branches stepping outwards in clear layers from a narrow top to a wider base, and a short straight trunk below. The tree is markedly taller than it is wide. The trunk fades out unfinished at the bottom.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "green needles, brown trunk"
  },
  "bath": {
   "box": [
@@ -13,7 +14,8 @@
    12
   ],
   "prompt": "A bathtub seen from the side, low and wide: an oval tub body with a clearly curved rim, a tap and a spout rising at one end. The tub is markedly wider than it is tall. The bottom of the tub fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "white enamel tub, light grey metal tap"
  },
  "sun": {
   "box": [
@@ -21,7 +23,8 @@
    13
   ],
   "prompt": "A sun: a plain round disc with short straight rays radiating evenly all around it. Perfectly circular, not oval.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "yellow sun"
  },
  "tower": {
   "box": [
@@ -29,7 +32,8 @@
    30
   ],
   "prompt": "A single tall narrow water tower seen from the side: a slim cylindrical tank at the top standing on four thin straight legs that cross once. Markedly taller than it is wide. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "light grey metal legs, white tank"
  },
  "door": {
   "box": [
@@ -37,7 +41,8 @@
    34
   ],
   "prompt": "A single tall narrow doorway seen straight on: a plain rectangular door frame with one recessed panel and a small round handle on the right side. Markedly taller than it is wide. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "warm brown wood, light grey handle"
  },
  "shower": {
   "box": [
@@ -45,7 +50,8 @@
    20
   ],
   "prompt": "A single shower seen from the side: a slim vertical pipe rising and bending over at the top into a small round shower head, with a few short straight water lines below it. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "light grey metal"
  },
  "towel": {
   "box": [
@@ -53,7 +59,8 @@
    20
   ],
   "prompt": "A single towel hanging from a short horizontal rail: a narrow rectangle of cloth with soft folds along its length and a fringed lower edge. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "light blue towel"
  },
  "tank": {
   "box": [
@@ -61,7 +68,8 @@
    26
   ],
   "prompt": "A single tall narrow fuel tank seen from the side: an upright cylinder with a rounded top, a small cap on top and two horizontal bands around it. Markedly taller than it is wide. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "light grey metal tank"
  },
  "umbrella": {
   "box": [
@@ -69,7 +77,8 @@
    20
   ],
   "prompt": "A single closed umbrella standing upright: a narrow furled canopy tapering to a point at the top, a straight slim shaft below it and a small curved handle at the bottom. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "red canopy, dark grey handle"
  },
  "swing": {
   "box": [
@@ -77,7 +86,8 @@
    12
   ],
   "prompt": "A single swing seen from the side: a horizontal seat plank hanging on two straight ropes from a top bar. Wider than it is tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "brown wooden seat, dark grey ropes"
  },
  "tyre": {
   "box": [
@@ -85,7 +95,8 @@
    13
   ],
   "prompt": "A single car tyre seen straight on: a thick circular ring with a narrower circle inside it and short tread marks around the outer edge. Perfectly round.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "black rubber, light grey rim"
  },
  "algae": {
   "box": [
@@ -93,7 +104,8 @@
    26
   ],
   "prompt": "A single strand of water plant: three or four very narrow wavy leaves rising side by side from one point, markedly taller than wide. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "deep green fronds"
  },
  "bird": {
   "box": [
@@ -101,7 +113,8 @@
    5
   ],
   "prompt": "A single bird in flight seen from below, far away: two simple curved wings spread wide with a small body between them. Much wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "grey-brown plumage, white belly"
  },
  "boots": {
   "box": [
@@ -109,7 +122,8 @@
    9
   ],
   "prompt": "A pair of rubber boots standing side by side, seen from the side: two short wide boots with rounded toes and low tops. Wider than tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "yellow rubber"
  },
  "bucket": {
   "box": [
@@ -117,7 +131,8 @@
    11
   ],
   "prompt": "A single bucket seen from the side: a container narrower at the bottom than at the top, with a curved handle arching over it. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "blue plastic"
  },
  "bush": {
   "box": [
@@ -125,7 +140,8 @@
    8
   ],
   "prompt": "A single low bush seen from the side: a wide rounded clump of small leaves, wider than it is tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "green foliage"
  },
  "can": {
   "box": [
@@ -133,7 +149,8 @@
    13
   ],
   "prompt": "A single watering can seen from the side: a rounded body with a long straight spout on the left and a handle on top. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "green watering can"
  },
  "cloud": {
   "box": [
@@ -141,7 +158,8 @@
    10
   ],
   "prompt": "A single cloud: a long horizontal outline made of three or four soft rounded bumps along the top and a flat bottom. Much wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "white cloud"
  },
  "dragonfly": {
   "box": [
@@ -149,7 +167,8 @@
    6.5
   ],
   "prompt": "A single dragonfly seen from above: a long thin body with two pairs of narrow wings spread out sideways. Much wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "light blue body, pale translucent wings"
  },
  "fence": {
   "box": [
@@ -157,7 +176,8 @@
    12
   ],
   "prompt": "A section of picket fence seen straight on: six or seven narrow vertical boards with pointed tops, joined by two horizontal rails. Wider than tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "warm brown wood"
  },
  "flower": {
   "box": [
@@ -165,7 +185,8 @@
    11
   ],
   "prompt": "A single flower seen from the side: a round centre with five simple petals around it, on one straight stem with two narrow leaves. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "red petals, yellow centre, green stem"
  },
  "grass": {
   "box": [
@@ -173,7 +194,8 @@
    6
   ],
   "prompt": "A small tuft of grass: five or six narrow blades rising and bending outwards from one point. Wider than tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "green blades"
  },
  "hangar": {
   "box": [
@@ -181,7 +203,8 @@
    14
   ],
   "prompt": "A single aircraft hangar seen from the front: a wide building with a half-round arched roof and one large rectangular opening in the middle. Wider than tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "light grey metal, blue doors"
  },
  "hooks": {
   "box": [
@@ -189,7 +212,8 @@
    10
   ],
   "prompt": "A wall rack of coat hooks: one horizontal board with three small hooks curving upwards from it. Wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "warm brown wood board, light grey hooks"
  },
  "house": {
   "box": [
@@ -197,7 +221,8 @@
    14
   ],
   "prompt": "A single small house seen from the front: a square body with a triangular roof, one door and one window. About as wide as it is tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "pale cream walls, red roof, blue door"
  },
  "lamp": {
   "box": [
@@ -205,7 +230,8 @@
    16
   ],
   "prompt": "A single street lamp seen from the side: a straight vertical post that curves over at the top into a small downward lamp head. Taller than wide. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "dark grey post, warm yellow lamp glass"
  },
  "lily": {
   "box": [
@@ -213,7 +239,8 @@
    7.5
   ],
   "prompt": "A single water lily seen from above: a round flat leaf with one narrow notch cut into its edge, and a small open flower beside it. Wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "white petals, yellow centre, green pad"
  },
  "mushroom": {
   "box": [
@@ -221,7 +248,8 @@
    7.5
   ],
   "prompt": "A single mushroom seen from the side: a rounded cap over a short thick stem. About as wide as it is tall. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "brown cap, pale cream stem"
  },
  "pebbles": {
   "box": [
@@ -229,7 +257,8 @@
    8
   ],
   "prompt": "Three small pebbles lying together: rounded stones of slightly different sizes, one behind two. Wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "grey stones of two shades"
  },
  "reed": {
   "box": [
@@ -237,7 +266,8 @@
    24
   ],
   "prompt": "A single reed plant: two or three very narrow upright stems, each with a small oval head at the top, and one long thin leaf. Markedly taller than wide. The bottom of the drawing fades out unfinished.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "green stems, brown seed head"
  },
  "shell": {
   "box": [
@@ -245,7 +275,8 @@
    6
   ],
   "prompt": "A single seashell seen from the side: a fan shape with straight ridges spreading from a small hinge at the bottom. Wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "pale pink and cream"
  },
  "stone": {
   "box": [
@@ -253,7 +284,8 @@
    10
   ],
   "prompt": "A single stone seen from the side: a low rounded boulder, wider than it is tall, with one flat facet on top.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "grey stone"
  },
  "tools": {
   "box": [
@@ -261,7 +293,8 @@
    12
   ],
   "prompt": "A hammer and a wrench lying side by side, seen from above: one hammer with a straight handle and one open wrench. Wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "blue handles, light grey metal"
  },
  "wave": {
   "box": [
@@ -269,7 +302,8 @@
    6
   ],
   "prompt": "A single long wave line: one low smooth crest running horizontally with a small curl at its top. Much wider than tall.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "blue water, white crest"
  },
  "windsock": {
   "box": [
@@ -277,7 +311,8 @@
    12
   ],
   "prompt": "A single windsock seen from the side: a cone of fabric with three bands along it, hanging from a short mast on the left and flaring to the right.",
-  "colour": true
+  "colour": true,
+  "colour_hint": "orange and white stripes, dark grey pole"
  },
  "_colour_08_26": [
   "Спрайты сцены заказываются В ЦВЕТЕ с 2026-08-26 — закон 13: рисуем цветное,",
@@ -285,5 +320,14 @@
   "запасом и не трогается: цветные лягут в pictures/fony/colour/, снятые с них",
   "ч/б — в pictures/fony/bw/. Повод — «Цветной лист» красил только героя,",
   "и название не оправдывалось (слово автора)."
+ ],
+ "_colour_hint_08_26": [
+  "ЦВЕТ КАЖДОГО ПРЕДМЕТА НАЗВАН ЗДЕСЬ, а не оставлен модели. Повод: первый",
+  "цветной прогон 08-26 дал 63% банка в жёлто-оранжевом (замер по доминирующему",
+  "тону 41 картинки), и четыре предмета вышли просто неверными — шина жёлтая,",
+  "ванна жёлтая, камень и галька оранжевые. В промпте стояло «colours true to",
+  "life» — ПРАВИЛО, и модель его не исполняет: цвета предмета в данных не было,",
+  "и она красила по своей насмотренности, а та тёплая.",
+  "Локальный закон 7: правило врёт — работает таблица. Строка на предмет."
  ]
 }

@@ -164,13 +164,30 @@ ZONE_H = 28.0       # высота верхней и нижней полосы, 
 # Отдаём картинку ФАЙЛОМ по адресу, а не встраиваем base64: сцена «трава» кладёт
 # 53 предмета, и встраивание раздуло бы один лист на мегабайт. Файл браузер
 # возьмёт один раз и закэширует (сервер отдаёт банк с `max-age`).
-_FONY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "pictures", "fony")
+# ЦВЕТ СЦЕНЫ (08-26). Слово автора: «по функции „цветной лист“ сделай цветными
+# также и фоновые элементы — иначе название не оправдывается одним героем».
+# Банк заказан заново ЦВЕТНЫМ (закон 13), ч/б снят с него технически, поэтому
+# в обеих печатях один и тот же рисунок, а не два разных.
+# ⚠ Старый плоский `pictures/fony/*.png` оставлен как запас: нет папки — сцена
+# берёт его, как раньше. Значит откат стоит одного `rm -r`.
+_FONY_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          "..", "pictures", "fony")
+_FONY_DIR = _FONY_ROOT
 _FONY_URL = "/fony/"
 
 
-def have_sprite(name: str) -> bool:
-    return os.path.isfile(os.path.join(_FONY_DIR, name + ".png"))
+def fony_dir(colour: bool = False) -> str:
+    d = os.path.join(_FONY_ROOT, "colour" if colour else "bw")
+    return d if os.path.isdir(d) else _FONY_ROOT
+
+
+def fony_url(colour: bool = False) -> str:
+    d = os.path.join(_FONY_ROOT, "colour" if colour else "bw")
+    return ("/fony/colour/" if colour else "/fony/bw/") if os.path.isdir(d) else _FONY_URL
+
+
+def have_sprite(name: str, colour: bool = False) -> bool:
+    return os.path.isfile(os.path.join(fony_dir(colour), name + ".png"))
 
 
 class Canvas:
@@ -183,7 +200,12 @@ class Canvas:
     """
 
     def __init__(self, w: float, h: float,
-                 avoid: Optional[Sequence[Tuple[float, float, float]]] = None):
+                 avoid: Optional[Sequence[Tuple[float, float, float]]] = None,
+                 colour: bool = False):
+        # Цвет — свойство ВСЕГО холста, а не отдельного предмета: класть его
+        # в каждый из трёх десятков вызовов `image()` значило бы тридцать раз
+        # повторить одно и то же и однажды забыть.
+        self.colour = bool(colour)
         self.w, self.h = w, h
         self.avoid = list(avoid or [])
         self.taken: List[Tuple[float, float, float, float]] = []
@@ -265,10 +287,10 @@ class Canvas:
         пропорцией займёт бокс не полностью, и это честнее растяжки — растянутая
         ёлка перестаёт быть ёлкой, а пустое место рядом с ней ничему не мешает.
         """
-        if not have_sprite(name):
+        if not have_sprite(name, self.colour):
             return False
         self.images.append(
-            f'<image href="{_FONY_URL}{name}.png" x="{x:.1f}" y="{y:.1f}" '
+            f'<image href="{fony_url(self.colour)}{name}.png" x="{x:.1f}" y="{y:.1f}" '
             f'width="{w:.1f}" height="{h:.1f}" '
             f'preserveAspectRatio="xMidYMid meet"/>')
         return True
@@ -841,7 +863,8 @@ SCENES: Dict[str, Callable[[Canvas], None]] = {
 
 def scene_svg(name: str, w: float, h: float,
               stroke: float = 0.95, opacity: float = 0.42,
-              avoid: Optional[Sequence[Tuple[float, float, float]]] = None) -> str:
+              avoid: Optional[Sequence[Tuple[float, float, float]]] = None,
+              colour: bool = False) -> str:
     """Слой сцены для вставки ПЕРВЫМ в <svg> дорожки (под тропу и кружки).
 
     `avoid` — круги, занятые кружками слогов и самой дорожкой. Без него сцена
@@ -853,6 +876,6 @@ def scene_svg(name: str, w: float, h: float,
     fn = SCENES.get(name or "")
     if not fn:
         return ""
-    cv = Canvas(w, h, avoid)
+    cv = Canvas(w, h, avoid, colour=colour)
     fn(cv)
     return cv.svg(stroke, opacity)

@@ -467,7 +467,10 @@ GOTENBERG = os.environ.get(
 
 # Соответствие адреса и папки на диске — то же, каким сервер отдаёт картинки
 # по сети (`_hero`, `_bank`). Один факт, один дом.
+# ⚠ 08-26: у сцены появились цветной и ч/б банки. Старый плоский путь оставлен:
+# нет папок — сервер отдаёт как раньше, и откат ничего не стоит.
 _PICT_DIRS = {"geroi/colour": "geroi", "geroi/bw": "geroi_bw", "fony": "fony",
+              "fony/colour": "fony/colour", "fony/bw": "fony/bw",
               "dorozhka/colour": "dorozhka/colour", "dorozhka/bw": "dorozhka/bw"}
 
 
@@ -962,7 +965,13 @@ class Handler(BaseHTTPRequestHandler):
         # Банк спрайтов сцены: предметы фона отдаются файлом, как и герои.
         # Встраивать их в лист нельзя — сцена «трава» кладёт 53 предмета.
         if path.startswith("/fony/"):
-            self._bank("fony", urllib.parse.unquote(path[len("/fony/"):]))
+            _rest = urllib.parse.unquote(path[len("/fony/"):])
+            _kind = "fony"
+            for _sub in ("colour/", "bw/"):
+                if _rest.startswith(_sub):
+                    _kind, _rest = "fony/" + _sub[:-1], _rest[len(_sub):]
+                    break
+            self._bank(_kind, _rest)
             return
         # Банк ЗВУКОВОЙ ДОРОЖКИ (08-26): виды героев, цели и листы-спирали.
         # Две папки, `colour` и `bw`, и вторая СНЯТА с первой — не рисовалась

@@ -970,7 +970,9 @@ def test_scene_sprite_raster_with_vector_fallback():
 
     real_have = SC.have_sprite
     try:
-        SC.have_sprite = lambda name: False          # банк «не доехал»
+        # ⚠ 08-26: у `have_sprite` появился второй аргумент — цвет банка.
+        # Подмена с одним параметром роняла тест не по существу.
+        SC.have_sprite = lambda name, colour=False: False   # банк «не доехал»
         empty = SC.scene_svg("лес", TR._W, h, avoid=avoid)
     finally:
         SC.have_sprite = real_have
