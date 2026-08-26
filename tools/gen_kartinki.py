@@ -180,6 +180,24 @@ def build(item: Dict[str, Any]) -> Tuple[str, str]:
     style = style_for(float(box[0]), float(box[1]),
                       bool(item.get("faded", True)),
                       bool(item.get("colour", False)))
+    # ОДУШЕВЛЕНИЕ (08-26). Приём снят с нынешних героев `pictures/geroi/` —
+    # они рисовались до конвейера и словаря промптов не имеют, поэтому описан
+    # он глазами, а не по памяти (закон 10: визуальный приём проверяют
+    # картинками). Повод — слово автора: «машинка-герой на [Р] одушевлена, а
+    # машина на звуковой дорожке — просто машина»; в одном продукте стояли два
+    # разных героя одного звука.
+    # ⚠ Лицо ДОБАВЛЯЕТСЯ, а не заменяет деталей: закон 11 говорит, что
+    # узнаваемость решает отбор предмета, а не манера рисунка, — грузовик,
+    # потерявший кузов ради улыбки, перестанет быть грузовиком.
+    if item.get("alive"):
+        style += (" THIS OBJECT IS A CHARACTER, ALIVE: give it one large round "
+                  "eye with a big black pupil on the front part of the body, "
+                  "facing right, and one short simple smiling mouth below the "
+                  "eye - a single curved line. Draw the eye and the mouth with "
+                  "the same thick black line as the outline. The object keeps "
+                  "its real shape and every feature that makes it recognizable; "
+                  "the face is added on top and replaces nothing. Only one eye "
+                  "is visible, because the object is seen from the side.")
     hint = str(item.get("colour_hint") or "").strip()
     if hint and item.get("colour"):
         style += (" COLOURS OF THIS OBJECT, use exactly these and no others: "
