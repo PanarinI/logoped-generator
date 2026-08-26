@@ -258,7 +258,12 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .tools { flex-direction: column; align-items: stretch; gap: var(--s2); }
 .tabs-title { font-size: 13px; font-weight: 600; color: var(--ink-2);
               margin: 0; }
-.tabs-whole { align-self: flex-start; }
+/* «Все этапы» — ответ другого рода, чем одиночная ступень: не точка на
+   лестнице, а вся лестница. Отличается тоном, но не спорит за первенство
+   со «Скачать» — цвет тише акцентного (08-26). */
+.tab-whole { color: var(--accent); font-weight: 600; }
+.tab-whole:not(.is-on) { background: #e3ded4; }
+.tab-whole.is-on { background: var(--card); color: var(--accent); }
 .tabs { display: flex; gap: 2px; padding: 2px;
         background: #ece8e0; border-radius: var(--r-sm);
         max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
@@ -273,7 +278,7 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 /* Вкладка — только имя этапа. Жанр листа называет плашка в панели: два
    уровня внутри одной кнопки автор забраковал сразу, как увидел (08-26). */
 .tab { border: 0; background: none; cursor: pointer; font-size: 13px;
-       color: var(--ink-2); padding: 4px 12px; border-radius: 6px;
+       color: var(--ink-2); padding: 4px 9px; border-radius: 6px;
        flex: 0 0 auto; white-space: nowrap;
        transition: background .12s, color .12s; }
 .tab:hover { color: var(--ink); }
