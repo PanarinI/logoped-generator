@@ -12,6 +12,11 @@
   --line:   #e6e2da;
   --line-2: #d5d0c6;
   --accent: #2f6b4f;
+  /* Кубик. Цвет НЕ зелёный намеренно: у него другая работа, чем у «Скачать»,
+     и общий цвет читался бы как вторая половина одной кнопки (слово автора
+     08-26). Тёплая охра — единственное второе пятно на панели, поэтому оно
+     заметно, но не спорит с главным действием за первенство. */
+  --dice: #b8701a;
   --warn:   #9a5a18;
   --warn-bg:#fdf5ea;
   --stop:   #9d3535;
@@ -168,11 +173,11 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    вторым действием, а не значком при кнопке скачивания. Это прямой ответ на
    слова логопеда «только один вариант на каждый звук». */
 .btn.dice { padding: 7px 9px; line-height: 0;
-            background: var(--accent); border-color: var(--accent); }
+            background: var(--dice); border-color: var(--dice); }
 .btn.dice svg { width: 22px; height: 22px; display: block; }
 .btn.dice rect { fill: none; stroke: #fff; stroke-width: 1.6; }
 .btn.dice circle { fill: #fff; }
-.btn.dice:hover { background: #24543e; border-color: #24543e; }
+.btn.dice:hover { background: #9a5c12; border-color: #9a5c12; }
 .btn.dice:hover rect { stroke: #fff; }
 .btn.dice:hover circle { fill: #fff; }
 
