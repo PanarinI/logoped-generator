@@ -492,9 +492,16 @@ def _embed_pictures(html: str) -> str:
         # остаётся адресом — то есть битой на чужом хосте.
         rel = urllib.parse.unquote(url.strip("/"))
         folder, name = ("", "")
-        for key, disk in _PICT_DIRS.items():
+        # ⚠ 08-26, поймал автор: спрайты фона в скачанном PDF выходили битыми
+        # значками, а герой вставал. Ключи перебирались В ПОРЯДКЕ ЗАПИСИ, и
+        # «/fony/colour/tree.png» цеплялся за короткий ключ «fony» раньше
+        # длинного «fony/colour». Имя тогда получалось «colour/tree.png», то
+        # есть с подкаталогом, — и защита от выхода за папку честно отказывала.
+        # Картинка молча оставалась адресом. Берём САМЫЙ ДЛИННЫЙ подходящий
+        # ключ: порядок словаря не должен решать, что вшивается.
+        for key in sorted(_PICT_DIRS, key=len, reverse=True):
             if rel.startswith(key + "/"):
-                folder, name = disk, rel[len(key) + 1:]
+                folder, name = _PICT_DIRS[key], rel[len(key) + 1:]
                 break
         if not folder:
             return m.group(0)
