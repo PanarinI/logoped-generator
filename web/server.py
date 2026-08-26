@@ -608,6 +608,30 @@ def file_name(raw: str, ext: str) -> str:
 CONFIG_CACHE: Dict[str, Any] = {}
 
 
+_VERSION_CACHE: Dict[str, Any] = {"stamp": None, "v": ""}
+
+
+def app_version() -> str:
+    """Короткий хэш кода экрана: index.html + app.js + app.css.
+
+    Пересчитывается, только когда у файлов сменилось время правки, — чтобы
+    каждое нажатие логопеда не читало три файла с диска.
+    """
+    paths = [os.path.join(HERE, n) for n in ("index.html", "app.js", "app.css")]
+    try:
+        stamp = tuple(os.path.getmtime(p) for p in paths)
+    except OSError:
+        return ""
+    if _VERSION_CACHE["stamp"] != stamp:
+        h = hashlib.md5()
+        for p in paths:
+            with open(p, "rb") as fh:
+                h.update(fh.read())
+        _VERSION_CACHE["stamp"] = stamp
+        _VERSION_CACHE["v"] = h.hexdigest()[:12]
+    return str(_VERSION_CACHE["v"])
+
+
 def config() -> Dict[str, Any]:
     if not CONFIG_CACHE:
         CONFIG_CACHE.update({
@@ -957,6 +981,17 @@ class Handler(BaseHTTPRequestHandler):
                 self._hero(parts[2], urllib.parse.unquote(parts[3]))
             else:
                 self._not_found()
+            return
+        if path == "/api/version":
+            # ВЕРСИЯ КОДА, ОТДАННОГО БРАУЗЕРУ. Заведена 08-26, вопрос автора:
+            # «человек, открывший вчера, работает со вчерашним кодом — можно
+            # сделать так, чтобы что он ни нажал, обновляло до текущей?».
+            # Можно: экран спрашивает эту ручку при каждом действии, и если
+            # версия сменилась — перезагружается сам.
+            # Считаем ПО СОДЕРЖИМОМУ трёх файлов экрана, а не по времени сборки:
+            # на Amvera образ пересобирается и от коммита, который экрана не
+            # касался, — версия не должна дёргаться зря.
+            self._json({"v": app_version()})
             return
         if path == "/api/config":
             self._json(config())
