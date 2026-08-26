@@ -96,6 +96,7 @@ if str(HERE) not in sys.path:
 import characters as CH        # noqa: E402
 import content as C            # noqa: E402
 import phonetics as _P         # noqa: E402
+from scenes import default_scene as SC_DEFAULT_SCENE   # noqa: E402  — мир героя
 
 
 class PropisiError(Exception):
@@ -575,8 +576,31 @@ def hero_tseli(hero: str, vid: str = "") -> list:
 # 2:3 упиралась в высоту раньше, чем в ширину, и четверть листа пустовала.
 SPIRAL_W, SPIRAL_H = 182.0, 200.0
 SPIRAL_TURNS = 2.6                  # столько же витков, сколько было на рисунках
-SPIRAL_HERO = 34.0                  # герой у старта, мм
-SPIRAL_TSEL = 30.0                  # награда в центре, мм
+# ⚠ 08-26, слово автора о рисованных спиралях: «сами изображения были больше —
+# была живость». И это замер, а не вкус: на рисунках герой занимал ~31 % ширины
+# листа, цель ~30 %. Первые числа кода (34 и 30 мм при ширине 182) давали 19 % и
+# 16 % — вдвое мельче, отсюда и пустота.
+SPIRAL_HERO = 56.0                  # герой у старта, мм (31 % ширины рамки)
+SPIRAL_TSEL = 52.0                  # награда в центре, мм
+
+
+# Фон листа-спирали: один рисунок на МИР героя, не на звук. Миры берутся из
+# `scenes.py` (WORLDS) — те же, что у слоговой дорожки, чтобы у героя был один
+# мир на оба материала. Заказ и промпты — `fony_spirali_prompts.json`,
+# инструмент — `tools/gen_fon_spirali.py` (герой уходит РЕФЕРЕНСОМ стиля).
+SPIRAL_FON: Dict[str, str] = {
+    "небо": "fon_nebo", "аэродром": "fon_nebo",
+    "дорога": "fon_doroga", "город": "fon_doroga",
+    "двор": "fon_dvor", "гараж": "fon_dvor",
+    "лес": "fon_les", "пруд": "fon_les",
+    "трава": "fon_trava", "камни": "fon_trava",
+    "ванная": "fon_vannaya", "прихожая": "fon_vannaya",
+}
+
+
+def spiral_fon(hero: str) -> str:
+    """Имя файла фона для героя. Пусто — фона нет, лист остаётся белым."""
+    return SPIRAL_FON.get(SC_DEFAULT_SCENE(hero), "")
 
 
 def spiral_geometry(w: float = SPIRAL_W, h: float = SPIRAL_H,
@@ -587,7 +611,11 @@ def spiral_geometry(w: float = SPIRAL_W, h: float = SPIRAL_H,
     палец обязан прийти к ней, а не уйти от неё. Первая точка пути — стартовая,
     тот же контракт, что у полос: у неё печатается чёрная точка и рядом герой.
     """
-    cx, cy = w / 2.0, h * 0.44
+    # Центр поднят выше середины: внизу слева живёт герой, и он теперь крупный
+    # (56 мм), как на рисунках. Место под него — не отступ на глаз, а расчёт
+    # ниже: смотрим, докуда доходит САМА ЛИНИЯ в левой трети, и ставим героя
+    # под неё.
+    cx, cy = w / 2.0, h * 0.375
     rmax = min(w / 2.0 - 4.0, cy - 4.0)
     # Внутренний конец пути доводится ДО САМОЙ награды: она половину своей
     # ширины занимает от центра, и линия обязана прийти к ней, а не оборваться
@@ -598,12 +626,20 @@ def spiral_geometry(w: float = SPIRAL_W, h: float = SPIRAL_H,
     total = 2.0 * math.pi * turns
     steps = 480
     pts: List[str] = []
+    xy: List[tuple] = []
     for i in range(steps + 1):
         t = 1.0 - i / steps             # снаружи (t=1) внутрь (t=0)
         rr = rmin + (rmax - rmin) * t
         ang = start_ang + total * (1.0 - t)
+        # ⚠ РУКА, А НЕ ЦИРКУЛЬ. Автор о рисованных спиралях: «в этом было больше
+        # души». Идеальная спираль Архимеда читается как чертёж, и лист теряет
+        # то, ради чего рисунок вообще был. Поэтому радиус чуть дышит — две
+        # медленные волны разной длины, вместе меньше полутора миллиметров.
+        # Не случайность: числа постоянны, лист воспроизводится в точности.
+        rr += 1.15 * math.sin(ang * 1.7 + 0.9) + 0.55 * math.sin(ang * 4.3 + 2.1)
         x = cx + rr * math.cos(ang)
         y = cy + rr * math.sin(ang)
+        xy.append((x, y))
         pts.append(f"{'M' if i == 0 else 'L'} {x:.2f} {y:.2f}")
     sx = cx + rmax * math.cos(start_ang)
     sy = cy + rmax * math.sin(start_ang)
@@ -611,12 +647,15 @@ def spiral_geometry(w: float = SPIRAL_W, h: float = SPIRAL_H,
     # по тому же лучу, которым кончается спираль. В углу он однажды разъехался
     # с точкой на треть листа, а при другой высоте рамки налез бы на виток:
     # место героя — следствие геометрии, а не отдельное число.
-    ux, uy = math.cos(start_ang), math.sin(start_ang)
-    hero_left = sx + ux * 30.0 - SPIRAL_HERO / 2.0
-    hero_top = sy + uy * 30.0 - SPIRAL_HERO / 2.0
+    # Герой стоит у стартовой точки, ПОД линией: место считается от самой линии,
+    # а не отступом на глаз. Смотрим, докуда доходит путь в левой трети листа, и
+    # ставим героя ниже с зазором. Тогда при любой рамке и любом размере героя
+    # он не налезет на виток и не уедет от точки на треть листа.
+    left_third = [yy for xx, yy in xy if xx < w * 0.36]
+    below = (max(left_third) if left_third else sy) + 5.0
+    hero_top = min(h - SPIRAL_HERO - 1.0, below)
     return {"d": " ".join(pts), "sx": sx, "sy": sy, "cx": cx, "cy": cy,
-            "hero_left": max(1.0, hero_left),
-            "hero_top": min(h - SPIRAL_HERO - 1.0, max(1.0, hero_top))}
+            "rmax": rmax, "hero_left": 1.0, "hero_top": hero_top}
 
 
 MODES = ("isolated", "syllable")
@@ -958,11 +997,14 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         else:
             _scentre = ('<div class="spiral-syll" ' + _sctr + '>'
                         + _e(syll.upper()) + '</div>')
-        spiral_html = f"""<div class="spiral-wrap"><div class="spiral-stage">
+        _sfon = spiral_fon(m["image_name"])
+        _sfon_html = (('<img class="spiral-fon" alt="" src="/dorozhka/%s/%s.png">'
+                       % (_sdir, _sfon)) if _sfon else "")
+        spiral_html = f"""<div class="spiral-wrap"><div class="spiral-stage">{_sfon_html}
       <svg class="spiral-line" viewBox="0 0 {SPIRAL_W:.0f} {SPIRAL_H:.0f}"
            width="{SPIRAL_W:.0f}mm" height="{SPIRAL_H:.0f}mm"
            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="{_g['d']}" fill="none" stroke="#000" stroke-width="1.3"
+        <path d="{_g['d']}" fill="none" stroke="#000" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="{_g['sx']:.1f}" cy="{_g['sy']:.1f}" r="2.1" fill="#000"/>
       </svg>{_shero}{_scentre}
@@ -1083,6 +1125,18 @@ h1 b {{ font-size:20pt; }}
 .spiral-wrap {{ display:flex; justify-content:center; margin-top:2mm; }}
 .spiral-stage {{ position:relative; width:{SPIRAL_W:.0f}mm; height:{SPIRAL_H:.0f}mm; }}
 .spiral-line {{ position:absolute; left:0; top:0; display:block; }}
+/* Фон — рисованный мир героя, по краям листа. Лежит ПОД спиралью и заполняет
+   рамку целиком; предметы у краёв, середина рисунка пуста, поэтому обрезка по
+   `cover` ничего важного не срезает.
+   ⚠ ВЫЦВЕТАНИЕ обязательно. Отправная точка — числа сцены слоговой дорожки
+   (`scenes.scene_svg`: 0.42 ч/б и 0.78 цвет), но там фон это вектор в один
+   штрих, а здесь полноценный рисунок в тот же вес, что и герой: на 0.78 он
+   спорил с дорожкой (проверено глазами на листе [Л]). Взято глуше — 0.62 и
+   0.38. Вместе с этим утолщён сам путь, 2.2 мм: линия обязана быть САМЫМ
+   жирным на листе, по ней ребёнок ведёт палец. Ровно этого требовал и промпт
+   старых рисованных спиралей — «by far the thickest and boldest line». */
+.spiral-fon {{ position:absolute; left:0; top:0; width:100%; height:100%;
+   object-fit:cover; display:block; opacity:{0.62 if colour else 0.38}; }}
 /* Место героя, награды и слога считает ГЕОМЕТРИЯ (`spiral_geometry`) и кладёт
    в style самой картинки: один дом у координат. Здесь только размеры. Герой
    смотрит вправо, по ходу пальца, — зеркало из той же таблицы, что у полос. */

@@ -1,0 +1,72 @@
+{
+ "_": [
+  "ФОНЫ ЛИСТА-СПИРАЛИ. Заказ 2026-08-26, слово автора: «не надо заполнять мир",
+  "элементами — нарисуй фон, возьми героя за референс и сделай из этого классно».",
+  "",
+  "Почему фон БЕЗ героя и без спирали, хотя автор разрешил «даже вместе с",
+  "героем»: герой и цель уже живут в банке — выверенные, одушевлённые, по три",
+  "вида на звук, с целью по виду. Вшить их в фон значит вернуть ровно те четыре",
+  "беды, из-за которых рисованные спирали и разбирались (герои без лиц, цель",
+  "приклеена, вид один из трёх, линия оборвана). Поэтому фон — только МИР, а",
+  "спираль чертит код и ставит на неё героя из банка.",
+  "",
+  "Референсом идёт цветной ГЕРОЙ этого мира: модель берёт из него толщину линии,",
+  "манеру и палитру, и фон садится с героем в один почерк. Сам герой в фоне",
+  "запрещён словами промпта.",
+  "",
+  "Середина листа обязана остаться ПУСТОЙ: туда ложится спираль. Это главное",
+  "требование, оно повторено в промпте трижды — на нём модель ошибается чаще",
+  "всего.",
+  "",
+  "Миры взяты из `scenes.py` (WORLDS) — те же, что у слоговой дорожки: у героя",
+  "один мир на оба материала, а не два разных."
+ ],
+ "fon_nebo": {
+  "hero": "plane_passazh",
+  "box": [
+   182,
+   200
+  ],
+  "world": "a few soft rounded clouds standing apart near the top corners and the upper edges, one small friendly sun in one top corner, two or three tiny distant birds drawn as simple curved strokes, and one or two small rounded green hills at the bottom corners"
+ },
+ "fon_doroga": {
+  "hero": "motor_legkovoy",
+  "box": [
+   182,
+   200
+  ],
+  "world": "two or three small simple houses with pitched roofs standing apart at the bottom corners, one street lamp at a side edge, one round leafy tree at another side edge, one or two small clouds in the top corners"
+ },
+ "fon_dvor": {
+  "hero": "pump_nozhnoy",
+  "box": [
+   182,
+   200
+  ],
+  "world": "a few short pieces of low wooden fence at the bottom corners, one round leafy tree at the left edge, one small bush at the right edge, two or three tufts of grass near the bottom, one small cloud in a top corner"
+ },
+ "fon_les": {
+  "hero": "komar_1",
+  "box": [
+   182,
+   200
+  ],
+  "world": "two or three tall simple trees standing apart at the left and right edges, two small mushrooms at a bottom corner, a couple of reeds at the other bottom corner, one small cloud in a top corner"
+ },
+ "fon_trava": {
+  "hero": "zhuk_1",
+  "box": [
+   182,
+   200
+  ],
+  "world": "a few separate tufts of grass near the bottom corners, two or three simple flowers standing apart at the side edges, one small round bush at a side edge, one or two small clouds in the top corners"
+ },
+ "fon_vannaya": {
+  "hero": "shchetka_zubnaya",
+  "box": [
+   182,
+   200
+  ],
+  "world": "one simple wall shelf with a folded towel at a top corner, one wall hook with a hanging towel at a side edge, one plain oval soap bar with a completely blank smooth surface at a bottom corner, one small round wall mirror at another side edge, and two or three simple square wall tiles drawn only as thin black outlines in a top corner. Do not draw any brush of any kind and do not draw a toothbrush: a brush is the character of this page and must not appear in the background"
+ }
+}
