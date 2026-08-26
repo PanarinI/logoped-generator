@@ -172,9 +172,13 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
    ЗАЛИТ тем же зелёным: на панели он становится вторым цветным пятном, то есть
    вторым действием, а не значком при кнопке скачивания. Это прямой ответ на
    слова логопеда «только один вариант на каждый звук». */
-.btn.dice { padding: 7px 9px; line-height: 0;
+/* ⚠ 08-26: «сам кубик занимает меньшую часть площади всей кнопки. Пусть
+   кнопка сама станет периметром кубика» (автор). Поля сняты, рисунок занимает
+   квадрат целиком — символ читается как кубик, а не как значок в коробке. */
+.btn.dice { padding: 0; line-height: 0; width: 38px; height: 38px;
+            display: inline-flex; align-items: center; justify-content: center;
             background: var(--dice); border-color: var(--dice); }
-.btn.dice svg { width: 22px; height: 22px; display: block; }
+.btn.dice svg { width: 38px; height: 38px; display: block; }
 .btn.dice rect { fill: none; stroke: #fff; stroke-width: 1.6; }
 .btn.dice circle { fill: #fff; }
 .btn.dice:hover { background: #9a5c12; border-color: #9a5c12; }
@@ -279,7 +283,7 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .tab-extra { display: inline-flex; gap: var(--s2); align-items: center;
              margin-left: var(--s3); }
 .tab-extra[hidden] { display: none; }
-.positions { display: inline-flex; gap: var(--s1); }
+.positions { display: inline-flex; gap: var(--s1); flex-wrap: wrap; }
 .pos { border: 1px solid var(--line-2); background: var(--card); cursor: pointer;
        font-size: 13px; color: var(--ink-2); padding: 5px 12px; border-radius: 999px; }
 .pos:hover { border-color: var(--accent); }
@@ -374,6 +378,11 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .seg-btn:hover { background: #ece8e0; }
 /* Фонов пять, а не два — сетка «1fr 1fr» рвала их на неровные ряды. */
 #scene-pick { grid-template-columns: repeat(3, 1fr); }
+/* ⚠ 08-26: тройка ложилась сеткой «1fr 1fr» и переносилась на второй ряд —
+   получался лишний уровень там, где три коротких кнопки. Автор: «сделай по
+   размеру как кнопки с гласными А О У Ы Э». Строкой, по содержимому. */
+#rows-pick { display: inline-flex; }
+#rows-pick .seg-btn { padding: 6px 12px; min-width: 34px; }
 #game-pick { grid-template-columns: repeat(3, 1fr); }
 .seg-btn.is-off { opacity: .45; cursor: not-allowed; }
 .seg-btn.is-on { background: var(--card); color: var(--ink); }
@@ -456,6 +465,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .note-box h3 { margin: 0 0 var(--s2); font-size: 13.5px; font-weight: 650; color: var(--warn); }
 
 /* методика — тихая кнопка, а не пунктирное поле */
+/* Подпись под листом: справка о бумаге живёт у бумаги, а не в панели (08-26). */
+.paper-foot { display: flex; justify-content: flex-end; padding: 2px 4px 0; }
+.paper-foot .link-quiet { margin: 0; }
 .method-open { display: block; width: 100%; text-align: left; line-height: 1.35;
                background: var(--card); }
 .method-open .method-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); }
