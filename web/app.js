@@ -1326,8 +1326,20 @@ function fitFrame() {
   // Лист сам знает свою ширину: она стоит в мм на `.page`, поэтому от ширины
   // рамки не зависит и меряется честно.
   const pageEl = d.querySelector('.page');
-  const w0 = pageEl ? Math.round(pageEl.getBoundingClientRect().width) : 0;
-  const pageW = w0 > 0 ? w0 : 794;
+  const pbox = pageEl ? pageEl.getBoundingClientRect() : null;
+  const pageW = pbox && pbox.width > 0 ? Math.round(pbox.width) : 794;
+  const pageH = pbox && pbox.height > 0 ? Math.round(pbox.height) : 0;
+  // АЛЬБОМНЫЙ ЛИСТ ПОКАЗЫВАЕМ ПОВЁРНУТЫМ — решение автора 08-26.
+  // Разбор: если дать альбомному листу его настоящую ширину, на широком окне он
+  // раздувается и ВЫДАВЛИВАЕТ ПАНЕЛЬ за край экрана (поймано автором на снимке:
+  // «Скачать PDF» и подсказка обрезаны). Слово автора: «просто на 90 градусов
+  // перевернуть содержание листа — да, не красиво, но логопед будет понимать,
+  // как вообще будет выглядеть». Коробка листа остаётся книжной, компоновка
+  // инструментов не шевелится ни на одной ширине окна.
+  // ⚠ Поворот живёт НА ОБЁРТКЕ в этом документе, а не внутри рамки. Значит
+  // печать (`f.contentWindow.print()`) и PDF (шлём html рамки) его не видят —
+  // на бумагу лист уходит нормальным альбомным.
+  const landscape = pageH > 0 && pageW > pageH;
   // Рамку и обёртку растягиваем ДО замера высоты: пока рамка уже бумаги,
   // документ прокручивается вбок и высота считается по обрезанной раскладке.
   f.style.width = pageW + 'px';
@@ -1363,15 +1375,29 @@ function fitFrame() {
 
   if (availH <= 0 || availW <= 0) return;
 
-  const k = Math.min(1, availW / pageW, availH / h);
   const sc = $('scaler');
   sc.style.transformOrigin = 'top left';
-  sc.style.transform = `scale(${k})`;
   sc.style.marginLeft = '0px';
-  stage.style.height = (h * k + padY) + 'px';
+
+  // Повёрнутый лист меняет местами свои габариты: по горизонтали он занимает
+  // ВЫСОТУ документа, по вертикали — его ширину. Масштаб считаем от того, что
+  // видно, иначе поворот съел бы всю экономию места.
+  const visW = landscape ? h : pageW;
+  const visH = landscape ? pageW : h;
+  const k = Math.min(1, availW / visW, availH / visH);
+
+  if (landscape) {
+    // rotate(90deg) при точке отсчёта в левом верхнем углу уводит лист влево
+    // за край — возвращаем сдвигом ровно на его новую ширину. Порядок важен:
+    // сначала масштаб, потом поворот, потом сдвиг.
+    sc.style.transform = `translateX(${(visW * k).toFixed(2)}px) rotate(90deg) scale(${k})`;
+  } else {
+    sc.style.transform = `scale(${k})`;
+  }
+  stage.style.height = (visH * k + padY) + 'px';
   // Ширина листа — ровно по бумаге; лишнее место в колонке раскладка отдаёт
   // отступам слева и справа, центрируя лист.
-  if (paper) paper.style.width = (pageW * k + pad) + 'px';
+  if (paper) paper.style.width = (visW * k + pad) + 'px';
 }
 
 window.addEventListener('resize', fitFrame);
