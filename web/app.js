@@ -287,7 +287,12 @@ const STAGE_MATERIALS = {
   slog:   ['track', 'propisi'],
   slovo:  ['maze'],
   fraza:  ['phrases'],
-  tekst:  ['story'],
+  // ⚡ 08-26, автор: «„сочини сам“ — это не настройка рассказа, а отдельное
+  // задание, тогда этот выбор должен пойти наверх». Верно и по коду: пересказ
+  // собирает `rasskaz.py` через /api/rasskaz, «сочини сам» — `story.py` через
+  // /api/story. Это два разных листа, и жанр им положен на плашке, а не
+  // галочкой в настройках. Ключ несёт РЕЖИМ, материал у обоих один.
+  tekst:  ['story:retell', 'story:compose'],
 };
 /* Ступень нельзя вычислить из одного материала: звуковая дорожка стоит и на
    «Звуке», и на «Слоге» — её ступень решает `propisiMode`. Поэтому не таблица,
@@ -309,7 +314,18 @@ const GENRE_LABEL = {
   sheet: 'лист занятия', propisi: 'звуковая дорожка', track: 'слоговая дорожка',
   maze: 'лабиринт', phrases: 'словосочетания', story: 'рассказы',
 };
-function genreLabel(m, st) {
+/* Ключ жанра может нести режим через двоеточие: `story:retell`. Материал и
+   режим разбираются здесь, чтобы вся остальная логика работала как раньше. */
+function splitGenre(key) {
+  const i = String(key).indexOf(':');
+  return i < 0 ? { tab: key, mode: '' } : { tab: key.slice(0, i), mode: key.slice(i + 1) };
+}
+function genreKeyNow() {
+  return S.tab === 'story' ? 'story:' + S.storyMode : S.tab;
+}
+function genreLabel(key, st) {
+  const { tab: m, mode } = splitGenre(key);
+  if (m === 'story') return mode === 'compose' ? 'сочини сам' : 'пересказ';
   if (m !== 'propisi') return GENRE_LABEL[m];
   // На «Звуке» дорожка одна — уточнять не от чего.
   if (st === 'zvuk') return 'дорожка';
@@ -493,10 +509,11 @@ function pickMaterial(it) {
     // Спираль слог не печатает — уходя на «Слог» с единицы, возвращаемся к трём.
     if (it.mode === 'syllable' && S.rows === 1) S.rows = 3;
   }
-  const _st = stageNow();
-  if (_st) LAST_IN_STAGE[_st] = it.tab;
-  if (it.mode) S.propisiMode = it.mode;
   if (it.storyMode) S.storyMode = it.storyMode;
+  // ⚠ Память ступени пишется ПОСЛЕ того, как режим встал: иначе «Текст»
+  // запоминал бы тот лист, с которого уходят, а не тот, на который пришли.
+  const _st = stageNow();
+  if (_st) LAST_IN_STAGE[_st] = genreKeyNow();
   S.typ = firstTypFor(it.tab);
   const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === S.typ);
   S.syllable = t ? t.syllable : '';
@@ -605,7 +622,17 @@ function renderTabs() {
   renderSounds();   // закладка активного звука обновляется вместе со всем
   renderColour();
   if (S.tab === 'maze') renderPositions();
-  $('reroll').hidden = !REROLLABLE.has(S.tab);
+  // ⚠ 08-26, поймал автор: «на этапе текст — рассказ — кнопка кубика ничего не
+  // делает». Замер подтвердил и объяснил: лист пересказа собран из ГОТОВОГО
+  // текста, а вопросы и «ещё поговорите» написаны руками и лежат в той же
+  // строке `rasskazy.jsonl`. Крутить нечего — там нет ни одного места, которое
+  // выбирает движок. Какой ИМЕННО текст взять — выбор осмысленный (логопед
+  // читает заголовок), и он уже стоит отдельной карточкой «Какой текст?»;
+  // дублировать его кубиком запрещает закон 16.
+  // «Сочини сам» — другое дело: там опорные слова отбирает движок, и сид их
+  // меняет. Поэтому кубик живёт на нём и молчит на пересказе.
+  $('reroll').hidden = !REROLLABLE.has(S.tab)
+    || (S.tab === 'story' && S.storyMode === 'retell');
   renderDiceTitle();
   $('pos-card').hidden = soon || (S.tab !== 'maze');
   // Профиль ребёнка меняет лист, лабиринт И СЛОВОСОЧЕТАНИЯ, но не дорожку и не
@@ -630,7 +657,9 @@ function renderTabs() {
   // Ряд гласных — только там, где слог на бумаге есть.
   $('stage-step').hidden = (S.tab !== 'propisi') || (S.propisiMode !== 'syllable');
   $('scene-card').hidden = (S.tab !== 'track');
-  $('story-mode-card').hidden = (S.tab !== 'story');
+  // ⛔ 08-26: галочка «Сочини сам» снята — это отдельный лист, и он выбирается
+  // плашкой жанра наверху, как все прочие листы.
+  $('story-mode-card').hidden = true;
   // Списки тем и текстов приходят С МАТЕРИАЛОМ, поэтому карточка стоит только
   // когда список описывает то, что сейчас на экране. Иначе между нажатием и
   // ответом логопед видел бы пустую коробку с подписью «на этом звуке пока
@@ -702,7 +731,9 @@ function renderGenrePick() {
   const card = $('genre-card');
   if (!card) return;
   const st = stageNow();
-  const mats = (STAGE_MATERIALS[st] || []).filter((m) => materialOk(m, S.typ));
+  const mats = (STAGE_MATERIALS[st] || [])
+    .filter((k) => materialOk(splitGenre(k).tab, S.typ));
+  const keyNow = genreKeyNow();
   // ⚠ 08-26, второй заход. Плашка стояла только там, где жанров больше одного.
   // Слово автора: «где есть выбор — там выбор, где выбора нет — просто
   // плашка-кнопка всё равно, возможно расширение на будущее». Так лист назван
@@ -713,13 +744,15 @@ function renderGenrePick() {
   box.innerHTML = '';
   mats.forEach((m) => {
     const b = el('button', 'seg-btn', genreLabel(m, st));
-    b.classList.toggle('is-on', m === S.tab);
+    b.classList.toggle('is-on', m === keyNow);
     // Единственный жанр залипает и ничего не делает по нажатию: кнопка здесь
     // не выбор, а имя листа (закон 12 — не обещать того, чего не произойдёт).
     b.addEventListener('click', () => {
-      if (m === S.tab) return;
+      if (m === keyNow) return;
       LAST_IN_STAGE[st] = m;
-      pickMaterial({ tab: m, mode: modeForStage(st) });
+      const g = splitGenre(m);
+      pickMaterial({ tab: g.tab, mode: modeForStage(st),
+                     ...(g.mode ? { storyMode: g.mode } : {}) });
     });
     box.appendChild(b);
   });
@@ -2549,10 +2582,12 @@ function bindActions() {
     b.onclick = () => {
       const st = b.dataset.stage || '';
       const mats = (STAGE_MATERIALS[st] || [b.dataset.tab])
-        .filter((m) => materialOk(m, S.typ));
+        .filter((k) => materialOk(splitGenre(k).tab, S.typ));
       // Возвращаемся туда, откуда ушли: этап помнит последний жанр.
       const want = mats.includes(LAST_IN_STAGE[st]) ? LAST_IN_STAGE[st] : mats[0];
-      pickMaterial({ tab: want || b.dataset.tab, mode: modeForStage(st),
+      const g = splitGenre(want || b.dataset.tab);
+      pickMaterial({ tab: g.tab, mode: modeForStage(st),
+                     ...(g.mode ? { storyMode: g.mode } : {}),
                      soon: !!b.dataset.soon });
     };
   });

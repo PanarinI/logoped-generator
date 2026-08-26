@@ -209,6 +209,13 @@ def main(argv: List[str] | None = None) -> int:
 
     with open(args.slovar, encoding="utf-8") as fh:
         slovar: Dict[str, Dict[str, Any]] = json.load(fh)
+    # ⚠ 08-26. Словари несут служебные ключи с подчёркивания — почему словарь
+    # такой и по какому правилу собран. Конвейер брал их за предметы и падал
+    # посреди заказа («'list' object has no attribute 'get'»), уже потратив
+    # деньги на часть картинок. Комментарий в данных законен, падать на нём —
+    # нет.
+    slovar = {k: v for k, v in slovar.items()
+              if not k.startswith("_") and isinstance(v, dict)}
 
     if args.only:
         want = {s.strip() for s in args.only.split(",") if s.strip()}

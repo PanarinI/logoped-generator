@@ -1,0 +1,41 @@
+{
+  "_": "СТАРТ И ФИНИШ слоговой дорожки — спрайты вместо рисованных кодом значков.",
+  "_zachem": [
+    "До 08-26 старт был стрелкой из двух отрезков, а финиш — флажком, и оба",
+    "рисовались кодом прямо в SVG. Слово автора: «флаг финиша давай тоже нарисуем",
+    "более красиво, пусть это будут различные элементы сгенерированные, и стрелка",
+    "в начале — мы можем позволить себе сделать несколько вариантов, это дёшево,",
+    "а облагораживает визуально».",
+    "Эталон старта — фото Ольги: «красная стрелка = старт» (STATE, разбор 08-26)."
+  ],
+  "_pravilo": [
+    "Вариантов по три на роль: крутит их кубик, как виды героя на звуковой",
+    "дорожке. Выбора логопеду тут не нужно — ему безразлично, какой именно флажок",
+    "(закон 16: где выбор безразличен, ручки нет, есть кубик).",
+    "Заказ цветной, ч/б снимается технически (закон 13)."
+  ],
+  "start_strelka": {
+    "box": [9, 6], "colour": true, "faded": false,
+    "prompt": "A single bold arrow pointing to the right: a thick straight shaft ending in a large solid triangular arrowhead. Nothing else. The arrow is much wider than it is tall."
+  },
+  "start_ukazatel": {
+    "box": [9, 9], "colour": true, "faded": false,
+    "prompt": "A single road signpost seen from the side: one flat rectangular board with a pointed right end, mounted on a short vertical post. The board is blank. The post fades out unfinished at the bottom."
+  },
+  "start_sled": {
+    "box": [8, 8], "colour": true, "faded": false,
+    "prompt": "Two children's shoe prints side by side, seen from directly above, both pointing to the right: simple rounded sole shapes, one slightly ahead of the other. Nothing else."
+  },
+  "finish_flag_kletka": {
+    "box": [8, 11], "colour": true, "faded": false,
+    "prompt": "A single racing chequered flag on a straight vertical pole: the cloth is a rectangle divided into large black and white squares in a chequerboard pattern, waving to the right from the top of the pole. The pole fades out unfinished at the bottom."
+  },
+  "finish_flag_vympel": {
+    "box": [8, 11], "colour": true, "faded": false,
+    "prompt": "A single triangular pennant flag on a straight vertical pole: one plain triangular cloth pointing to the right from the top of the pole. The cloth is one flat colour. The pole fades out unfinished at the bottom."
+  },
+  "finish_vorota": {
+    "box": [11, 9], "colour": true, "faded": false,
+    "prompt": "A simple finish gate seen from the front: two straight vertical posts joined at the top by one straight horizontal bar, forming an open doorway shape. Nothing hangs from it. The posts fade out unfinished at the bottom."
+  }
+}
