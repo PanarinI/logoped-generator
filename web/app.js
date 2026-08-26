@@ -282,7 +282,9 @@ const MATERIAL_TITLE = { track: 'слоговая дорожка', propisi: 'з�
 const STAGE_MATERIALS = {
   lesson: ['sheet'],
   zvuk:   ['propisi'],
-  slog:   ['propisi', 'track'],
+  // ⚡ 08-26, слово автора: на «Слоге» первой слева и по умолчанию — слоговая
+  // дорожка. Она и есть канонный слоговой материал; дорожка с гласной рядом.
+  slog:   ['track', 'propisi'],
   slovo:  ['maze'],
   fraza:  ['phrases'],
   tekst:  ['story'],
@@ -308,12 +310,20 @@ const GENRE_LABEL = {
   maze: 'лабиринт', phrases: 'словосочетания', story: 'рассказы',
 };
 function genreLabel(m, st) {
-  if (m === 'propisi' && st === 'zvuk') return 'дорожка';
-  return GENRE_LABEL[m];
+  if (m !== 'propisi') return GENRE_LABEL[m];
+  // На «Звуке» дорожка одна — уточнять не от чего.
+  if (st === 'zvuk') return 'дорожка';
+  // ⚠ 08-26, автор: «дурацкое получается название, что звуковая дорожка внутри
+  // слога». И правда: на ступени «Слог» слово «звуковая» спорит с самой
+  // ступенью. Называем по тому, чем этот лист ОТЛИЧАЕТСЯ от соседнего:
+  // у слоговой дорожки кружки со слогами, ребёнок ШАГАЕТ по ним; здесь одна
+  // линия, ребёнок ТЯНЕТ звук и приходит к гласной — слог собирается в конце
+  // пути (✅ Борисова 2008: «обведи трафарет и произнеси: с-са»).
+  return 'дорожка с гласной';
 }
 /* Чем логопед пользовался на этом этапе в прошлый раз: вернувшись на «Слог»,
    он должен попасть туда же, откуда ушёл, а не на первый жанр по списку. */
-const LAST_IN_STAGE = { slog: 'propisi' };
+const LAST_IN_STAGE = { slog: 'track' };
 
 /* Умеет ли материал ТЕКУЩИЙ слог. Правду про это знает движок
    (logoped_slovar/capabilities.py) и присылает её вместе с конфигом. */
@@ -503,7 +513,7 @@ function pickMaterial(it) {
   forgetPicks();
   $('ask').hidden = true;        // профиль спрашиваем после первого материала
   $('warn').hidden = true;
-  $('moat').innerHTML = '';
+  { const _m = $('moat'); if (_m) _m.innerHTML = ''; }
   show('result');
   renderChips();
   renderAudience();
@@ -635,7 +645,7 @@ function renderTabs() {
   // так видит на бумаге (слово автора 08-23: «вообще лишний блок»). Материалы
   // из слов — другое дело: там ров говорит про ОБЪЁМ БАНКА, а этого на листе
   // не видно.
-  $('moat-box').hidden = soon || !USES_WORDS.has(S.tab);
+  { const _mb = $('moat-box'); if (_mb) _mb.hidden = soon || !USES_WORDS.has(S.tab); }
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
@@ -644,7 +654,7 @@ function renderTabs() {
   if (S.tab === 'propisi') renderVowelPick();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
-  $('moat-summary').textContent = {
+  if ($('moat-summary')) $('moat-summary').textContent = {
     sheet:   'Из чего собран этот лист',
     phrases: 'Из чего собраны эти словосочетания',
     maze:    'Из чего собран этот лабиринт',
@@ -1117,7 +1127,7 @@ async function load() {
   // Но ров возвращаем только тем, у кого он есть: на дорожках его нет вовсе,
   // и безусловное `false` здесь показывало бы пустую коробку (renderTabs ниже
   // выставит правду, но кадр между ними логопед бы увидел).
-  $('moat-box').hidden = !USES_WORDS.has(S.tab);
+  { const _mb = $('moat-box'); if (_mb) _mb.hidden = !USES_WORDS.has(S.tab); }
   renderTabs();
   writeFrame(res.html);
   renderMoat(res.stats);
@@ -1207,7 +1217,7 @@ function showError(res) {
   // «всё равно распечатать», которая печатает невидимый прошлый лист.
   // Настройки несобранного материала — из той же породы: выбирать фон у
   // дорожки, которой нет, логопеду нечего.
-  $('moat-box').hidden = true;
+  { const _mb = $('moat-box'); if (_mb) _mb.hidden = true; }
   $('scene-card').hidden = true;
   $('game-card').hidden = true;
   $('text-card').hidden = true;
@@ -1217,7 +1227,7 @@ function showError(res) {
   if ($('save')) $('save').disabled = true;
   $('warn').hidden = true;
   $('warn').innerHTML = '';
-  $('moat').innerHTML = '';
+  { const _m = $('moat'); if (_m) _m.innerHTML = ''; }
 }
 
 /* ── лист в рамке ────────────────────────────────────────── */
@@ -1555,6 +1565,9 @@ if (window.ResizeObserver) {
 
 function renderMoat(st) {
   const box = $('moat');
+  // ⛔ 08-26: блок рва снят с экрана. Функция оставлена целой — числа рва ещё
+  // нужны справке, — но без своего узла она просто молчит.
+  if (!box) return;
   box.innerHTML = '';
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
 
