@@ -291,7 +291,7 @@ Object.keys(STAGE_MATERIALS).forEach((st) => {
   STAGE_MATERIALS[st].forEach((m) => { STAGE_OF[m] = st; });
 });
 const GENRE_LABEL = {
-  sheet: 'занятие', propisi: 'звуковая дорожка', track: 'слоговая дорожка',
+  sheet: 'лист занятия', propisi: 'звуковая дорожка', track: 'слоговая дорожка',
   maze: 'лабиринт', phrases: 'словосочетания', story: 'рассказы',
 };
 /* Чем логопед пользовался на этом этапе в прошлый раз: вернувшись на «Слог»,
@@ -533,14 +533,6 @@ function renderTabs() {
     // бы целиком из-за одной недоступной дорожки.
     const alive = mats.filter((m) => materialOk(m, S.typ));
     b.hidden = !alive.length;
-    // Подпись под именем этапа называет ЖАНР — то самое знакомое слово,
-    // которое иначе потерялось бы («Лабиринт» узнаваем, «Слово» нет).
-    const sub = b.querySelector('.tab-sub');
-    if (sub && mats.length > 1) {
-      sub.textContent = (st === stageNow)
-        ? GENRE_LABEL[S.tab]
-        : alive.map((m) => GENRE_LABEL[m]).join(' · ');
-    }
   });
   renderGenrePick();
   // На витринной вкладке настраивать нечего: материала ещё нет.
@@ -674,13 +666,19 @@ function renderGenrePick() {
   if (!card) return;
   const st = STAGE_OF[S.tab] || '';
   const mats = (STAGE_MATERIALS[st] || []).filter((m) => materialOk(m, S.typ));
-  card.hidden = mats.length < 2 || !!SOON[S.tab];
+  // ⚠ 08-26, второй заход. Плашка стояла только там, где жанров больше одного.
+  // Слово автора: «где есть выбор — там выбор, где выбора нет — просто
+  // плашка-кнопка всё равно, возможно расширение на будущее». Так лист назван
+  // ВСЕГДА, а не только на «Слоге», и место второму жанру уже размечено.
+  card.hidden = !mats.length || !!SOON[S.tab];
   if (card.hidden) return;
   const box = $('genre-pick');
   box.innerHTML = '';
   mats.forEach((m) => {
     const b = el('button', 'seg-btn', GENRE_LABEL[m]);
     b.classList.toggle('is-on', m === S.tab);
+    // Единственный жанр залипает и ничего не делает по нажатию: кнопка здесь
+    // не выбор, а имя листа (закон 12 — не обещать того, чего не произойдёт).
     b.addEventListener('click', () => {
       if (m === S.tab) return;
       LAST_IN_STAGE[st] = m;
