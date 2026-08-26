@@ -47,6 +47,7 @@ import sys
 import threading
 import time
 import traceback
+from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Tuple
 
@@ -476,6 +477,71 @@ _PICT_DIRS = {"geroi/colour": "geroi", "geroi/bw": "geroi_bw", "fony": "fony",
               "metki/colour": "metki/colour", "metki/bw": "metki/bw"}
 
 
+def _pict_disk_path(url: str) -> str:
+    """Адрес картинки в листе -> файл на диске. Пусто = не наша картинка.
+
+    Запрос может нести хвост `?v=…` (штамп версии, см. `_stamp_pictures`) —
+    он к имени файла отношения не имеет и здесь отбрасывается.
+    """
+    root = os.path.abspath(os.path.join(HERE, "..", "pictures"))
+    # Имя в адресе URL-кодировано («самолёт.png» → «%D1%81…»), а на диске оно
+    # кириллицей: без раскодирования файл не находится и картинка молча
+    # остаётся адресом — то есть битой на чужом хосте (Gotenberg).
+    rel = urllib.parse.unquote(urllib.parse.urlsplit(url).path.strip("/"))
+    # ⚠ 08-26, поймал автор: спрайты фона в скачанном PDF выходили битыми
+    # значками, а герой вставал. Ключи перебирались В ПОРЯДКЕ ЗАПИСИ, и
+    # «/fony/colour/tree.png» цеплялся за короткий ключ «fony» раньше длинного
+    # «fony/colour». Имя получалось «colour/tree.png», то есть с подкаталогом,
+    # и защита от выхода за папку честно отказывала. Берём САМЫЙ ДЛИННЫЙ
+    # подходящий ключ: порядок словаря не должен решать, что вшивается.
+    for key in sorted(_PICT_DIRS, key=len, reverse=True):
+        if rel.startswith(key + "/"):
+            folder, name = _PICT_DIRS[key], rel[len(key) + 1:]
+            break
+    else:
+        return ""
+    path = os.path.abspath(os.path.join(root, folder, name))
+    if os.path.dirname(path) != os.path.join(root, folder) or not os.path.isfile(path):
+        return ""
+    return path
+
+
+@lru_cache(maxsize=512)
+def _pict_stamp(path: str, mtime: float, size: int) -> str:
+    """Восемь знаков от содержимого файла. mtime и size — в ключе кэша:
+    файл переменился — старое значение само перестаёт находиться."""
+    with open(path, "rb") as fh:
+        return hashlib.md5(fh.read()).hexdigest()[:8]
+
+
+def _stamp_pictures(html: str) -> str:
+    """Дописать в адрес каждой картинки штамп её содержимого: `?v=8знаков`.
+
+    ⚡ Зачем. 08-26 автор трижды за день видел в проде ВЧЕРАШНИЕ рисунки, хотя
+    сервер отдавал новые: адрес картинки не менялся, а браузер держал копию по
+    старому заголовку `max-age`. Ревалидация (`no-cache`) чинит это только для
+    тех, кто возьмёт файл ПОСЛЕ правки, — у всех, кто открывал лист раньше,
+    копия остаётся свежей и сервер её не спрашивают.
+    Лечится не заголовком, а АДРЕСОМ: сменилось содержимое — сменился адрес,
+    старая копия в кэше больше никому не адресована. Это и было записано в
+    коммите 19:54 как правильное решение («положить хэш в сам адрес»).
+    Заодно возвращается длинный срок хранения: адрес со штампом отдаётся на год
+    как `immutable` (см. `_pict_cache`), и лишних запросов больше нет.
+    """
+    def sub(m):
+        attr, url = m.group(1), m.group(2)
+        if "?" in url:
+            return m.group(0)
+        path = _pict_disk_path(url)
+        if not path:
+            return m.group(0)
+        st = os.stat(path)
+        return f'{attr}="{url}?v={_pict_stamp(path, st.st_mtime, st.st_size)}"'
+
+    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony|dorozhka|metki)/[^"]+)"',
+                  sub, html)
+
+
 def _embed_pictures(html: str) -> str:
     """Вшить картинки в сам HTML перед отправкой на печать.
 
@@ -485,30 +551,15 @@ def _embed_pictures(html: str) -> str:
     Ровно та же беда была у снимков листов и лечилась так же: не адресом, а
     содержимым. Файл читается с диска, а не выкачивается по сети у самого себя.
     """
-    root = os.path.abspath(os.path.join(HERE, "..", "pictures"))
-
     def sub(m):
         attr, url = m.group(1), m.group(2)
         # Имя в адресе URL-кодировано («самолёт.png» → «%D1%81…»), а на диске
         # оно кириллицей. Без раскодирования файл не находится и картинка молча
         # остаётся адресом — то есть битой на чужом хосте.
-        rel = urllib.parse.unquote(url.strip("/"))
-        folder, name = ("", "")
-        # ⚠ 08-26, поймал автор: спрайты фона в скачанном PDF выходили битыми
-        # значками, а герой вставал. Ключи перебирались В ПОРЯДКЕ ЗАПИСИ, и
-        # «/fony/colour/tree.png» цеплялся за короткий ключ «fony» раньше
-        # длинного «fony/colour». Имя тогда получалось «colour/tree.png», то
-        # есть с подкаталогом, — и защита от выхода за папку честно отказывала.
-        # Картинка молча оставалась адресом. Берём САМЫЙ ДЛИННЫЙ подходящий
-        # ключ: порядок словаря не должен решать, что вшивается.
-        for key in sorted(_PICT_DIRS, key=len, reverse=True):
-            if rel.startswith(key + "/"):
-                folder, name = _PICT_DIRS[key], rel[len(key) + 1:]
-                break
-        if not folder:
-            return m.group(0)
-        path = os.path.abspath(os.path.join(root, folder, name))
-        if os.path.dirname(path) != os.path.join(root, folder) or not os.path.isfile(path):
+        # ⚠ 08-26: адрес может нести штамп версии `?v=…` — путь к файлу
+        # разбирает общий помощник, он же хвост и отбрасывает.
+        path = _pict_disk_path(url)
+        if not path:
             return m.group(0)
         with open(path, "rb") as fh:
             data = base64.b64encode(fh.read()).decode()
@@ -785,6 +836,15 @@ class Handler(BaseHTTPRequestHandler):
     # Когда банки устоятся, правильнее будет вернуть длинный срок и положить
     # хэш содержимого в САМ АДРЕС картинки; тогда старый адрес просто исчезнет.
     CACHE_PICT = "no-cache"
+    # Адрес СО ШТАМПОМ содержимого (`?v=…`) держать можно сколько угодно:
+    # переменилось содержимое — переменился адрес. Голый адрес (закладка,
+    # старый лист на руках) по-прежнему ревалидируется — иначе он застрял бы
+    # на год с неверной картинкой.
+    CACHE_PICT_STAMPED = "public, max-age=31536000, immutable"
+
+    def _pict_cache(self) -> str:
+        q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+        return self.CACHE_PICT_STAMPED if q.get("v") else self.CACHE_PICT
 
     def _send(self, code: int, body: bytes, ctype: str,
               cache: str = CACHE_LIVE, etag: str = "") -> None:
@@ -813,6 +873,11 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, body, ctype, cache, etag)
 
     def _json(self, payload: Dict[str, Any], code: int = 200) -> None:
+        # Готовый лист уходит отсюда — здесь же картинкам и ставится штамп
+        # версии. Один выход на все материалы: лист, дорожки, лабиринт,
+        # рассказ. Ставить его в каждом рендере значило бы забыть в одном.
+        if isinstance(payload.get("html"), str):
+            payload = dict(payload, html=_stamp_pictures(payload["html"]))
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self._send(code, body, "application/json; charset=utf-8")
 
@@ -901,7 +966,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, b"not found", "text/plain; charset=utf-8")
             return
         with open(path, "rb") as fh:
-            self._cached(fh.read(), "image/png", self.CACHE_PICT)
+            self._cached(fh.read(), "image/png", self._pict_cache())
 
     def _img(self, name: str) -> None:
         """Картинка страницы сайта. Кэш длинный: снимок листа не меняется."""
@@ -916,7 +981,7 @@ class Handler(BaseHTTPRequestHandler):
             self._not_found()
             return
         with open(path, "rb") as fh:
-            self._cached(fh.read(), ctype, self.CACHE_PICT)
+            self._cached(fh.read(), ctype, self._pict_cache())
 
     def _bank(self, folder: str, name: str) -> None:
         """Картинка из банка `pictures/<folder>/`. Кэш длинный, как у героев."""
@@ -926,7 +991,7 @@ class Handler(BaseHTTPRequestHandler):
             self._not_found()
             return
         with open(path, "rb") as fh:
-            self._cached(fh.read(), "image/png", self.CACHE_PICT)
+            self._cached(fh.read(), "image/png", self._pict_cache())
 
     def _body(self) -> Dict[str, Any]:
         length = int(self.headers.get("Content-Length") or 0)

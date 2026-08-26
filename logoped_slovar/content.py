@@ -2290,10 +2290,20 @@ def _find_bond(syllable: str, groups: Sequence[Dict[str, Any]],
                 continue                       # ворота: только по звукам
             if avoid_used and w in used:
                 continue
+            # БУКВЫ — приоритет, а не ворота. Ворота выше по звуку, здесь же
+            # выбираем среди звучащих: если слог ВИДЕН в слове теми же буквами
+            # («ажа» в «баклажан»), он идёт вперёд слова, где то же звучание
+            # написано иначе («ажа» в «пожарный», «аса» в «оса»). Ровно это
+            # обещал комментарий сверху про «ра — розетка», но проверка стояла
+            # фонемная (`tr.startswith`) и обещания не исполняла: замер 08-26
+            # дал 125 связок из 492, где логопед не видит слога в слове.
+            # Не ворота: у [ж] на «ажа» слов с буквами всего два, и жёсткое
+            # правило оставило бы ряды без связки (правило 7 их бы сняло).
             # длина — тай-брейк: связка это ПЕРВОЕ слово на этом слоге, короткое
             # легче; заодно слоговой ряд остаётся в полстроки и блок [3] не
             # разбухает (правило 11). Жёсткие ворота выше этим не трогаются.
             key = (1 if w in used else 0, _bond_place(w, syllable, syl_type),
+                   0 if ortho(syllable) in w else 1,
                    0 if tr.startswith(syllable) else 1, len(w), w)
             if best is None or key < best:
                 best = key
@@ -2356,14 +2366,15 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
                 word = _find_bond(unit, groups, used_bonds, avoid_used=avoid,
                                   syl_type=syl_type)
                 if word:
-                    cands.append((_bond_place(word, unit, syl_type), i,
+                    cands.append((_bond_place(word, unit, syl_type),
+                                  0 if ortho(unit) in word else 1, i,
                                   len(word), unit, word))
             if not cands:
                 continue
-            lead = next((c for c in cands if c[1] == 0 and c[0] == 0), None)
+            lead = next((c for c in cands if c[2] == 0 and c[0] == 0), None)
             best = lead or min(cands)
-            bond = {"syllable": best[3], "word": best[4]}
-            used_bonds.add(best[4])
+            bond = {"syllable": best[4], "word": best[5]}
+            used_bonds.add(best[5])
             break
         if bond is None:
             warnings.append(

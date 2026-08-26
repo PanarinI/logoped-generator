@@ -531,9 +531,19 @@ def hero_flip(hero: str, vid: str) -> bool:
     return vid in (d.get("flip") or [])
 
 
-def hero_tseli(hero: str) -> list:
-    b = banka()
-    return (b.get(hero) or b.get(CH.SOFT_TWIN.get(hero, ""), {}) or {}).get("tseli", [])
+def hero_tseli(hero: str, vid: str = "") -> list:
+    """Цели героя. У ЩЁТКИ — по виду, у остальных общий список.
+
+    ⚡ Поймал автор 08-26: «зубная щётка получается чистит обувь». Вид героя и
+    цель крутились двумя независимыми колёсами (3 вида, 5 целей), и пара
+    складывалась случайно. У шести героев это безразлично — любая машина едет в
+    гараж, любой жук садится на лист. У щётки нет: ВИД МЕНЯЕТ, что она чистит.
+    Разделение лежит ДАННЫМИ (`tseli_po_vidu` в банке), а не условием здесь —
+    тот же порядок, что у таблицы зеркал.
+    """
+    d = banka().get(hero) or banka().get(CH.SOFT_TWIN.get(hero, ""), {}) or {}
+    by_vid = (d.get("tseli_po_vidu") or {}).get(vid) if vid else None
+    return list(by_vid or d.get("tseli", []))
 
 
 SPIRAL_BY_HERO = {
@@ -694,7 +704,6 @@ def build_propisi(sound: str = "р",
     # нужна. Её даёт кубик «собрать другой набор», который на экране уже есть
     # (закон 13: где выбор безразличен — ручки нет, есть кубик).
     _vidy = hero_vidy(image["name"]) or [""]
-    _tseli = hero_tseli(image["name"]) or [""]
 
     line = line if line in LINE_FORMS else "wave"
     _fn = line_fn(line)
@@ -702,13 +711,17 @@ def build_propisi(sound: str = "р",
     for _i in range(rows):
         hint = LINE_HINT[line]
         fn, task_label = _fn, LINE_LABEL[line]
+        _vid = _vidy[(_i + seed) % len(_vidy)]
+        _tseli = hero_tseli(image["name"], _vid) or [""]
         lines.append({
             "task_label": task_label,
             "hint": hint,
             "_fn": fn,
             # свой вид героя на каждой строке — в жанре герои разные, не один
             # повторённый (образец [Л] с тремя самолётами, 08-25)
-            "vid": _vidy[(_i + seed) % len(_vidy)],
+            "vid": _vid,
+            # цель берётся ПОД ЭТОТ вид, а не из общего колеса: иначе зубная
+            # щётка едет чистить ботинок (поймано автором 08-26)
             "tsel": _tseli[(_i + seed) % len(_tseli)],
         })
 
