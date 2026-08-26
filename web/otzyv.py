@@ -87,11 +87,24 @@ def record(data: Dict[str, Any]) -> Dict[str, Any]:
     if answer not in ("yes", "no", ""):
         answer = ""
 
+    # ⚡ ОЦЕНКА ЗВЁЗДАМИ (08-26). Пришла на смену вопросу «дадите этот лист
+    # ребёнку?» со словом автора «формулировка грубая». Диапазон 1-5; всё
+    # остальное считаем отсутствием оценки, а не нулём: ноль звёзд и «не
+    # оценивал» — разные новости, и путать их нельзя.
+    try:
+        stars = int(data.get("stars") or 0)
+    except (TypeError, ValueError):
+        stars = 0
+    if not 1 <= stars <= 5:
+        stars = 0
+
     return {
         "ts": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
-        # откуда пришло: "vopros" — полоса после второго скачивания,
+        # откуда пришло: "ocenka" — рейтбар после второго скачивания,
+        # "vopros" — прежний вопрос «да/нет» (записи до 08-26),
         # "svobodno" — тихая ссылка
-        "kind": "vopros" if answer else "svobodno",
+        "kind": "ocenka" if stars else ("vopros" if answer else "svobodno"),
+        "stars": stars,
         "answer": answer,
         "reasons": reasons,
         "text": _clean(data.get("text"), MAX_TEXT),
@@ -118,6 +131,8 @@ def store(rec: Dict[str, Any]) -> bool:
 def _human(rec: Dict[str, Any]) -> str:
     """Одна строка для Google-формы: там поле одно, а знать надо всё."""
     parts: List[str] = []
+    if rec.get("stars"):
+        parts.append("оценка листа: %d из 5" % rec["stars"])
     if rec["answer"]:
         parts.append("дам ребёнку: да" if rec["answer"] == "yes"
                      else "дам ребёнку: нет")

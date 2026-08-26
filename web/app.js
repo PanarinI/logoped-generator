@@ -2405,23 +2405,55 @@ function bindOtzyv() {
     };
   }
 
-  const yesno = $('ask-yesno');
-  if (yesno) {
-    yesno.onclick = (e) => {
-      const b = e.target.closest('button[data-a]');
-      if (!b) return;
-      if (b.dataset.a === 'yes') {
-        sendOtzyv({ answer: 'yes' });
-        askThanks('Спасибо.');
-        return;
-      }
-      // «Нет» сам по себе — уже ответ; отправляем его сразу, чтобы не потерять,
-      // если человек закроет полосу, не дойдя до причин.
-      sendOtzyv({ answer: 'no' });
-      $('ask-q').textContent = 'Что не так?';
-      yesno.hidden = true;
-      $('ask-why').hidden = false;
-    };
+  /* РЕЙТБАР. ⚠ 08-26: здесь стояли «Да/Нет» на вопрос «дадите этот лист
+     ребёнку?». Слово автора: формулировка грубая. Она и правда ставит человека
+     перед приговором о собственной работе, а сказать «нет» про свой же выбор
+     неловко — значит и ответы кривые. Оценка звёздами не требует признания.
+
+     ⚡ ОДНА ЗАПИСЬ, А НЕ ДВЕ. Соблазн был отправить оценку сразу по нажатию
+     звезды, а текст — второй посылкой. Так уже сделано у «Нет», и STATE уже
+     держит предупреждение: тот ответ приходит ДВУМЯ записями и читается
+     неверно. Поэтому звезда только запоминается и открывает поле, а уходит
+     всё вместе — по «Отправить» или при закрытии полосы. Ничего не теряется:
+     закрытие тоже отправляет. */
+  let stars = 0;
+  let sent = false;
+  const starsBox = $('ask-stars');
+
+  function paint(n) {
+    [...starsBox.children].forEach((b, i) => {
+      b.classList.toggle('is-lit', i < n);
+      b.textContent = i < n ? '\u2605' : '\u2606';
+    });
+  }
+
+  if (starsBox) {
+    for (let n = 1; n <= 5; n += 1) {
+      const b = el('button', 'ask-star', '\u2606');
+      b.type = 'button';
+      b.setAttribute('aria-label', n + ' из 5');
+      b.onmouseenter = () => paint(n);
+      b.onfocus = () => paint(n);
+      b.onclick = () => {
+        stars = n;
+        paint(n);
+        // Поле — продолжение, а не условие: оценка уже сказана.
+        $('ask-q').textContent = 'Спасибо. Если есть время — что поправить?';
+        $('ask-why').hidden = false;
+      };
+      starsBox.appendChild(b);
+    }
+    starsBox.onmouseleave = () => paint(stars);
+  }
+
+  async function flushAsk() {
+    if (sent || !stars) return;
+    sent = true;
+    await sendOtzyv({
+      stars: stars,
+      reasons: [...chosen],
+      text: (($('ask-text') || {}).value || '').trim(),
+    });
   }
 
   if ($('ask-send')) {
@@ -2429,13 +2461,15 @@ function bindOtzyv() {
       const btn = $('ask-send');
       btn.disabled = true;
       btn.textContent = 'Отправляем…';
-      await sendOtzyv({
-        answer: 'no',
-        reasons: [...chosen],
-        text: ($('ask-text').value || '').trim(),
-      });
-      askThanks('Спасибо. Это и есть то, из чего он растёт.');
+      await flushAsk();
+      // ⚠ 08-26, слово автора: после отправки — коротко «Спасибо!». Длинная
+      // благодарность после уже сделанного дела читается как самолюбование.
+      askThanks('Спасибо!');
     };
+  }
+  // Закрыли, не дописав, — оценка всё равно уходит: она уже поставлена.
+  if ($('ask-close')) {
+    $('ask-close').onclick = () => { flushAsk(); closeAskBar(true); };
   }
 }
 

@@ -720,6 +720,18 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   border-radius: var(--r); box-shadow: var(--shadow);
 }
 .ask-q { margin: 0 0 var(--s2); font-size: 0.95rem; }
+
+/* РЕЙТБАР (08-26). Звезда заполняется под курсором вместе со всеми левее —
+   так человек видит, ЧТО он сейчас поставит, ещё до нажатия. Кнопки, а не
+   значки: оценка ставится и с клавиатуры. */
+.ask-stars { display: flex; gap: 2px; }
+.ask-star { border: 0; background: none; cursor: pointer; padding: 2px 3px;
+            font-size: 26px; line-height: 1; color: var(--line-2);
+            transition: color .1s, transform .1s; }
+.ask-star:hover { transform: translateY(-1px); }
+.ask-star.is-lit { color: var(--dice); }
+.ask-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
+                          border-radius: 4px; }
 .ask-row { display: flex; gap: var(--s2); }
 .ask-close {
   position: absolute; top: 6px; right: 8px;

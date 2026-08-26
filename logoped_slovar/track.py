@@ -449,6 +449,15 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
         if m.get("scene") else []
     svg += [f'<path d="{_route_path(rows, cols, shape)}" fill="none" stroke="#000" '
            f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']
+    # ⚡ ПЕРВЫЙ И ПОСЛЕДНИЙ КРУЖОК И ЕСТЬ СТАРТ С ФИНИШЕМ (08-26, слово автора).
+    # Прежде метки стояли РЯДОМ с ними, и обе мешали: стрелка уходила за левый
+    # край листа и обрезалась, а флажок со своим белым полем налезал на тропу.
+    # Метку не нужно ставить рядом — она уже есть, это сам кружок.
+    # ⚠ Цветом одним обойтись нельзя: лист по умолчанию печатается Ч/Б, и
+    # зелёный с красным станут на бумаге одинаково серыми. Поэтому цвет идёт
+    # только на цветной лист, а знак несёт ОБВОДКА — у концов она вдвое толще
+    # и видна на любой бумаге.
+    _last_i = len(cells) - 1
     last = None
     for idx, c in enumerate(cells):
         r, i = divmod(idx, cols)
@@ -456,77 +465,38 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
             break
         x, y = _cell_xy(r, i, cols, shape)
         last = (x, y)
+        _end = (idx == 0) or (idx == _last_i)
+        _fill = "#fff"
+        if _end and colour:
+            _fill = "#e2f0e4" if idx == 0 else "#fde6e2"
         svg.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{_R:.1f}" fill="#fff" '
-            f'stroke="#000" stroke-width="0.9"/>'
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{_R:.1f}" fill="{_fill}" '
+            f'stroke="#000" stroke-width="{1.9 if _end else 0.9}"/>'
             f'<text x="{x:.1f}" y="{y + 2.3:.1f}" text-anchor="middle" '
             f'font-size="6.6" font-weight="700" font-family="{_FONT}">'
             f'{e(c["syllable"].upper())}</text>')
-    # старт и финиш — концы маршрута, а не украшения по краям листа
-    sx, sy = _cell_xy(0, 0, cols, shape)
+    # МЕТКА — НАД КРУЖКОМ, а не сбоку. Сбоку она обрезалась у левого края
+    # и налезала своим белым полем на тропу (поймано автором 08-26 на снимке).
+    # Над кружком свободно всегда: там начинается верхнее поле листа у первого
+    # ряда и промежуток между рядами у последнего.
+    # ⚠ Если банка нет — метки нет вовсе, и это нормально: концы маршрута уже
+    # названы толстой обводкой кружка, а на цветном листе ещё и заливкой.
+    # Прежние рисованные стрелка и флажок сняты вместе с их местом сбоку.
+    def _metka(px: float, py: float, item) -> None:
+        name, mw, mh = item
+        x = min(max(px - mw / 2.0, 1.0), _W - mw - 1.0)
+        svg.append(
+            f'<image href="{_metka_url(name, colour)}" '
+            f'x="{x:.1f}" y="{max(0.0, py - _R - mh - 0.5):.1f}" '
+            f'width="{mw:.1f}" height="{mh:.1f}" '
+            f'preserveAspectRatio="xMidYMid meet"/>')
+
     if have_metki(colour):
         _sd = int(m.get("seed") or 0)
-        _n, _mw, _mh = _METKI_START[_sd % len(_METKI_START)]
-        svg.insert(1,
-            f'<image href="{_metka_url(_n, colour)}" '
-            f'x="{sx - _R - 1.5 - _mw:.1f}" y="{sy - _mh / 2:.1f}" '
-            f'width="{_mw:.1f}" height="{_mh:.1f}" '
-            f'preserveAspectRatio="xMidYMid meet"/>')
-    else:
-        # Банк не доехал — рисуем как раньше: лист не имеет права остаться
-        # без метки старта только потому, что нет картинки.
-        svg.insert(1,
-            f'<path d="M {sx - _R - 8.0:.1f} {sy:.1f} L {sx - _R - 1.5:.1f} {sy:.1f} '
-            f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
-            f'fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round" '
-            f'stroke-linejoin="round"/>')
-        # ⚠ Слова «старт» и «финиш» сняты 08-23 по слову автора: стрелка и
-        # флажок говорят то же самое, а подпись повторяла их третий раз. Место
-        # у краёв листа дорого — там же лежит сцена.
-    if last:
-        fx, fy = last
-        # Флажок ставим ПО ХОДУ движения: на обратном ряду ребёнок идёт справа
-        # налево, и цель у него слева. Иначе финиш оказывается позади него.
-        last_row = (len(cells) - 1) // cols
-        fwd = -1.0 if (last_row % 2 == 1) else 1.0
-
-        def _flag_fits(px: float, d: float) -> bool:
-            lo, hi = sorted((px, px + d * _FLAG_W))
-            return lo >= 1.0 and hi <= _W - 1.0
-
-        px = fx + fwd * (_R + 2.5)
-        # ⚠ Прежде здесь стоял ЗАЖИМ в границы листа, и он молча ставил флажок
-        # ПОВЕРХ слога: на [щ] кружок занимал 7.0-25.0 мм, а зажатый флажок
-        # оказывался на 8.1 — внутри кружка (замер 08-22, поймано автором
-        # глазами). Это ровно та молчаливая подмена, которую запрещает закон 12:
-        # материал делал не то, что обещал, и никак об этом не говорил.
-        # Теперь: не помещается по ходу — флажок уходит на ДРУГУЮ сторону
-        # кружка. Сторона хуже, чем задумано, но слог остаётся читаемым, а это
-        # важнее: по слогу ребёнок говорит, по флажку только понимает, что дошёл.
-        if not _flag_fits(px, fwd):
-            fwd = -fwd
-            px = fx + fwd * (_R + 2.5)
-        # Подпись уходит ПОД кружок с зазором, а не впритык к нему: на [щ] она
-        # начиналась в полумиллиметре от края кружка и читалась как его часть.
-        tx = max(8.0, min(_W - 8.0, px))
-        if have_metki(colour):
-            _sd = int(m.get("seed") or 0)
-            _n, _mw, _mh = _METKI_FINISH[_sd % len(_METKI_FINISH)]
-            # Рисунок ставится ПО ХОДУ движения, как и рисованный флажок: при
-            # движении справа налево он уходит влево от кружка, иначе финиш
-            # оказывался бы позади ребёнка.
-            _x = px if fwd > 0 else px - _mw
-            svg.append(
-                f'<image href="{_metka_url(_n, colour)}" '
-                f'x="{_x:.1f}" y="{fy - _mh + 3.0:.1f}" '
-                f'width="{_mw:.1f}" height="{_mh:.1f}" '
-                f'preserveAspectRatio="xMidYMid meet"/>')
-        else:
-            svg.append(
-                f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
-                f'L {px + fwd * _FLAG_W:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
-                f'fill="#000" stroke="#000" stroke-width="1.4" '
-                f'stroke-linejoin="round"/>')
+        sx, sy = _cell_xy(0, 0, cols, shape)
+        _metka(sx, sy, _METKI_START[_sd % len(_METKI_START)])
+        if last:
+            _metka(last[0], last[1], _METKI_FINISH[_sd % len(_METKI_FINISH)])
 
     return f"""<!DOCTYPE html>
 <html lang="ru">

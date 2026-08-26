@@ -439,11 +439,13 @@
        Формулировка автора 08-24: спрашиваем про действие, не про оценку. -->
   <div class="ask-bar" id="ask-bar" hidden>
     <button class="ask-close" id="ask-close" type="button" aria-label="Закрыть">×</button>
-    <p class="ask-q" id="ask-q">Вы дадите этот лист ребёнку?</p>
-    <div class="ask-row" id="ask-yesno">
-      <button class="btn small" type="button" data-a="yes">Да</button>
-      <button class="btn small" type="button" data-a="no">Нет</button>
-    </div>
+    <!-- ⚠ 08-26. Здесь стоял вопрос «Вы дадите этот лист ребёнку?» с «Да/Нет».
+         Слово автора: «формулировка грубая, давай точнее и не в лоб». Она и
+         правда ставит человека перед приговором о своей работе с ребёнком,
+         а ответить на неё честно «нет» неловко — значит ответы кривые.
+         Теперь оценка звёздами, как в остальных инструментах автора. -->
+    <p class="ask-q" id="ask-q">Оцените качество листа</p>
+    <div class="ask-stars" id="ask-stars" role="group" aria-label="Оценка листа"></div>
     <div class="ask-why" id="ask-why" hidden>
       <div class="ask-chips" id="ask-reasons">
         <button class="chip" type="button" data-r="words">слова не те</button>
@@ -452,7 +454,7 @@
         <button class="chip" type="button" data-r="task">не то задание</button>
         <button class="chip" type="button" data-r="other">другое</button>
       </div>
-      <textarea id="ask-text" rows="2" placeholder="Если есть время — напишите словами"></textarea>
+      <textarea id="ask-text" rows="2" placeholder="Если есть время — напишите словами. Можно не писать."></textarea>
       <button class="btn primary small" id="ask-send" type="button">Отправить</button>
     </div>
   </div>
