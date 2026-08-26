@@ -1,0 +1,260 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 800" width="1500" height="800" font-family="Helvetica,Arial,sans-serif">
+<rect width="1500" height="800" fill="#f6f5f2"/>
+<text x="34" y="40" font-size="23" font-weight="700" fill="#1c2024">Слоговая дорожка — что переделываем. Оранжевым новое</text>
+<text x="34" y="64" font-size="13.5" fill="#6b7280">Эталон — фото Ольги: сцена во всю страницу, поверх неё тропа кружков со слогами, красная стрелка = старт.</text>
+<text x="34" y="98" font-size="15" font-weight="700" fill="#1c2024">СЕЙЧАС</text>
+<rect x="34" y="110" width="262" height="370" fill="#ffffff" stroke="#1c2024" stroke-width="2"/>
+<circle cx="64" cy="160" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="64" y="164" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="81" y1="160" x2="95" y2="160" stroke="#6b7280" stroke-width="3"/>
+<circle cx="112" cy="160" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="112" y="164" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="129" y1="160" x2="143" y2="160" stroke="#6b7280" stroke-width="3"/>
+<circle cx="160" cy="160" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="160" y="164" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="177" y1="160" x2="191" y2="160" stroke="#6b7280" stroke-width="3"/>
+<circle cx="208" cy="160" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="208" y="164" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="225" y1="160" x2="239" y2="160" stroke="#6b7280" stroke-width="3"/>
+<circle cx="256" cy="160" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="256" y="164" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="256" y1="177" x2="256" y2="195" stroke="#6b7280" stroke-width="3"/>
+<circle cx="64" cy="212" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="64" y="216" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="81" y1="212" x2="95" y2="212" stroke="#6b7280" stroke-width="3"/>
+<circle cx="112" cy="212" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="112" y="216" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="129" y1="212" x2="143" y2="212" stroke="#6b7280" stroke-width="3"/>
+<circle cx="160" cy="212" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="160" y="216" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="177" y1="212" x2="191" y2="212" stroke="#6b7280" stroke-width="3"/>
+<circle cx="208" cy="212" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="208" y="216" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="225" y1="212" x2="239" y2="212" stroke="#6b7280" stroke-width="3"/>
+<circle cx="256" cy="212" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="256" y="216" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="64" y1="229" x2="64" y2="247" stroke="#6b7280" stroke-width="3"/>
+<circle cx="64" cy="264" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="64" y="268" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="81" y1="264" x2="95" y2="264" stroke="#6b7280" stroke-width="3"/>
+<circle cx="112" cy="264" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="112" y="268" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="129" y1="264" x2="143" y2="264" stroke="#6b7280" stroke-width="3"/>
+<circle cx="160" cy="264" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="160" y="268" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="177" y1="264" x2="191" y2="264" stroke="#6b7280" stroke-width="3"/>
+<circle cx="208" cy="264" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="208" y="268" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="225" y1="264" x2="239" y2="264" stroke="#6b7280" stroke-width="3"/>
+<circle cx="256" cy="264" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="256" y="268" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="256" y1="281" x2="256" y2="299" stroke="#6b7280" stroke-width="3"/>
+<circle cx="64" cy="316" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="64" y="320" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="81" y1="316" x2="95" y2="316" stroke="#6b7280" stroke-width="3"/>
+<circle cx="112" cy="316" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="112" y="320" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="129" y1="316" x2="143" y2="316" stroke="#6b7280" stroke-width="3"/>
+<circle cx="160" cy="316" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="160" y="320" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="177" y1="316" x2="191" y2="316" stroke="#6b7280" stroke-width="3"/>
+<circle cx="208" cy="316" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="208" y="320" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="225" y1="316" x2="239" y2="316" stroke="#6b7280" stroke-width="3"/>
+<circle cx="256" cy="316" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="256" y="320" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="64" y1="333" x2="64" y2="351" stroke="#6b7280" stroke-width="3"/>
+<circle cx="64" cy="368" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="64" y="372" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="81" y1="368" x2="95" y2="368" stroke="#6b7280" stroke-width="3"/>
+<circle cx="112" cy="368" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="112" y="372" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="129" y1="368" x2="143" y2="368" stroke="#6b7280" stroke-width="3"/>
+<circle cx="160" cy="368" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="160" y="372" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="177" y1="368" x2="191" y2="368" stroke="#6b7280" stroke-width="3"/>
+<circle cx="208" cy="368" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="208" y="372" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="225" y1="368" x2="239" y2="368" stroke="#6b7280" stroke-width="3"/>
+<circle cx="256" cy="368" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="256" y="372" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="256" y1="385" x2="256" y2="403" stroke="#6b7280" stroke-width="3"/>
+<circle cx="64" cy="420" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="64" y="424" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="81" y1="420" x2="95" y2="420" stroke="#6b7280" stroke-width="3"/>
+<circle cx="112" cy="420" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="112" y="424" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="129" y1="420" x2="143" y2="420" stroke="#6b7280" stroke-width="3"/>
+<circle cx="160" cy="420" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="160" y="424" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="177" y1="420" x2="191" y2="420" stroke="#6b7280" stroke-width="3"/>
+<circle cx="208" cy="420" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="208" y="424" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<line x1="225" y1="420" x2="239" y2="420" stroke="#6b7280" stroke-width="3"/>
+<circle cx="256" cy="420" r="17" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="256" y="424" font-size="9" text-anchor="middle" fill="#1c2024">РА</text>
+<path d="M 107.87628870603231 308.71105984174505 l 2 -7 M 110.87628870603231 308.71105984174505 l -1 -8 M 113.87628870603231 308.71105984174505 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 136.65022630748126 327.2152119648203 l 2 -7 M 139.65022630748126 327.2152119648203 l -1 -8 M 142.65022630748126 327.2152119648203 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 192.40702629555577 160.31394636434206 l 2 -7 M 195.40702629555577 160.31394636434206 l -1 -8 M 198.40702629555577 160.31394636434206 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 58.87062215896256 399.61541544990257 l 2 -7 M 61.87062215896256 399.61541544990257 l -1 -8 M 64.87062215896256 399.61541544990257 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 112.53917512350566 212.64259792447587 l 2 -7 M 115.53917512350566 212.64259792447587 l -1 -8 M 118.53917512350566 212.64259792447587 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 273.0505741412809 285.7816873319589 l 2 -7 M 276.0505741412809 285.7816873319589 l -1 -8 M 279.0505741412809 285.7816873319589 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 238.34859637781676 287.66949469679383 l 2 -7 M 241.34859637781676 287.66949469679383 l -1 -8 M 244.34859637781676 287.66949469679383 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 195.3168546386273 186.69109144729242 l 2 -7 M 198.3168546386273 186.69109144729242 l -1 -8 M 201.3168546386273 186.69109144729242 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 194.39962350617108 409.094045214422 l 2 -7 M 197.39962350617108 409.094045214422 l -1 -8 M 200.39962350617108 409.094045214422 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 170.05350386355968 369.788075422462 l 2 -7 M 173.05350386355968 369.788075422462 l -1 -8 M 176.05350386355968 369.788075422462 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 202.3677016305712 159.84974585036917 l 2 -7 M 205.3677016305712 159.84974585036917 l -1 -8 M 208.3677016305712 159.84974585036917 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 221.29419369052619 323.2408707087085 l 2 -7 M 224.29419369052619 323.2408707087085 l -1 -8 M 227.29419369052619 323.2408707087085 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 121.67634977442529 149.6136429556225 l 2 -7 M 124.67634977442529 149.6136429556225 l -1 -8 M 127.67634977442529 149.6136429556225 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 244.68493766141015 286.5522174862947 l 2 -7 M 247.68493766141015 286.5522174862947 l -1 -8 M 250.68493766141015 286.5522174862947 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 212.70361544634508 412.43196807919935 l 2 -7 M 215.70361544634508 412.43196807919935 l -1 -8 M 218.70361544634508 412.43196807919935 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 211.68022742724216 425.5405869510011 l 2 -7 M 214.68022742724216 425.5405869510011 l -1 -8 M 217.68022742724216 425.5405869510011 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 142.10202207216219 388.28171900542077 l 2 -7 M 145.10202207216219 388.28171900542077 l -1 -8 M 148.10202207216219 388.28171900542077 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 152.9273902190658 430.0318837284015 l 2 -7 M 155.9273902190658 430.0318837284015 l -1 -8 M 158.9273902190658 430.0318837284015 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 247.59293195369307 170.21083601657193 l 2 -7 M 250.59293195369307 170.21083601657193 l -1 -8 M 253.59293195369307 170.21083601657193 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 85.64121152374582 207.26595178227257 l 2 -7 M 88.64121152374582 207.26595178227257 l -1 -8 M 91.64121152374582 207.26595178227257 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 266.47467027980827 275.21017865450307 l 2 -7 M 269.47467027980827 275.21017865450307 l -1 -8 M 272.47467027980827 275.21017865450307 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+<path d="M 192.60932740896325 233.31812151190667 l 2 -7 M 195.60932740896325 233.31812151190667 l -1 -8 M 198.60932740896325 233.31812151190667 l 3 -7" fill="none" stroke="#6b7280" stroke-width="1.1"/>
+
+<text x="34" y="502" font-size="11.5" fill="#6b7280">· 30 кружков жёсткой змейкой — таблица, не тропа</text>
+<text x="34" y="519" font-size="11.5" fill="#6b7280">· фон = один спрайт, размноженный по дырам</text>
+<text x="34" y="536" font-size="11.5" fill="#6b7280">· всё серое · герой в углу с ноготь</text>
+<text x="34" y="553" font-size="11.5" fill="#6b7280">· вариантов на звук: 3</text>
+<text x="352" y="98" font-size="15" font-weight="700" fill="#c2410c">БУДЕТ</text>
+<rect x="352" y="110" width="262" height="370" fill="#eef5fb" stroke="#1c2024" stroke-width="2"/>
+<path d="M 358 462 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0" fill="none" stroke="#9ec7e8" stroke-width="2"/>
+<path d="M 358 449 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0" fill="none" stroke="#9ec7e8" stroke-width="2"/>
+<path d="M 358 436 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0" fill="none" stroke="#9ec7e8" stroke-width="2"/>
+<path d="M 358 423 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0" fill="none" stroke="#9ec7e8" stroke-width="2"/>
+<path d="M 358 410 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0 q 20 -7 40 0 q 20 7 40 0" fill="none" stroke="#9ec7e8" stroke-width="2"/>
+<path d="M 392 170 q 14 -9 26 0 q -12 9 -26 0 z" fill="#bcd9ef" stroke="#6b7280" stroke-width="1.2"/>
+<path d="M 552 220 q 14 -9 26 0 q -12 9 -26 0 z" fill="#bcd9ef" stroke="#6b7280" stroke-width="1.2"/>
+<path d="M 422 410 q 14 -9 26 0 q -12 9 -26 0 z" fill="#bcd9ef" stroke="#6b7280" stroke-width="1.2"/>
+<path d="M 562 360 q 14 -9 26 0 q -12 9 -26 0 z" fill="#bcd9ef" stroke="#6b7280" stroke-width="1.2"/>
+<path d="M 370 464 q -7 -34 3 -58 q 8 -20 1 -34" fill="none" stroke="#7fb18a" stroke-width="2.4"/>
+<path d="M 472 464 q -7 -34 3 -58 q 8 -20 1 -34" fill="none" stroke="#7fb18a" stroke-width="2.4"/>
+<path d="M 588 464 q -7 -34 3 -58 q 8 -20 1 -34" fill="none" stroke="#7fb18a" stroke-width="2.4"/>
+<line x1="482" y1="150" x2="503" y2="162" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="503" y1="162" x2="523" y2="173" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="523" y1="173" x2="539" y2="185" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="539" y1="185" x2="552" y2="196" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="552" y1="196" x2="560" y2="208" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="560" y1="208" x2="563" y2="220" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="563" y1="220" x2="560" y2="231" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="560" y1="231" x2="551" y2="243" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="551" y1="243" x2="538" y2="254" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="538" y1="254" x2="521" y2="266" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="521" y1="266" x2="501" y2="278" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="501" y1="278" x2="480" y2="289" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="480" y1="289" x2="459" y2="301" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="459" y1="301" x2="440" y2="312" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="440" y1="312" x2="423" y2="324" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="423" y1="324" x2="411" y2="336" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="411" y1="336" x2="403" y2="347" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="403" y1="347" x2="401" y2="359" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="401" y1="359" x2="405" y2="370" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="405" y1="370" x2="414" y2="382" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="414" y1="382" x2="428" y2="394" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="428" y1="394" x2="445" y2="405" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="445" y1="405" x2="465" y2="417" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="465" y1="417" x2="486" y2="428" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<line x1="486" y1="428" x2="507" y2="440" stroke="#c2410c" stroke-width="3.4" stroke-linecap="round" opacity="0.55"/>
+<circle cx="482" cy="150" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="482" y="153" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="503" cy="162" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="503" y="165" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="523" cy="173" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="523" y="176" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="539" cy="185" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="539" y="188" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="552" cy="196" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="552" y="199" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="560" cy="208" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="560" y="211" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="563" cy="220" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="563" y="223" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="560" cy="231" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="560" y="234" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="551" cy="243" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="551" y="246" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="538" cy="254" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="538" y="257" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="521" cy="266" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="521" y="269" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="501" cy="278" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="501" y="281" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="480" cy="289" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="480" y="292" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="459" cy="301" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="459" y="304" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="440" cy="312" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="440" y="315" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="423" cy="324" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="423" y="327" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="411" cy="336" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="411" y="339" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="403" cy="347" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="403" y="350" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="401" cy="359" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="401" y="362" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="405" cy="370" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="405" y="373" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="414" cy="382" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="414" y="385" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="428" cy="394" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="428" y="397" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="445" cy="405" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="445" y="408" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="465" cy="417" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="465" y="420" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="486" cy="428" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="486" y="431" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<circle cx="507" cy="440" r="13" fill="#ffd84d" stroke="#1c2024" stroke-width="1.6"/>
+<text x="507" y="443" font-size="8" text-anchor="middle" fill="#1c2024" font-weight="700">РА</text>
+<path d="M 456 150 l 18 0 l -5 -5 m 5 5 l -5 5" stroke="#d33" stroke-width="2.6" fill="none"/>
+<text x="452" y="140" font-size="9" text-anchor="end" fill="#d33" font-weight="700">старт</text>
+<text x="352" y="502" font-size="11.5" fill="#c2410c">· сцена ЦЕЛЬНОЙ картинкой во всю страницу (как спираль)</text>
+<text x="352" y="519" font-size="11.5" fill="#c2410c">· тропа извилистая, кружки поверх сцены</text>
+<text x="352" y="536" font-size="11.5" fill="#c2410c">· цвет · стрелка старта · герой в сцене</text>
+<text x="352" y="553" font-size="11.5" fill="#c2410c">· вариантов на звук: 2 мира × цвет/чб</text>
+<text x="674" y="98" font-size="15" font-weight="700" fill="#1c2024">ЭКРАН — НОВЫХ РУЧЕК НЕТ</text>
+<rect x="674" y="110" width="360" height="330" rx="8" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="692" y="140" font-size="12.5" font-weight="700" fill="#1c2024">Где звук в слоге?</text>
+<rect x="692" y="147" width="29.8" height="24" rx="4" fill="#eef4f0" stroke="#2f6f4f" stroke-width="1.6"/>
+<text x="706.9" y="163" font-size="10.5" text-anchor="middle" fill="#1c2024">Ра</text>
+<rect x="728.8" y="147" width="29.8" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="743.6999999999999" y="163" font-size="10.5" text-anchor="middle" fill="#1c2024">аР</text>
+<rect x="765.5999999999999" y="147" width="37.2" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="784.1999999999999" y="163" font-size="10.5" text-anchor="middle" fill="#1c2024">аРа</text>
+<rect x="809.8" y="147" width="37.2" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="828.4" y="163" font-size="10.5" text-anchor="middle" fill="#1c2024">кРа</text>
+<text x="692" y="192" font-size="12.5" font-weight="700" fill="#1c2024">Какие ещё звуки не получаются?</text>
+<rect x="692" y="199" width="324" height="46" rx="4" fill="none" stroke="#d7dade"/>
+<text x="700" y="216" font-size="10" fill="#6b7280">С З Ц Ш Ж Щ Ч Л Й К Г Х П Б Т Д</text>
+<text x="700" y="232" font-size="9.5" fill="#6b7280">профиль ребёнка — как было</text>
+<text x="692" y="274" font-size="12.5" font-weight="700" fill="#1c2024">Какой фон?</text>
+<rect x="692" y="281" width="74.2" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="729.1" y="297" font-size="10.5" text-anchor="middle" fill="#1c2024">без фона</text>
+<rect x="773.2" y="281" width="44.6" height="24" rx="4" fill="#eef4f0" stroke="#2f6f4f" stroke-width="1.6"/>
+<text x="795.5" y="297" font-size="10.5" text-anchor="middle" fill="#1c2024">море</text>
+<rect x="824.8000000000001" y="281" width="37.2" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="843.4000000000001" y="297" font-size="10.5" text-anchor="middle" fill="#1c2024">лес</text>
+<text x="692" y="320" font-size="9.5" fill="#c2410c">те же три кнопки — но за ними теперь ЦЕЛЬНАЯ картинка,</text>
+<text x="692" y="334" font-size="9.5" fill="#c2410c">а не россыпь спрайтов. Ручка та же, лист другой.</text>
+<text x="692" y="356" font-size="12.5" font-weight="700" fill="#1c2024">Цветной лист</text>
+<rect x="692" y="363" width="44.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="714.3" y="379" font-size="10.5" text-anchor="middle" fill="#1c2024">выкл</text>
+<rect x="743.6" y="363" width="37.2" height="24" rx="4" fill="#eef4f0" stroke="#2f6f4f" stroke-width="1.6"/>
+<text x="762.2" y="379" font-size="10.5" text-anchor="middle" fill="#1c2024">вкл</text>
+<text x="674" y="462" font-size="14" font-weight="700" fill="#1c2024">Почему ручки не добавляются</text>
+<circle cx="682" cy="482" r="3" fill="#2f6f4f"/>
+<text x="694" y="486" font-size="11.5" font-weight="700" fill="#1c2024">Фон уже есть</text>
+<text x="694" y="501" font-size="10.5" fill="#6b7280">три кнопки на месте; меняется не выбор, а то, что за ним</text>
+<circle cx="682" cy="520" r="3" fill="#2f6f4f"/>
+<text x="694" y="524" font-size="11.5" font-weight="700" fill="#1c2024">Тропа не настраивается</text>
+<text x="694" y="539" font-size="10.5" fill="#6b7280">извилистость — механика, а не вкус; ровных змеек в жанре нет</text>
+<circle cx="682" cy="558" r="3" fill="#2f6f4f"/>
+<text x="694" y="562" font-size="11.5" font-weight="700" fill="#1c2024">Число кружков не трогаем</text>
+<text x="694" y="577" font-size="10.5" fill="#6b7280">у Ольги на фото ~40, у нас 30 — мы НЕ перегружены</text>
+<text x="674" y="610" font-size="11.5" fill="#2f6f4f" font-weight="700">Вся переделка — внутри листа. Логопед не учится ничему новому.</text>
+</svg>

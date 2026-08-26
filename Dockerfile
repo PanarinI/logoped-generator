@@ -45,6 +45,13 @@ COPY --chown=app:app pictures/objects_colour/small/ ./pictures/objects_colour/sm
 COPY --chown=app:app pictures/fony/ ./pictures/fony/
 COPY --chown=app:app pictures/geroi/ ./pictures/geroi/
 COPY --chown=app:app pictures/geroi_bw/ ./pictures/geroi_bw/
+# Банк звуковой дорожки (08-25/26): виды героев, цели у финиша и листы-спирали.
+# ⚠ Без этой строки прод отдавал бы 404 на /dorozhka/<bw|colour>/<файл>.png, и
+# на дорожке не было бы ни героя, ни цели — при том что локально всё цело.
+# Поймано перед первым выкатом дорожки 08-26.
+# ⚠ Цветная половина банка тяжёлая: bw 864 КБ, colour 77 МБ (~1,5 МБ на файл).
+# Ужать до печатного размера — отдельная работа, как сделано для objects/small.
+COPY --chown=app:app pictures/dorozhka/ ./pictures/dorozhka/
 
 EXPOSE 8080
 CMD ["python3", "web/server.py"]

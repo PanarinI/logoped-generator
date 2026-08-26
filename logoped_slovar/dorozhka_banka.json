@@ -1,0 +1,141 @@
+{
+  "мотор": {
+    "vidy": [
+      "motor_legkovoy",
+      "motor_gruzovik",
+      "motor_gonochny"
+    ],
+    "tseli": [
+      "garage",
+      "trafficlight",
+      "bridge",
+      "fuelpump",
+      "roadsign"
+    ],
+    "spirali": [
+      "spiral_motor",
+      "spiral_motor_punktir"
+    ],
+    "flip": [
+      "motor_gruzovik"
+    ]
+  },
+  "самолёт": {
+    "vidy": [
+      "plane_passazh",
+      "plane_vint",
+      "plane_planer"
+    ],
+    "tseli": [
+      "hangar",
+      "cloud",
+      "towerair",
+      "rainbow",
+      "windsock"
+    ],
+    "spirali": [
+      "spiral_samolet",
+      "spiral_samolet_punktir"
+    ],
+    "flip": [
+      "plane_passazh",
+      "plane_planer",
+      "plane_vint"
+    ]
+  },
+  "насос": {
+    "vidy": [
+      "pump_nozhnoy",
+      "pump_ruchnoy",
+      "pump_velo"
+    ],
+    "tseli": [
+      "ball",
+      "bike",
+      "swimring",
+      "tyre",
+      "boatinf"
+    ],
+    "spirali": [
+      "spiral_nasos",
+      "spiral_nasos_punktir"
+    ],
+    "flip": []
+  },
+  "комарик": {
+    "vidy": [
+      "komar_1",
+      "komar_muha",
+      "komar_strekoza"
+    ],
+    "tseli": [
+      "reed",
+      "waterlily",
+      "stump",
+      "bushsm",
+      "lantern"
+    ],
+    "spirali": [
+      "spiral_komarik",
+      "spiral_komarik_punktir"
+    ],
+    "flip": []
+  },
+  "змея": {
+    "vidy": [
+      "zmeya_1",
+      "zmeya_polzet",
+      "zmeya_kobra"
+    ],
+    "tseli": [
+      "burrow",
+      "bigstone",
+      "snag",
+      "tussock",
+      "stonepile"
+    ],
+    "spirali": [
+      "spiral_zmeya",
+      "spiral_zmeya_punktir"
+    ],
+    "flip": []
+  },
+  "жук": {
+    "vidy": [
+      "zhuk_1",
+      "zhuk_bozhya",
+      "zhuk_usach"
+    ],
+    "tseli": [
+      "leafbig",
+      "flower",
+      "bark",
+      "cone",
+      "mushroom2"
+    ],
+    "spirali": [
+      "spiral_zhuk",
+      "spiral_zhuk_punktir"
+    ],
+    "flip": []
+  },
+  "щётка": {
+    "vidy": [
+      "shchetka_odezhda",
+      "shchetka_obuv",
+      "shchetka_zubnaya"
+    ],
+    "tseli": [
+      "boot",
+      "doormat",
+      "shelfsm",
+      "basin",
+      "hook"
+    ],
+    "spirali": [
+      "spiral_shchetka",
+      "spiral_shchetka_punktir"
+    ],
+    "flip": []
+  }
+}

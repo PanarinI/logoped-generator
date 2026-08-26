@@ -243,6 +243,8 @@
 
 ---
 
+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
+
 ## 10. Что в планах · ~250 знаков
 
 [текст автора живёт в `TEKST.md` — там его единственный дом]

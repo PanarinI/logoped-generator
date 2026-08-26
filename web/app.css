@@ -157,12 +157,17 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .crumb-kind { margin-left: 5px; font-size: 11px; color: var(--ink-3); font-weight: 400; }
 
 /* «Собрать другой набор» — игральная кость: значок объясняет функцию без слов. */
-.btn.dice { padding: 7px 9px; line-height: 0; }
+/* КУБИК ЦВЕТНОЙ — решение автора 08-26. Серым он читался как приложение к
+   кнопке скачивания, и вариативность материала была на экране невидима:
+   логопед из группы написал «только один вариант на каждый звук». Место
+   осталось прежним (слово автора), сменился только цвет. */
+.btn.dice { padding: 7px 9px; line-height: 0; border-color: var(--accent); }
 .btn.dice svg { width: 22px; height: 22px; display: block; }
-.btn.dice rect { fill: none; stroke: var(--ink-2); stroke-width: 1.6; }
-.btn.dice circle { fill: var(--ink-2); }
-.btn.dice:hover rect { stroke: var(--accent); }
-.btn.dice:hover circle { fill: var(--accent); }
+.btn.dice rect { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.btn.dice circle { fill: var(--accent); }
+.btn.dice:hover { background: var(--accent); }
+.btn.dice:hover rect { stroke: #fff; }
+.btn.dice:hover circle { fill: #fff; }
 
 .syl .glyph .rest { display: block; margin-top: 2px; font-size: 14px;
                     font-weight: 500; color: var(--ink-3); letter-spacing: .02em; }
@@ -278,6 +283,8 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 /* Подложка сцены прижата: её отступ отнимался у высоты листа. */
 .stage { position: relative; overflow: hidden; max-width: 100%;
          background: var(--stage); border-radius: var(--r); padding: var(--s2); }
+/* Ширина — стартовая: её перебивает `fitFrame`, спросив у самого листа
+   (у альбомного она 1123px). Зашитые 794px обрезали альбомный лист — 08-26. */
 .scaler { transform-origin: top center; width: 794px; margin: 0 auto;
           filter: drop-shadow(0 2px 4px rgba(22,25,29,.08))
                   drop-shadow(0 12px 32px rgba(22,25,29,.10)); }
@@ -592,6 +599,7 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   cursor: pointer;
 }
 .link-quiet:hover { color: var(--accent); }
+
 
 .otzyv-back {
   position: fixed; inset: 0; z-index: 40;

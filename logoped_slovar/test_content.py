@@ -941,8 +941,12 @@ def test_characters_are_drawn_not_written():
         truthy(f"[{sound}] по умолчанию берётся ч/б, не цветной",
                bool(svg) and len(svg) < len(CH.character_svg(name, 30.0, colour=True) or "x" * 10**9))
     html = PR.render_propisi(PR.build_propisi("р", "direct"))
+    # ⚠ 08-26: проверка ждала ВЕКТОРНОГО героя (`<svg class="chr">`). После
+    # пересборки звуковой дорожки герой приходит РАСТРОМ из банка
+    # (`<img class="vid">`), и тест покраснел, хотя закон не нарушен. Проверяем
+    # то, ради чего он писался: у старта стоит картинка, а не слово «мотор».
     truthy("звуковая дорожка печатает рисунок, а не слово «мотор»",
-           "<svg class=\"chr\"" in html)
+           ('<img class="vid' in html) or ('<svg class="chr"' in html))
     html_t = TR.render_track(TR.build_track("р", "direct"))
     truthy("слоговая дорожка печатает рисунок", "<svg class=\"chr\"" in html_t)
 

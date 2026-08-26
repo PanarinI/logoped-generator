@@ -33,6 +33,9 @@ const S = {
   // Умолчание — «только звук»: это ПЕРВАЯ ступень приёма, изолированный звук
   // отрабатывается ДО слога (решение автора 08-24; порядок канонический).
   propisiMode: 'isolated',
+  rows: 3,             // сколько дорожек на листе; 1 = лист-спираль
+  frame: '',           // выбранное стечение; пусто — крутит кубик
+  frames: [],          // какие стечения законны у этого ребёнка
   vowel: null,     // гласная слога звуковой дорожки; null = движок берёт первую
   theme: null,     // тема листа «сочини рассказ»; null = движок берёт самую полную
   storyMode: 'retell', // рассказы: пересказ готового текста | сочини сам
@@ -69,7 +72,12 @@ const USES_WORDS = new Set(['sheet', 'maze', 'phrases', 'story']);
 // заданы лестницей Поповой и не перебираются; слов на этом листе нет вовсе.
 // Кнопка, которая выглядит рабочей и ничего не делает, — та же ложь, что
 // погашенная кнопка без причины (закон 12, поймано автором).
-const REROLLABLE = new Set(['sheet', 'track', 'phrases', 'story', 'maze']);
+// ✅ 2026-08-26. `propisi` ВЕРНУЛСЯ: причина снятия истекла. После пересборки
+// дорожки от сида крутятся ВИДЫ ГЕРОЯ и ЦЕЛИ в конце каждой линии — замер:
+// сид 0 даёт «легковая→гараж · грузовик→светофор · гоночная→мост», сид 1 —
+// «грузовик→светофор · гоночная→мост · легковая→заправка». Лист меняется, и
+// прятать кубик теперь значило бы прятать единственную вариативность материала.
+const REROLLABLE = new Set(['sheet', 'track', 'phrases', 'story', 'maze', 'propisi']);
 
 
 /* ── адрес страницы говорит, с чем открыть виджет ──────────
@@ -306,18 +314,26 @@ function renderSylPick() {
   const box = $('syl-pick');
   if (!box) return;
   box.innerHTML = '';
-  const list = (S.cfg.syllables[S.sound] || []);
+  // ⛔ 08-26, слово автора: «не надо этих оправданий. если чего-то нельзя
+  // сделать — не выноси это на экран». Раньше ряд печатал ВСЕ пять типов, три
+  // из них мёртвыми, и под ними висели три абзаца, объясняющие, почему нельзя.
+  // Это ровно то, что закон 12 запретил ещё 08-24: «прежде чем объяснять,
+  // почему элемент мёртв, спроси, должен ли он там быть». Не должен: у звуковой
+  // дорожки живых типа два, и логопеду нужны они, а не рассказ про остальные.
+  // Показываем ТОЛЬКО живые. Ложью это не станет: то, чего на экране нет,
+  // ничего и не обещает.
+  const list = (S.cfg.syllables[S.sound] || []).filter((t) => {
+    const mats = t.materials || {};
+    const mine = mats[S.tab] || { ok: t.available, why: '' };
+    return mine.ok;
+  });
   list.forEach((t) => {
     const mats = t.materials || {};
     const mine = mats[S.tab] || { ok: t.available, why: '' };
     const b = el('button', 'seg-btn' + (t.typ === S.typ ? ' is-on' : ''));
     b.appendChild(syllableGlyph(t.syllable, soundLabel()));
     b.title = SHORT_LABEL[t.typ] || t.label;
-    if (!mine.ok) {
-      b.disabled = true;
-      b.classList.add('is-off');
-      b.title = mine.why || b.title;
-    } else if (t.thin) {
+    if (t.thin) {
       b.classList.add('is-thin');
     }
     b.onclick = () => {
@@ -350,27 +366,13 @@ function renderSylPick() {
   // видит; у слогов — нет, и погашенная кнопка молчала. Это ровно закон 12:
   // «погашенная кнопка без объяснения — та же ложь, только тише». С ховера
   // причина не читается вовсе на телефоне, где ховера не существует.
-  const off = list.filter((t) => {
-    const m = (t.materials || {})[S.tab];
-    return m ? !m.ok : !t.available;
-  });
-  // Причины ПОГАШЕННЫХ кнопок — одной строкой и без повторов. У слоговой
-  // дорожки два стечения гаснут по ОДНОЙ причине, и разница между текстами
-  // только в слоге внутри кавычек: печатать оба — значит дважды сказать одно.
-  // Сравниваем тексты, вырезав кавычечную вставку, и оставляем первый.
-  const seen = new Set();
-  const offSaid = [];
-  off.forEach((t) => {
-    const why = materialWhy(S.tab, t.typ);
-    if (!why) return;
-    const key = why.replace(/«[^»]*»/g, '«»');
-    if (seen.has(key)) return;
-    seen.add(key);
-    offSaid.push(why);
-  });
+  // Блок «причины погашенных кнопок» снят 08-26 вместе с самими погашенными
+  // кнопками: список теперь содержит только живые типы, и объяснять нечего.
+  // Осталось предупреждение о БЕДНОЙ картотеке — оно про то, каким выйдет лист,
+  // а не про устройство кнопки, и молчать о нём нельзя.
   const warnThin = $('syl-thin');
   if (warnThin) {
-    const said = [thin.trim(), ...offSaid].filter(Boolean).join(' ');
+    const said = thin.trim();
     warnThin.textContent = said;
     warnThin.hidden = !said;
   }
@@ -567,6 +569,8 @@ function renderTabs() {
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
+  renderRows();
+  renderFramePick();
   if (S.tab === 'propisi') { renderPropisiMode(); renderVowelPick(); }
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
@@ -753,6 +757,62 @@ function renderVowelPick() {
   });
 }
 
+/* СКОЛЬКО ДОРОЖЕК. Карточка живёт только у звуковой дорожки. */
+function renderRows() {
+  const card = $('rows-card');
+  if (!card) return;
+  card.hidden = S.tab !== 'propisi';
+  if (card.hidden) return;
+  const box = $('rows-pick');
+  box.innerHTML = '';
+  // ⛔ 08-26: четвёрка снята. Пока дорожки на листе одинаковые, «4» — не
+  // экономия бумаги, а четыре копии одного задания (слово автора).
+  [1, 2, 3].forEach((n) => {
+    const b = el('button', 'seg-btn', String(n));
+    b.classList.toggle('is-on', n === S.rows);
+    b.addEventListener('click', () => {
+      if (n === S.rows) return;
+      S.rows = n;
+      renderRows();
+      load();
+    });
+    box.appendChild(b);
+  });
+  // Подсказка называет, что произойдёт, ДО нажатия (закон 12).
+  // ⚠ 08-26: здесь стояло «дорожки идут от простой к трудной, последняя всегда
+  // прерывистая» — от снятой лестницы. Лестницы нет, пунктира нет, дорожки
+  // одинаковые: строка описывала лист, которого экран уже не печатал.
+  $('rows-hint').textContent = (S.rows === 1)
+    ? 'Одна дорожка — это спираль во весь лист: самый длинный путь на странице.'
+    : 'Дорожки одинаковые: одно и то же задание повторяется столько раз.';
+}
+
+/* ⛔ РУЧКА ФОРМЫ ЛИНИИ СНЯТА 08-26, слово автора: «с чего ты решил дать
+   настройку по типу линии?? это бред… вообще убери этот пунктир. Отовсюду».
+   Ручка появилась ради пунктира — пунктира нет, ручки нет. Форма линии на
+   сервер больше не уходит, движок берёт плавную. */
+
+/* КАКОЕ СТЕЧЕНИЕ. Список приходит от движка — он уже отфильтровал по профилю. */
+function renderFramePick() {
+  const card = $('frame-card');
+  if (!card) return;
+  const list = S.frames || [];
+  card.hidden = !(S.tab === 'propisi' && list.length > 1);
+  if (card.hidden) return;
+  const box = $('frame-pick');
+  box.innerHTML = '';
+  list.forEach((f) => {
+    const b = el('button', 'seg-btn', f.toUpperCase());
+    b.classList.toggle('is-on', f === S.frame);
+    b.addEventListener('click', () => {
+      if (f === S.frame) return;
+      S.frame = f;
+      load();
+    });
+    box.appendChild(b);
+  });
+}
+
 function renderPropisiMode() {
   // Кнопка называет то, что ВКЛЮЧАЕТ: отжата — звук, нажата — слог.
   $('propisi-mode-btn').classList.toggle('is-on', S.propisiMode === 'syllable');
@@ -853,6 +913,7 @@ async function load() {
       // Прописи: линия + слог. Слов тоже нет — профиль не влияет.
       res = await post('/api/propisi',
         { sound: S.sound, typ: S.typ, mode: S.propisiMode, seed: S.sheetNo - 1,
+          rows: S.rows, frame: S.frame,
           colour: S.colour, ...(S.vowel ? { vowel: S.vowel } : {}) });
     } else if (S.tab === 'phrases') {
       // Здесь профиль работает на ОБЕ части пары: и на существительное,
@@ -898,6 +959,11 @@ async function load() {
   if (S.tab === 'propisi' && res.stats) {
     S.vowelOptions = res.stats.vowels || [];
     S.vowelUsed = res.stats.vowel || '';
+    // Законные стечения приходят ВМЕСТЕ с листом: их считает движок по профилю
+    // ребёнка, и на экране они появляются ровно те, что можно напечатать.
+    S.frames = res.stats.frames || [];
+    S.frame = res.stats.frame || '';
+    renderFramePick();
   }
   // Пределы дорожки со стечениями — это ДАННЫЕ, а не жанр: законна ли рамка,
   // решает профиль ребёнка. Конфиг считается один раз и на пустом профиле,
@@ -1250,6 +1316,23 @@ function fitFrame() {
   const pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
   const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
 
+  // ШИРИНУ БУМАГИ СПРАШИВАЕМ У САМОГО ЛИСТА, а не считаем зашитым числом.
+  // ⚠ 08-26, поймал автор: «почему линии упираются в край?». Здесь и в
+  // `app.css` стояло 794px — ширина A4 КНИЖНОГО. Звуковая дорожка семьи
+  // «полосы» печатается на A4 АЛЬБОМНОМ (297 мм ≈ 1123px), рамка её обрезала,
+  // и правая треть листа вместе с целью в конце каждой дорожки (светофор,
+  // мост, заправка) просто не показывалась. На бумаге лист был цел — сломан
+  // был предпросмотр.
+  // Лист сам знает свою ширину: она стоит в мм на `.page`, поэтому от ширины
+  // рамки не зависит и меряется честно.
+  const pageEl = d.querySelector('.page');
+  const w0 = pageEl ? Math.round(pageEl.getBoundingClientRect().width) : 0;
+  const pageW = w0 > 0 ? w0 : 794;
+  // Рамку и обёртку растягиваем ДО замера высоты: пока рамка уже бумаги,
+  // документ прокручивается вбок и высота считается по обрезанной раскладке.
+  f.style.width = pageW + 'px';
+  $('scaler').style.width = pageW + 'px';
+
   const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
   if (!h) return;
   f.style.height = h + 'px';
@@ -1280,7 +1363,7 @@ function fitFrame() {
 
   if (availH <= 0 || availW <= 0) return;
 
-  const k = Math.min(1, availW / 794, availH / h);
+  const k = Math.min(1, availW / pageW, availH / h);
   const sc = $('scaler');
   sc.style.transformOrigin = 'top left';
   sc.style.transform = `scale(${k})`;
@@ -1288,7 +1371,7 @@ function fitFrame() {
   stage.style.height = (h * k + padY) + 'px';
   // Ширина листа — ровно по бумаге; лишнее место в колонке раскладка отдаёт
   // отступам слева и справа, центрируя лист.
-  if (paper) paper.style.width = (794 * k + pad) + 'px';
+  if (paper) paper.style.width = (pageW * k + pad) + 'px';
 }
 
 window.addEventListener('resize', fitFrame);
@@ -1591,15 +1674,42 @@ function sheetHtml() {
   return (d && d.documentElement) ? d.documentElement.outerHTML : '';
 }
 
-function download(blob, ext) {
+/* ЗАБРАТЬ ГОТОВЫЙ ФАЙЛ.
+
+   До 08-25 здесь делалась «ссылка в памяти» (`blob:`) с пометкой `download`.
+   На компьютере это работает, на айфоне — нет: Safari такую пометку не
+   выполняет, а просто ПЕРЕХОДИТ по ссылке, и телефон показывает лист
+   смотрелкой вместо того, чтобы сохранить. Экран умирает, правки логопеда
+   вместе с ним. Поймано автором 08-25.
+
+   Теперь файл лежит на сервере под одноразовым ключом и отдаётся с заголовком
+   «это вложение». Вложение скачивают ВСЕ браузеры и со страницы при этом не
+   уводят — лист остаётся на экране. */
+function takeFile(url) {
   gotSheet();
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = saveName() + '.' + ext;
+  a.href = url;                 // без `download`: сохранять велит сам сервер
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* Разбор ответа обеих выгрузок: обе ручки отвечают одинаково — либо адрес
+   готового файла, либо человеческая причина, почему не вышло. */
+async function fileFrom(url, payload, fallbackMsg) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  let j = null;
+  try { j = await r.json(); } catch (e) { j = null; }
+  if (!j || !j.ok || !j.url) {
+    showError({ kind: 'network', message: (j && j.message) || fallbackMsg });
+    return false;
+  }
+  takeFile(j.url);
+  return true;
 }
 
 async function savePdf() {
@@ -1610,20 +1720,9 @@ async function savePdf() {
   btn.disabled = true;
   btn.textContent = 'Собираем…';
   try {
-    const r = await fetch('/api/pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ html }),
-    });
-    if (!r.ok || (r.headers.get('Content-Type') || '').indexOf('pdf') < 0) {
-      let msg = '';
-      try { msg = (await r.json()).message; } catch (e) { msg = ''; }
-      showError({ kind: 'network', message: msg
-        || 'PDF сейчас не собрать. Лист никуда не делся — сохраните его в Word '
-         + 'или через окно печати.' });
-      return;
-    }
-    download(await r.blob(), 'pdf');
+    await fileFrom('/api/pdf', { html, name: saveName() },
+      'PDF сейчас не собрать. Лист никуда не делся — сохраните его в Word '
+      + 'или через окно печати.');
   } catch (e) {
     showError({ kind: 'network',
                 message: 'Не дозвонились до службы печати. Лист на месте — '
@@ -1882,8 +1981,15 @@ async function saveDoc() {
     if (btn) { btn.disabled = false; btn.textContent = was; }
   }
   if (!html) return;
-  download(new Blob(['\ufeff', html],
-    { type: 'application/msword;charset=utf-8' }), 'doc');
+  try {
+    await fileFrom('/api/word', { html, name: saveName() },
+      'Word сейчас не собрать. Лист на месте — сохраните его в PDF '
+      + 'или через окно печати.');
+  } catch (e) {
+    showError({ kind: 'network',
+                message: 'Не дозвонились до сервера. Лист на месте — '
+                       + 'сохраните его через окно печати.' });
+  }
 }
 
 /* Имя файла — по-человечески: «занятие-Р», «слоговая-дорожка-Рь». Логопед

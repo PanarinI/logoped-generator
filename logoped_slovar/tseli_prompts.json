@@ -1,0 +1,317 @@
+{
+  "garage": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A small garage seen from the side: a simple rectangular building with a wide up-and-over door filling most of the front wall, and a plain gable roof above. Markedly wider than it is tall. The bottom of the building fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "trafficlight": {
+    "box": [
+      10,
+      24
+    ],
+    "prompt": "A traffic light on a post seen from the side-front: a tall narrow upright box with three separate round lamps stacked one above the other, on a straight slim post. Markedly taller than it is wide. The post fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "bridge": {
+    "box": [
+      26,
+      14
+    ],
+    "prompt": "A short arched bridge seen from the side: a single wide arch with a flat roadway across the top and a low railing of short vertical posts along it. Markedly wider than it is tall. Both ends fade out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "fuelpump": {
+    "box": [
+      12,
+      22
+    ],
+    "prompt": "A fuel pump seen from the side: an upright rectangular column with a small display panel near the top and a hose curving down from its side to a nozzle hooked on the front. Taller than it is wide. The base fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "roadsign": {
+    "box": [
+      14,
+      22
+    ],
+    "prompt": "A road sign on a post seen from the front: a triangular warning sign with a thick border and a clear exclamation mark inside it, mounted at the top of a slim vertical post. The post fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "hangar": {
+    "box": [
+      26,
+      16
+    ],
+    "prompt": "An aircraft hangar seen from the front: a wide half-round arched shed with a very large open arched doorway taking up most of the front. Markedly wider than it is tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "cloud": {
+    "box": [
+      24,
+      13
+    ],
+    "prompt": "A single cloud: a plain puffy outline made of several rounded bumps along the top and a flat straight underside. Markedly wider than it is tall. Nothing else around it.",
+    "faded": false,
+    "colour": true
+  },
+  "towerair": {
+    "box": [
+      13,
+      26
+    ],
+    "prompt": "An airfield control tower seen from the side: a tall narrow shaft widening at the very top into a small glazed cabin with slanted windows all round, and a short mast above. Markedly taller than it is wide. The base fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "rainbow": {
+    "box": [
+      26,
+      14
+    ],
+    "prompt": "A rainbow: several concentric arcs nested one inside another, drawn as plain outlines with clear gaps between them. A wide low arch, markedly wider than it is tall. Both ends fade out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "windsock": {
+    "box": [
+      16,
+      22
+    ],
+    "prompt": "An airfield windsock seen from the side: a straight slim mast with a wide-mouthed conical fabric tube attached near the top, streaming sideways and narrowing to its open tail, marked with a few cross bands. The mast fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "ball": {
+    "box": [
+      18,
+      18
+    ],
+    "prompt": "A ball: a plain circle with two or three curved seam lines crossing its surface to show roundness. Perfectly circular, not oval. Nothing beneath it.",
+    "faded": false,
+    "colour": true
+  },
+  "bike": {
+    "box": [
+      26,
+      16
+    ],
+    "prompt": "A bicycle seen from the side: two equal large wheels with spokes, a simple triangular frame between them, straight handlebars at the front and a small saddle above the rear wheel. Markedly wider than it is tall. The wheels fade out unfinished where they would touch the ground.",
+    "faded": false,
+    "colour": true
+  },
+  "swimring": {
+    "box": [
+      20,
+      20
+    ],
+    "prompt": "An inflatable swim ring seen face-on, with a child's arm holding it: a thick round ring made of several rounded segments like a lifebuoy, with a small round valve stub on its outer edge and a clear inner hole. Perfectly circular. Nothing beneath it.",
+    "faded": false,
+    "colour": true
+  },
+  "tyre": {
+    "box": [
+      18,
+      18
+    ],
+    "prompt": "A car tyre seen face-on: a thick round ring with a clear tread pattern of short bars around its outer edge and a plain round hub in the middle. Perfectly circular. Nothing beneath it.",
+    "faded": false,
+    "colour": true
+  },
+  "boatinf": {
+    "box": [
+      26,
+      12
+    ],
+    "prompt": "An inflatable rubber dinghy seen from the side: the hull is made of two thick rounded air tubes stacked one on the other, curving up at both ends, with a plain flat seat board across the middle and a rope loop at the bow. It is clearly inflated, not a wooden boat. Markedly wider than it is tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "reed": {
+    "box": [
+      12,
+      26
+    ],
+    "prompt": "Reeds at a pond: three straight slender stalks of different heights standing close together, each topped with a narrow sausage-shaped head, and a few thin blade leaves. Markedly taller than wide. The stalks fade out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "waterlily": {
+    "box": [
+      22,
+      12
+    ],
+    "prompt": "A water lily seen from the side: one wide flat round leaf pad lying level, with a single open flower of pointed petals rising just beside it. Markedly wider than it is tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "stump": {
+    "box": [
+      18,
+      14
+    ],
+    "prompt": "A tree stump seen from the side: a short thick cylinder of trunk cut flat across the top, with bark texture down its side and concentric growth rings on the cut face. Wider than tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "bushsm": {
+    "box": [
+      22,
+      16
+    ],
+    "prompt": "A small bush: a rounded mass of foliage drawn as a bumpy outline with a few leaf shapes suggested inside, and two or three thin branches showing at its lower edge. Wider than tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "lantern": {
+    "box": [
+      12,
+      24
+    ],
+    "prompt": "A garden lantern on a post seen from the side: a straight slim post topped with a four-sided glass housing that has a small pointed cap above it. Markedly taller than it is wide. The post fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "burrow": {
+    "box": [
+      20,
+      14
+    ],
+    "prompt": "A burrow entrance in a low mound seen from the side: a rounded hummock with a dark arched hole opening at its base, and a few grass blades at its top edge. Wider than tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "bigstone": {
+    "box": [
+      22,
+      16
+    ],
+    "prompt": "A single large boulder seen from the side: a rounded irregular block with a few clear facet lines and two shallow cracks across its surface. Wider than tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "snag": {
+    "box": [
+      24,
+      14
+    ],
+    "prompt": "A dead branch lying on the ground: a thick crooked stick with rough bark texture and two or three short broken side twigs. Markedly wider than it is tall. Both ends fade out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "tussock": {
+    "box": [
+      18,
+      14
+    ],
+    "prompt": "A tussock of grass: a dense clump of long narrow blades springing from one point and arching outwards in all directions. Wider than tall. The base fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "stonepile": {
+    "box": [
+      22,
+      14
+    ],
+    "prompt": "A small pile of stones: three or four rounded pebbles of different sizes resting against one another, each drawn as a plain closed outline. Wider than tall. The bottom fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "leafbig": {
+    "box": [
+      20,
+      18
+    ],
+    "prompt": "A single large leaf seen face-on: a broad oval blade with a pointed tip, a clear central vein and several side veins branching from it, and a short stalk. The stalk fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "flower": {
+    "box": [
+      16,
+      24
+    ],
+    "prompt": "A single flower on a stem seen from the side: a round centre surrounded by evenly spaced rounded petals, on one straight stem with two leaves. Markedly taller than it is wide. The stem fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "bark": {
+    "box": [
+      14,
+      26
+    ],
+    "prompt": "A piece of tree trunk seen from the side: a tall vertical band of bark with deep lengthwise furrows and ridges running down it. Markedly taller than it is wide. Both top and bottom fade out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "cone": {
+    "box": [
+      12,
+      20
+    ],
+    "prompt": "A pine cone seen from the side: an elongated oval body covered in overlapping scales arranged in neat rows, narrowing to a rounded tip. Taller than wide. The stalk end fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "mushroom2": {
+    "box": [
+      18,
+      16
+    ],
+    "prompt": "A mushroom seen from the side: a wide domed cap with a plain rim and a short thick stalk beneath it. Wider than tall. The stalk fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "boot": {
+    "box": [
+      22,
+      16
+    ],
+    "prompt": "A single shoe seen from the side: a low boot with a clear rounded toe, a raised heel, a lacing panel with a few eyelets and a plain sole. Markedly wider than it is tall. The sole fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "doormat": {
+    "box": [
+      24,
+      10
+    ],
+    "prompt": "A doormat seen at a slight angle from above: a plain rectangle with a clear border band and a dense pattern of short bristle strokes filling the middle. Markedly wider than it is tall.",
+    "faded": false,
+    "colour": true
+  },
+  "shelfsm": {
+    "box": [
+      22,
+      16
+    ],
+    "prompt": "A small wall shelf seen from the front: two horizontal boards held by simple side brackets, with a plain jar and a folded towel standing on the upper board. Wider than tall. The brackets fade out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "basin": {
+    "box": [
+      22,
+      14
+    ],
+    "prompt": "A washbasin seen from the side: an oval bowl with a clearly curved rim, a tap and spout rising behind it, and a short pedestal below. Wider than tall. The pedestal fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  },
+  "hook": {
+    "box": [
+      12,
+      22
+    ],
+    "prompt": "A coat hook on a wall board seen from the side: a short vertical backing plate with two curved hooks projecting from it, one above the other. Taller than wide. The board fades out unfinished at the bottom.",
+    "faded": false,
+    "colour": true
+  }
+}

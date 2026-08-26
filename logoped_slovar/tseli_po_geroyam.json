@@ -1,0 +1,51 @@
+{
+  "мотор": [
+    "garage",
+    "trafficlight",
+    "bridge",
+    "fuelpump",
+    "roadsign"
+  ],
+  "самолёт": [
+    "hangar",
+    "cloud",
+    "towerair",
+    "rainbow",
+    "windsock"
+  ],
+  "насос": [
+    "ball",
+    "bike",
+    "swimring",
+    "tyre",
+    "boatinf"
+  ],
+  "комарик": [
+    "reed",
+    "waterlily",
+    "stump",
+    "bushsm",
+    "lantern"
+  ],
+  "змея": [
+    "burrow",
+    "bigstone",
+    "snag",
+    "tussock",
+    "stonepile"
+  ],
+  "жук": [
+    "leafbig",
+    "flower",
+    "bark",
+    "cone",
+    "mushroom2"
+  ],
+  "щётка": [
+    "boot",
+    "doormat",
+    "shelfsm",
+    "basin",
+    "hook"
+  ]
+}

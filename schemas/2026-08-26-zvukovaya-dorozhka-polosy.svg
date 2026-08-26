@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 780" width="1520" height="780" font-family="Helvetica,Arial,sans-serif">
+<rect width="1520" height="780" fill="#f6f5f2"/>
+<text x="34" y="40" font-size="23" font-weight="700" fill="#1c2024">Звуковая дорожка · семья А — полосы. Лист и экран</text>
+<text x="34" y="64" font-size="13.5" fill="#6b7280">Оранжевым — то, чего сейчас нет. Лист АЛЬБОМНЫЙ: так устроены все многострочные образцы жанра.</text>
+<text x="34" y="84" font-size="15" font-weight="700" fill="#1c2024">ЛИСТ — А4 альбомный, три дорожки по умолчанию</text>
+<rect x="34" y="96" width="640" height="452" fill="#ffffff" stroke="#1c2024" stroke-width="2"/>
+<text x="50" y="122" font-size="10" fill="#6b7280">Ребёнок ________________</text>
+<rect x="224" y="110" width="52" height="16" fill="none" stroke="#1c2024" stroke-width="1.2"/>
+<text x="250" y="122" font-size="10" text-anchor="middle" font-weight="700" fill="#1c2024">Звук [Р]</text>
+<text x="288" y="122" font-size="10" fill="#6b7280">прямые слоги</text>
+<text x="534" y="122" font-size="10" fill="#6b7280">Дата __________</text>
+<line x1="50" y1="130" x2="658" y2="130" stroke="#1c2024" stroke-width="0.8"/>
+<text x="50" y="152" font-size="13" font-weight="700" fill="#1c2024">Звуковая дорожка · слог РА</text>
+<text x="50" y="168" font-size="9.5" fill="#6b7280">Веди пальцем и тяни звук, пока не доедешь до буквы. Три дорожки — три задания.</text>
+<rect x="52" y="213.68" width="46" height="34" rx="4" fill="none" stroke="#c2410c" stroke-width="1.6"/>
+<text x="75" y="231.68" font-size="8" text-anchor="middle" fill="#c2410c" font-weight="700">герой</text>
+<text x="75" y="242.68" font-size="7.5" text-anchor="middle" fill="#c2410c">легковая</text>
+<text x="110" y="207.68" font-size="9" font-weight="700" fill="#1c2024">Р-Р-Р</text>
+<circle cx="110" cy="233.68" r="3" fill="#1c2024"/>
+<path d="M 110 233.68 L 118.0 232.2 L 125.9 230.7 L 133.9 229.3 L 141.9 228.0 L 149.8 226.8 L 157.8 225.7 L 165.8 224.7 L 173.7 223.9 L 181.7 223.3 L 189.7 222.9 L 197.6 222.7 L 205.6 222.7 L 213.6 222.9 L 221.5 223.3 L 229.5 223.9 L 237.5 224.6 L 245.4 225.6 L 253.4 226.7 L 261.4 227.9 L 269.3 229.2 L 277.3 230.6 L 285.3 232.1 L 293.2 233.6 L 301.2 235.1 L 309.2 236.5 L 317.1 237.9 L 325.1 239.3 L 333.1 240.5 L 341.0 241.6 L 349.0 242.6 L 357.0 243.4 L 364.9 244.0 L 372.9 244.4 L 380.9 244.6 L 388.8 244.7 L 396.8 244.5 L 404.8 244.1 L 412.7 243.5 L 420.7 242.8 L 428.7 241.9 L 436.6 240.8 L 444.6 239.6 L 452.6 238.3 L 460.5 236.9 L 468.5 235.4 L 476.5 233.9 L 484.4 232.4 L 492.4 230.9 L 500.4 229.5 L 508.3 228.2 L 516.3 226.9 L 524.3 225.8 L 532.2 224.8 L 540.2 224.0 L 548.2 223.4 L 556.1 223.0 L 564.1 222.7 L 572.1 222.7 L 580.0 222.9 L 588.0 223.2 " fill="none" stroke="#1c2024" stroke-width="2.4" stroke-linecap="round"/>
+<text x="604" y="240.68" font-size="19" font-weight="700" fill="#1c2024">А</text>
+<text x="110" y="286.0" font-size="8" fill="#6b7280">1. тяни слитно</text>
+<rect x="52" y="321.68" width="46" height="34" rx="4" fill="none" stroke="#c2410c" stroke-width="1.6"/>
+<text x="75" y="339.68" font-size="8" text-anchor="middle" fill="#c2410c" font-weight="700">герой</text>
+<text x="75" y="350.68" font-size="7.5" text-anchor="middle" fill="#c2410c">грузовик</text>
+<text x="110" y="315.68" font-size="9" font-weight="700" fill="#1c2024">Р-Р-Р</text>
+<circle cx="110" cy="341.68" r="3" fill="#1c2024"/>
+<path d="M 110 341.68 L 118.0 339.7 L 125.9 337.7 L 133.9 335.8 L 141.9 334.0 L 149.8 332.3 L 157.8 330.7 L 165.8 329.2 L 173.7 327.9 L 181.7 326.8 L 189.7 325.9 L 197.6 325.2 L 205.6 324.7 L 213.6 324.4 L 221.5 324.3 L 229.5 324.4 L 237.5 324.6 L 245.4 325.1 L 253.4 325.7 L 261.4 326.4 L 269.3 327.2 L 277.3 328.1 L 285.3 329.1 L 293.2 330.1 L 301.2 331.1 L 309.2 332.0 L 317.1 332.9 L 325.1 333.8 L 333.1 334.5 L 341.0 335.1 L 349.0 335.6 L 357.0 335.9 L 364.9 336.0 L 372.9 335.9 L 380.9 335.6 L 388.8 335.2 L 396.8 334.5 L 404.8 333.6 L 412.7 332.5 L 420.7 331.3 L 428.7 329.9 L 436.6 328.3 L 444.6 326.6 L 452.6 324.8 L 460.5 322.9 L 468.5 320.9 L 476.5 318.9 L 484.4 316.9 L 492.4 314.9 L 500.4 313.0 L 508.3 311.2 L 516.3 309.4 L 524.3 307.8 L 532.2 306.3 L 540.2 305.0 L 548.2 303.9 L 556.1 303.0 L 564.1 302.2 L 572.1 301.7 L 580.0 301.4 L 588.0 301.2 " fill="none" stroke="#1c2024" stroke-width="2.4" stroke-linecap="round"/>
+<text x="604" y="318.68" font-size="19" font-weight="700" fill="#1c2024">А</text>
+<text x="110" y="394.0" font-size="8" fill="#6b7280">2. голос выше</text>
+<rect x="52" y="429.68" width="46" height="34" rx="4" fill="none" stroke="#c2410c" stroke-width="1.6"/>
+<text x="75" y="447.68" font-size="8" text-anchor="middle" fill="#c2410c" font-weight="700">герой</text>
+<text x="75" y="458.68" font-size="7.5" text-anchor="middle" fill="#c2410c">гоночная</text>
+<text x="110" y="423.68" font-size="9" font-weight="700" fill="#1c2024">Р-Р-Р</text>
+<circle cx="110" cy="449.68" r="3" fill="#1c2024"/>
+<path d="M 110 449.68 L 118.0 448.2 L 125.9 446.7 L 133.9 445.3 L 141.9 444.0 L 149.8 442.8 L 157.8 441.7 L 165.8 440.7 L 173.7 439.9 L 181.7 439.3 L 189.7 438.9 L 197.6 438.7 L 205.6 438.7 L 213.6 438.9 L 221.5 439.3 L 229.5 439.9 L 237.5 440.6 L 245.4 441.6 L 253.4 442.7 L 261.4 443.9 L 269.3 445.2 L 277.3 446.6 L 285.3 448.1 L 293.2 449.6 L 301.2 451.1 L 309.2 452.5 L 317.1 453.9 L 325.1 455.3 L 333.1 456.5 L 341.0 457.6 L 349.0 458.6 L 357.0 459.4 L 364.9 460.0 L 372.9 460.4 L 380.9 460.6 L 388.8 460.7 L 396.8 460.5 L 404.8 460.1 L 412.7 459.5 L 420.7 458.8 L 428.7 457.9 L 436.6 456.8 L 444.6 455.6 L 452.6 454.3 L 460.5 452.9 L 468.5 451.4 L 476.5 449.9 L 484.4 448.4 L 492.4 446.9 L 500.4 445.5 L 508.3 444.2 L 516.3 442.9 L 524.3 441.8 L 532.2 440.8 L 540.2 440.0 L 548.2 439.4 L 556.1 439.0 L 564.1 438.7 L 572.1 438.7 L 580.0 438.9 L 588.0 439.2 " fill="none" stroke="#1c2024" stroke-width="2.4" stroke-dasharray="7 5" stroke-linecap="round"/>
+<text x="604" y="456.68" font-size="19" font-weight="700" fill="#1c2024">А</text>
+<text x="110" y="502.0" font-size="8" fill="#6b7280">3. отрывисто</text>
+<line x1="50" y1="518" x2="658" y2="518" stroke="#1c2024" stroke-width="0.8"/>
+<text x="50" y="532" font-size="8.5" fill="#6b7280">Взрослому. Слог на всех трёх дорожках один и тот же — меняется задача голосу…</text>
+<text x="34" y="582" font-size="15" font-weight="700" fill="#1c2024">ЧТО СТОИТ В КОНЦЕ ЛИНИИ — одно место, два случая</text>
+<rect x="34" y="598" width="306" height="72" fill="#ffffff" stroke="#6b7280" stroke-width="1"/>
+<rect x="44" y="616" width="36" height="28" rx="3" fill="none" stroke="#c2410c" stroke-width="1.4"/>
+<text x="62" y="635" font-size="7.5" text-anchor="middle" fill="#c2410c">герой</text>
+<circle cx="86" cy="632" r="2.6" fill="#1c2024"/>
+<path d="M 86 632 L 90.7 630.5 L 95.3 629.0 L 100.0 627.5 L 104.6 626.3 L 109.2 625.2 L 113.9 624.3 L 118.5 623.6 L 123.2 623.2 L 127.8 623.0 L 132.5 623.1 L 137.2 623.5 L 141.8 624.1 L 146.4 625.0 L 151.1 626.0 L 155.8 627.3 L 160.4 628.7 L 165.1 630.2 L 169.7 631.7 L 174.3 633.3 L 179.0 634.8 L 183.7 636.2 L 188.3 637.5 L 192.9 638.7 L 197.6 639.6 L 202.2 640.3 L 206.9 640.8 L 211.6 641.0 L 216.2 640.9 L 220.8 640.6 L 225.5 640.0 L 230.2 639.2 L 234.8 638.2 L 239.4 636.9 L 244.1 635.6 L 248.8 634.1 L 253.4 632.6 L 258.1 631.0 L 262.7 629.5 L 267.4 628.0 L 272.0 626.7 " fill="none" stroke="#1c2024" stroke-width="2.2" stroke-linecap="round"/>
+<text x="294" y="640" font-size="22" font-weight="700" fill="#1c2024">А</text>
+<text x="34" y="688" font-size="12" font-weight="700" fill="#1c2024">«Со слогом» ВКЛЮЧЁН</text>
+<text x="34" y="704" font-size="11" fill="#6b7280">справа гласная — собирается слог РА</text>
+<rect x="364" y="598" width="306" height="72" fill="#ffffff" stroke="#6b7280" stroke-width="1"/>
+<rect x="374" y="616" width="36" height="28" rx="3" fill="none" stroke="#c2410c" stroke-width="1.4"/>
+<text x="392" y="635" font-size="7.5" text-anchor="middle" fill="#c2410c">герой</text>
+<circle cx="416" cy="632" r="2.6" fill="#1c2024"/>
+<path d="M 416 632 L 420.6 630.5 L 425.3 629.0 L 429.9 627.5 L 434.6 626.3 L 439.2 625.2 L 443.9 624.3 L 448.6 623.6 L 453.2 623.2 L 457.9 623.0 L 462.5 623.1 L 467.1 623.5 L 471.8 624.1 L 476.4 625.0 L 481.1 626.0 L 485.8 627.3 L 490.4 628.7 L 495.1 630.2 L 499.7 631.7 L 504.4 633.3 L 509.0 634.8 L 513.6 636.2 L 518.3 637.5 L 523.0 638.7 L 527.6 639.6 L 532.2 640.3 L 536.9 640.8 L 541.5 641.0 L 546.2 640.9 L 550.9 640.6 L 555.5 640.0 L 560.1 639.2 L 564.8 638.2 L 569.5 636.9 L 574.1 635.6 L 578.8 634.1 L 583.4 632.6 L 588.0 631.0 L 592.7 629.5 L 597.4 628.0 L 602.0 626.7 " fill="none" stroke="#1c2024" stroke-width="2.2" stroke-linecap="round"/>
+<rect x="610" y="616" width="32" height="32" rx="3" fill="none" stroke="#c2410c" stroke-width="1.6"/>
+<text x="626" y="635" font-size="7.5" text-anchor="middle" fill="#c2410c">цель</text>
+<text x="364" y="688" font-size="12" font-weight="700" fill="#1c2024">«Со слогом» ВЫКЛЮЧЕН</text>
+<text x="364" y="704" font-size="11" fill="#6b7280">справа ЦЕЛЬ из банка — тянем один звук</text>
+<text x="720" y="84" font-size="15" font-weight="700" fill="#1c2024">ЭКРАН — ОДНА новая ручка, и одна условная</text>
+<rect x="720" y="96" width="370" height="330" rx="8" fill="#ffffff" stroke="#1c2024" stroke-width="1.6"/>
+<text x="738" y="126" font-size="12.5" font-weight="700" fill="#1c2024">Где звук в слоге?</text>
+<rect x="738" y="133" width="30.2" height="24" rx="4" fill="#eef4f0" stroke="#2f6f4f" stroke-width="1.6"/>
+<text x="753.1" y="149" font-size="10.5" text-anchor="middle" fill="#1c2024">Ра</text>
+<rect x="775.2" y="133" width="30.2" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="790.3000000000001" y="149" font-size="10.5" text-anchor="middle" fill="#1c2024">аР</text>
+<rect x="812.4000000000001" y="133" width="37.8" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="831.3000000000001" y="149" font-size="10.5" text-anchor="middle" fill="#1c2024">аРа</text>
+<text x="738" y="178" font-size="12.5" font-weight="700" fill="#1c2024">Со слогом</text>
+<rect x="738" y="185" width="45.4" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="760.7" y="201" font-size="10.5" text-anchor="middle" fill="#1c2024">выкл</text>
+<rect x="790.4" y="185" width="22.6" height="24" rx="4" fill="#eef4f0" stroke="#2f6f4f" stroke-width="1.6"/>
+<text x="801.6999999999999" y="201" font-size="10.5" text-anchor="middle" fill="#1c2024">А</text>
+<rect x="820.0" y="185" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="831.3" y="201" font-size="10.5" text-anchor="middle" fill="#1c2024">О</text>
+<rect x="849.6" y="185" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="860.9" y="201" font-size="10.5" text-anchor="middle" fill="#1c2024">У</text>
+<rect x="879.2" y="185" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="890.5" y="201" font-size="10.5" text-anchor="middle" fill="#1c2024">Ы</text>
+<rect x="908.8000000000001" y="185" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="920.1" y="201" font-size="10.5" text-anchor="middle" fill="#1c2024">Э</text>
+<text x="738" y="230" font-size="12.5" font-weight="700" fill="#c2410c">Сколько дорожек?</text>
+<rect x="738" y="237" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="749.3" y="253" font-size="10.5" text-anchor="middle" fill="#1c2024">1</text>
+<rect x="767.6" y="237" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="778.9" y="253" font-size="10.5" text-anchor="middle" fill="#1c2024">2</text>
+<rect x="797.2" y="237" width="22.6" height="24" rx="4" fill="#fdf0e8" stroke="#c2410c" stroke-width="1.6"/>
+<text x="808.5" y="253" font-size="10.5" text-anchor="middle" fill="#1c2024">3</text>
+<rect x="826.8000000000001" y="237" width="22.6" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="838.1" y="253" font-size="10.5" text-anchor="middle" fill="#1c2024">4</text>
+<text x="738" y="276" font-size="9.5" fill="#c2410c">одна дорожка = лист-спираль, целая картинка</text>
+<rect x="732" y="284" width="346" height="52" rx="5" fill="#faf7f4" stroke="#c2410c" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="740" y="300" font-size="11.5" font-weight="700" fill="#c2410c">Линия</text>
+<text x="788" y="300" font-size="9.5" fill="#6b7280">видна только при ОДНОЙ дорожке</text>
+<rect x="738" y="309" width="75.8" height="24" rx="4" fill="#fdf0e8" stroke="#c2410c" stroke-width="1.6"/>
+<text x="775.9" y="325" font-size="10.5" text-anchor="middle" fill="#1c2024">сплошная</text>
+<rect x="820.8" y="309" width="68.19999999999999" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="854.9" y="325" font-size="10.5" text-anchor="middle" fill="#1c2024">пунктир</text>
+<text x="738" y="360" font-size="12.5" font-weight="700" fill="#1c2024">Цветной лист</text>
+<rect x="738" y="367" width="45.4" height="24" rx="4" fill="#eef4f0" stroke="#2f6f4f" stroke-width="1.6"/>
+<text x="760.7" y="383" font-size="10.5" text-anchor="middle" fill="#1c2024">выкл</text>
+<rect x="790.4" y="367" width="37.8" height="24" rx="4" fill="#ffffff" stroke="#c9ccd1" stroke-width="1"/>
+<text x="809.3" y="383" font-size="10.5" text-anchor="middle" fill="#1c2024">вкл</text>
+<text x="720" y="448" font-size="15" font-weight="700" fill="#1c2024">ПОЧЕМУ РУЧЕК НЕ ТРИ, А ОДНА</text>
+<circle cx="728" cy="468" r="3" fill="#2f6f4f"/>
+<text x="740" y="472" font-size="11.5" font-weight="700" fill="#1c2024">Герой не выбирается</text>
+<text x="740" y="487" font-size="10.5" fill="#6b7280">видов ровно 3, строк 3 — выбирать не из чего, они крутятся сами</text>
+<circle cx="728" cy="508" r="3" fill="#2f6f4f"/>
+<text x="740" y="512" font-size="11.5" font-weight="700" fill="#1c2024">Цель не выбирается</text>
+<text x="740" y="527" font-size="10.5" fill="#6b7280">5 целей на героя, но какая куда — логопеду безразлично; меняются кубиком «собрать другой набор», он уже есть</text>
+<circle cx="728" cy="548" r="3" fill="#2f6f4f"/>
+<text x="740" y="552" font-size="11.5" font-weight="700" fill="#1c2024">Пунктир на полосах не ручка</text>
+<text x="740" y="567" font-size="10.5" fill="#6b7280">это ПОСЛЕДНЯЯ ступень лестницы: ✅ у Поповой прерывистая — самый сложный вариант, он всегда в конце</text>
+<circle cx="728" cy="588" r="3" fill="#2f6f4f"/>
+<text x="740" y="592" font-size="11.5" font-weight="700" fill="#1c2024">Пунктир нужен только спирали</text>
+<text x="740" y="607" font-size="10.5" fill="#6b7280">там линия ОДНА, и выбор настоящий — потому 14 листов в банке: 7 сплошных и 7 пунктирных</text>
+<text x="720" y="644" font-size="11" fill="#2f6f4f" font-weight="700">Закон 13: где выбор безразличен — ручки нет, есть кубик.</text>
+</svg>

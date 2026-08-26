@@ -13,3 +13,5 @@ pictures/probes/
 # локально падают рядом с web/. В репозиторий не берутся.
 otzyvy.jsonl
 web/otzyvy.jsonl
+# Отклонённые пробы рисунков — тот же класс, что probes/: в гит не берём.
+pictures/otkloneno/

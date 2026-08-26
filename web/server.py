@@ -42,7 +42,10 @@ import os
 import re
 import urllib.parse
 import urllib.request
+import secrets
 import sys
+import threading
+import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Tuple
@@ -464,7 +467,8 @@ GOTENBERG = os.environ.get(
 
 # Соответствие адреса и папки на диске — то же, каким сервер отдаёт картинки
 # по сети (`_hero`, `_bank`). Один факт, один дом.
-_PICT_DIRS = {"geroi/colour": "geroi", "geroi/bw": "geroi_bw", "fony": "fony"}
+_PICT_DIRS = {"geroi/colour": "geroi", "geroi/bw": "geroi_bw", "fony": "fony",
+              "dorozhka/colour": "dorozhka/colour", "dorozhka/bw": "dorozhka/bw"}
 
 
 def _embed_pictures(html: str) -> str:
@@ -498,7 +502,8 @@ def _embed_pictures(html: str) -> str:
             data = base64.b64encode(fh.read()).decode()
         return attr + '="data:image/png;base64,' + data + '"'
 
-    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony)/[^"]+)"', sub, html)
+    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony|dorozhka)/[^"]+)"',
+                  sub, html)
 
 
 def to_pdf(html: str) -> bytes:
@@ -517,7 +522,17 @@ def to_pdf(html: str) -> bytes:
         + html.encode("utf-8") + b"\r\n")
     # A4 в дюймах. Поля нулевые: они уже заданы внутри листа через @page, и
     # вторые поля поверх первых сдвинули бы всю вёрстку.
-    for k, v in (("paperWidth", "8.27"), ("paperHeight", "11.69"),
+    #
+    # ⚠ 08-26. Размер был ВШИТ книжным, и это молча пережило появление
+    # альбомного листа: полосы звуковой дорожки не влезали в портретную бумагу
+    # по ширине и переносились на ВТОРУЮ страницу — все шесть пробных PDF вышли
+    # двухстраничными. На экране лист выглядел правильно, потому что там
+    # ориентацию задаёт `@page`, а Gotenberg про `@page` не спрашивает: бумагу
+    # ему называют цифрами. Поэтому ориентацию читаем из самого листа — один
+    # факт, один дом: объявил `@page ... landscape`, значит бумага альбомная.
+    _land = bool(re.search(r"@page[^{]*\{[^}]*landscape", html))
+    _pw, _ph = ("11.69", "8.27") if _land else ("8.27", "11.69")
+    for k, v in (("paperWidth", _pw), ("paperHeight", _ph),
                  ("marginTop", "0"), ("marginBottom", "0"),
                  ("marginLeft", "0"), ("marginRight", "0"),
                  ("printBackground", "true")):
@@ -530,6 +545,64 @@ def to_pdf(html: str) -> bytes:
         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
     with urllib.request.urlopen(req, timeout=90) as r:
         return r.read()
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  ВЫДАЧА ГОТОВОГО ФАЙЛА
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Файл кладётся сюда и забирается ОДНИМ переходом по настоящему адресу.
+#
+# Почему не отдавать его прямо в ответ на запрос — так и было до 08-25.
+# Страница получала PDF, делала из него ссылку в памяти (`blob:`) и щёлкала по
+# ней с пометкой «скачать». На компьютере работает, на айфоне нет: Safari
+# пометку `download` у ссылок `blob:` не выполняет, а просто ПЕРЕХОДИТ по ней —
+# и телефон показывает лист смотрелкой вместо того, чтобы сохранить. Экран с
+# листом при этом умирает, правки логопеда вместе с ним. Поймано автором 08-25,
+# в логе видно как есть: `POST /api/pdf 200`, а следом полная перезагрузка
+# приложения. Та же беда ждала и Word — он уходил той же дорогой.
+#
+# Лечится не в браузере, а заголовком: файл, отданный с `Content-Disposition:
+# attachment`, скачивают ВСЕ, включая айфон, и со страницы при этом не уводят.
+# Но заголовок живёт на настоящем адресе, а на `blob:` его повесить некуда —
+# значит готовый файл должен полежать у нас, пока за ним не придут.
+#
+# Одноразово и ненадолго: ключ случайный, забрали — забыли, через пять минут
+# пропадает сам. Держим в памяти, а не на диске: файл живёт секунды, и класть
+# чужой лист на постоянное хранилище незачем.
+
+_STASH: Dict[str, Tuple[float, str, str, bytes]] = {}
+_STASH_TTL = 300            # пять минут — с запасом на медленный телефон
+_STASH_MAX = 40             # больше одновременных выдач у нас не бывает
+_STASH_LOCK = threading.Lock()
+
+
+def stash(data: bytes, name: str, ctype: str) -> str:
+    """Придержать готовый файл, вернуть ключ для адреса `/file/<ключ>`."""
+    now = time.time()
+    token = secrets.token_urlsafe(12)
+    with _STASH_LOCK:
+        for k in [k for k, v in _STASH.items() if v[0] < now]:
+            _STASH.pop(k, None)
+        while len(_STASH) >= _STASH_MAX:
+            _STASH.pop(min(_STASH, key=lambda k: _STASH[k][0]), None)
+        _STASH[token] = (now + _STASH_TTL, name, ctype, data)
+    return token
+
+
+def unstash(token: str) -> Tuple[str, str, bytes] | None:
+    with _STASH_LOCK:
+        item = _STASH.pop(token, None)
+    if not item or item[0] < time.time():
+        return None
+    return item[1], item[2], item[3]
+
+
+def file_name(raw: str, ext: str) -> str:
+    """Имя файла для человека. Расширение ставим мы, а не тот, кто попросил."""
+    name = re.sub(r"[\\/\r\n\"\x00-\x1f]", "", str(raw or ""))[:80].strip()
+    name = name.rsplit(".", 1)[0].strip() or "list"
+    return name + "." + ext
 
 
 CONFIG_CACHE: Dict[str, Any] = {}
@@ -708,6 +781,40 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", self.CACHE_LIVE)
         self.end_headers()
 
+    def _give_file(self, token: str) -> None:
+        """Отдать придержанный файл как ВЛОЖЕНИЕ и забыть его."""
+        got = unstash(token)
+        if not got:
+            # Промахнуться тут можно только одним способом — вернуться на
+            # старую ссылку через час. Говорим человеческим языком и не пугаем:
+            # лист никуда не делся, он на экране.
+            self._send(410, ("<!doctype html><meta charset=utf-8>"
+                             "<title>Ссылка устарела</title>"
+                             "<p style='font:16px/1.5 system-ui;padding:2rem'>"
+                             "Эта ссылка на файл уже сработала или устарела.<br>"
+                             "Вернитесь на страницу и нажмите «Скачать» ещё раз — "
+                             "лист никуда не делся.").encode("utf-8"),
+                       "text/html; charset=utf-8")
+            return
+        name, ctype, data = got
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        # Имя у нас кириллицей («занятие-Р.pdf»), а в заголовке разрешён только
+        # ASCII. Поэтому имя идёт дважды: голым запасным вариантом и по RFC 5987
+        # — второй понимают все нынешние браузеры, включая мобильный Safari.
+        stem, _, ext = name.rpartition(".")
+        ascii_name = re.sub(r"[^A-Za-z0-9._-]", "", stem).strip("-._")
+        ascii_name = (ascii_name or "list") + "." + ext
+        self.send_header(
+            "Content-Disposition",
+            "attachment; filename=\"%s\"; filename*=UTF-8''%s"
+            % (ascii_name, urllib.parse.quote(name)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(data)
+
     def _static(self, name: str) -> None:
         path = os.path.join(HERE, name)
         if not os.path.isfile(path) or os.path.dirname(path) != HERE:
@@ -765,7 +872,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _bank(self, folder: str, name: str) -> None:
         """Картинка из банка `pictures/<folder>/`. Кэш длинный, как у героев."""
-        root = os.path.abspath(os.path.join(HERE, "..", "pictures", folder))
+        root = os.path.abspath(os.path.join(HERE, "..", "pictures", *folder.split("/")))
         path = os.path.abspath(os.path.join(root, name))
         if os.path.dirname(path) != root or not os.path.isfile(path):
             self._not_found()
@@ -817,6 +924,11 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/favicon.ico", "/favicon.svg"):
             self._static("favicon.svg")
             return
+        # Готовый лист — забирается одним переходом по одноразовому ключу.
+        # Почему так, а не ответом на сам запрос — см. `stash`.
+        if path.startswith("/file/"):
+            self._give_file(path[len("/file/"):])
+            return
         # Иллюстрации страниц сайта — снимки НАСТОЯЩИХ листов, снятые с движка
         # (см. tools/snimki_listov.py). Канон требует минимум три иллюстрации на
         # страницу и называет картинку фундаментом статьи, а не украшением.
@@ -827,6 +939,17 @@ class Handler(BaseHTTPRequestHandler):
         # Встраивать их в лист нельзя — сцена «трава» кладёт 53 предмета.
         if path.startswith("/fony/"):
             self._bank("fony", urllib.parse.unquote(path[len("/fony/"):]))
+            return
+        # Банк ЗВУКОВОЙ ДОРОЖКИ (08-26): виды героев, цели и листы-спирали.
+        # Две папки, `colour` и `bw`, и вторая СНЯТА с первой — не рисовалась
+        # отдельно (закон дома: рисуем цветное, ч/б снимаем технически).
+        if path.startswith("/dorozhka/"):
+            parts = path.split("/")          # ['', 'dorozhka', <colour|bw>, <file>]
+            if len(parts) == 4 and parts[2] in ("colour", "bw"):
+                self._bank("dorozhka/" + parts[2],
+                           urllib.parse.unquote(parts[3]))
+            else:
+                self._not_found()
             return
         if path.startswith("/geroi/"):
             parts = path.split("/")          # ['', 'geroi', <kind>, <file>]
@@ -973,11 +1096,33 @@ class Handler(BaseHTTPRequestHandler):
                     self._json({"ok": False, "kind": "network",
                                 "message": human.pdf_failed(str(exc))}, 200)
                     return
-                self.send_response(200)
-                self.send_header("Content-Type", "application/pdf")
-                self.send_header("Content-Length", str(len(pdf)))
-                self.end_headers()
-                self.wfile.write(pdf)
+                # Готовый PDF не отдаём в ответ, а придерживаем и возвращаем
+                # адрес: скачать его должен ПЕРЕХОД по настоящей ссылке, иначе
+                # айфон открывает лист вместо того, чтобы сохранить (см. `stash`).
+                name = file_name(data.get("name"), "pdf")
+                self._json({"ok": True,
+                            "url": "/file/" + stash(pdf, name, "application/pdf"),
+                            "name": name})
+                return
+
+            elif path == "/api/word":
+                # Word собирает САМА страница — она умеет переложить сетку листа
+                # в таблицы, а сервер про экранную вёрстку ничего не знает.
+                # Сюда готовый документ приходит только затем, чтобы уехать
+                # обратно вложением: путь скачивания в инструменте один на все
+                # форматы. Иначе айфон был бы починен для PDF и сломан для Word.
+                html = str(data.get("html") or "")
+                if not html.strip():
+                    self._json({"ok": False, "kind": "input",
+                                "message": "нечего сохранять"}, 400)
+                    return
+                # Метка порядка байт: без неё Word открывает кириллицу кракозябрами.
+                body = ("\ufeff" + html).encode("utf-8")
+                name = file_name(data.get("name"), "doc")
+                self._json({"ok": True,
+                            "url": "/file/" + stash(
+                                body, name, "application/msword"),
+                            "name": name})
                 return
 
             elif path == "/api/track_types":
@@ -1178,10 +1323,23 @@ class Handler(BaseHTTPRequestHandler):
                     # на бумаге типа слога не видно.
                     if typ not in PR.PROPISI_TYPES:
                         typ = "direct"
+                # Конструктор дорожек (08-26): сколько их на листе, решает
+                # логопед. Одна переключает СЕМЬЮ листа на спираль — см.
+                # `propisi.build_propisi`.
                 p = PR.build_propisi(sound, typ,
                                      vowel=data.get("vowel") or None,
                                      seed=as_int(data.get("seed"), 0),
-                                     mode=mode)
+                                     mode=mode,
+                                     # Профиль ребёнка нужен стечениям: он и
+                                     # решает, законна ли рамка (08-26).
+                                     profile=profile_str(data.get("profile")),
+                                     rows=as_int(data.get("rows"), 3, low=1),
+                                     # ⚠ 08-26: `line` с экрана больше не
+                                     # приходит — ручка формы линии снята
+                                     # вместе с пунктиром. Движок берёт
+                                     # умолчание «плавная».
+                                     frame_pick=str(data.get("frame") or ""),
+                                     colour=bool(data.get("colour")))
                 self._json({
                     "ok": True,
                     "html": PR.render_propisi(p, colour=bool(data.get("colour"))),
@@ -1192,6 +1350,11 @@ class Handler(BaseHTTPRequestHandler):
                               "vowel": p["meta"]["vowel"],
                               "vowels": p["meta"].get("vowels") or [],
                               "rows": p["meta"]["n_rows"],
+                              "family": p["meta"].get("family", "strips"),
+                              "n_dorozhek": p["meta"].get("rows", 3),
+                              "line": p["meta"].get("line", "wave"),
+                              "frame": p["meta"].get("frame", ""),
+                              "frames": p["meta"].get("frames", []),
                               "type_label": p["meta"]["type_label"],
                               "syllable": p["meta"]["syllable"],
                               "image_name": p["meta"]["image_name"],
