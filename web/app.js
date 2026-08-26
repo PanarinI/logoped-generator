@@ -274,6 +274,30 @@ function syllableGlyph(syl, soundLabel) {
 /* Материалы, у которых слог свой, — их имена для подписи под кнопкой. */
 const MATERIAL_TITLE = { track: 'слоговая дорожка', propisi: 'звуковая дорожка' };
 
+/* ЭТАПЫ АВТОМАТИЗАЦИИ — ось ряда вкладок с 08-26. Порядок канонный: звук
+   закрепляют в слоге, потом в слове, потом во фразе, потом в тексте. Так же
+   его назвала живой логопед, отвечая, какие листы нужны на занятие.
+   `S.tab` по-прежнему держит МАТЕРИАЛ: этап — только имя на экране, поэтому
+   адреса, ссылки с сайта и вся логика ниже не тронуты. */
+const STAGE_MATERIALS = {
+  lesson: ['sheet'],
+  slog:   ['propisi', 'track'],
+  slovo:  ['maze'],
+  fraza:  ['phrases'],
+  tekst:  ['story'],
+};
+const STAGE_OF = {};
+Object.keys(STAGE_MATERIALS).forEach((st) => {
+  STAGE_MATERIALS[st].forEach((m) => { STAGE_OF[m] = st; });
+});
+const GENRE_LABEL = {
+  sheet: 'занятие', propisi: 'звуковая дорожка', track: 'слоговая дорожка',
+  maze: 'лабиринт', phrases: 'словосочетания', story: 'рассказы',
+};
+/* Чем логопед пользовался на этом этапе в прошлый раз: вернувшись на «Слог»,
+   он должен попасть туда же, откуда ушёл, а не на первый жанр по списку. */
+const LAST_IN_STAGE = { slog: 'propisi' };
+
 /* Умеет ли материал ТЕКУЩИЙ слог. Правду про это знает движок
    (logoped_slovar/capabilities.py) и присылает её вместе с конфигом. */
 function materialOk(tab, typ) {
@@ -434,6 +458,7 @@ function forgetPicks() {
 function pickMaterial(it) {
   if (it.soon) { S.tab = it.tab; show('result'); renderTabs(); showSoon(it.tab); return; }
   S.tab = it.tab;
+  if (STAGE_OF[it.tab]) LAST_IN_STAGE[STAGE_OF[it.tab]] = it.tab;
   if (it.mode) S.propisiMode = it.mode;
   if (it.storyMode) S.storyMode = it.storyMode;
   S.typ = firstTypFor(it.tab);
@@ -494,15 +519,30 @@ function syncGroupTitle() {
 
 
 function renderTabs() {
+  const stageNow = STAGE_OF[S.tab] || '';
   document.querySelectorAll('.tab').forEach((b) => {
-    b.classList.toggle('is-on', b.dataset.tab === S.tab);
+    const st = b.dataset.stage || '';
+    const mats = STAGE_MATERIALS[st] || [b.dataset.tab];
+    b.classList.toggle('is-on', st === stageNow);
     // Витрина видна всегда: она говорит не про слог, а про весь замысел.
     if (b.dataset.soon) { b.hidden = false; return; }
     // Материала на этом слоге нет — вкладки нет. Сначала она была серой с
     // объяснением, но автор 08-10: «раз её нет, не надо и показывать» —
     // погашенная вкладка заставляет разбираться там, где разбираться не в чем.
-    b.hidden = !materialOk(b.dataset.tab, S.typ);
+    // ⚡ 08-26: этап живёт, пока жив ХОТЬ ОДИН его жанр. Иначе «Слог» исчезал
+    // бы целиком из-за одной недоступной дорожки.
+    const alive = mats.filter((m) => materialOk(m, S.typ));
+    b.hidden = !alive.length;
+    // Подпись под именем этапа называет ЖАНР — то самое знакомое слово,
+    // которое иначе потерялось бы («Лабиринт» узнаваем, «Слово» нет).
+    const sub = b.querySelector('.tab-sub');
+    if (sub && mats.length > 1) {
+      sub.textContent = (st === stageNow)
+        ? GENRE_LABEL[S.tab]
+        : alive.map((m) => GENRE_LABEL[m]).join(' · ');
+    }
   });
+  renderGenrePick();
   // На витринной вкладке настраивать нечего: материала ещё нет.
   const soon = !!SOON[S.tab];
   // ⚠ 08-26: ряд `tab-extra` над кнопкой «Скачать» снят — позиции лабиринта
@@ -626,6 +666,28 @@ function renderDiceTitle() {
   const t = DICE_TITLE[S.tab] || 'Собрать заново — другой вариант';
   b.title = t;
   b.setAttribute('aria-label', t);
+}
+
+/* КАКОЙ ЛИСТ — жанры внутри этапа. Карточки нет там, где жанр один. */
+function renderGenrePick() {
+  const card = $('genre-card');
+  if (!card) return;
+  const st = STAGE_OF[S.tab] || '';
+  const mats = (STAGE_MATERIALS[st] || []).filter((m) => materialOk(m, S.typ));
+  card.hidden = mats.length < 2 || !!SOON[S.tab];
+  if (card.hidden) return;
+  const box = $('genre-pick');
+  box.innerHTML = '';
+  mats.forEach((m) => {
+    const b = el('button', 'seg-btn', GENRE_LABEL[m]);
+    b.classList.toggle('is-on', m === S.tab);
+    b.addEventListener('click', () => {
+      if (m === S.tab) return;
+      LAST_IN_STAGE[st] = m;
+      pickMaterial({ tab: m });
+    });
+    box.appendChild(b);
+  });
 }
 
 function renderColour() {
@@ -2441,7 +2503,14 @@ function bindActions() {
   // цветным, через вкладку чёрно-белым (поймано разбором 08-22). Теперь обе
   // двери ведут в одну комнату.
   document.querySelectorAll('.tab').forEach((b) => {
-    b.onclick = () => pickMaterial({ tab: b.dataset.tab, soon: !!b.dataset.soon });
+    b.onclick = () => {
+      const st = b.dataset.stage || '';
+      const mats = (STAGE_MATERIALS[st] || [b.dataset.tab])
+        .filter((m) => materialOk(m, S.typ));
+      // Возвращаемся туда, откуда ушли: этап помнит последний жанр.
+      const want = mats.includes(LAST_IN_STAGE[st]) ? LAST_IN_STAGE[st] : mats[0];
+      pickMaterial({ tab: want || b.dataset.tab, soon: !!b.dataset.soon });
+    };
   });
 
   $('colour-btn').onclick = () => {

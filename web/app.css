@@ -264,10 +264,15 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 @media (min-width: 900px) {
   .tabs { flex-wrap: wrap; overflow-x: visible; }
 }
+/* Вкладка — этап, подпись под ним — жанр листа (08-26). Два уровня в одной
+   кнопке, чтобы ряд остался одной строкой и не оброс рамками категорий. */
 .tab { border: 0; background: none; cursor: pointer; font-size: 13px;
        color: var(--ink-2); padding: 4px 12px; border-radius: 6px;
-       flex: 0 0 auto; white-space: nowrap;
+       flex: 0 0 auto; white-space: nowrap; text-align: center;
+       display: flex; flex-direction: column; gap: 1px; line-height: 1.2;
        transition: background .12s, color .12s; }
+.tab-sub { font-size: 11px; color: var(--ink-3); font-weight: 400; }
+.tab.is-on .tab-sub { color: var(--ink-2); }
 .tab:hover { color: var(--ink); }
 .tab.is-on { background: var(--card); color: var(--ink); font-weight: 600; }
 /* Материал, который текущий слог не делает. Не заперт — виден и открывается,
