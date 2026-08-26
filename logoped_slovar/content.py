@@ -2164,6 +2164,44 @@ def _fuses(frame: str) -> Optional[str]:
     return None
 
 
+# ── ЗАКОННЫЕ НАЧАЛА СЛОГА (08-26) ───────────────────────────────────
+# Стечение годится ребёнку только если с него МОЖЕТ начинаться русский слог.
+# Признака этого в наших данных нет, поэтому здесь таблица с доказательством
+# на каждую строку — `onset_frames.json`. Разбор и метод сборки — в самом файле.
+# Локальный закон 7: правило врёт, таблица работает.
+_DEVOICED = {"ф": "в", "с": "з", "ш": "ж", "к": "г", "п": "б", "т": "д"}
+
+
+@lru_cache(maxsize=1)
+def onset_table() -> Dict[str, str]:
+    """Стечение (орфография, без мягкого знака) -> слово-доказательство."""
+    path = Path(__file__).resolve().parent / "onset_frames.json"
+    with path.open(encoding="utf-8") as fh:
+        return dict(json.load(fh)["frames"])
+
+
+def onset_display(frame: str) -> str:
+    """Как стечение печатается логопеду. Пусто — начало незаконное.
+
+    Две работы разом, и обе про БУКВЫ, а не про звуки:
+      1. отсев: «рш» (горшок) начала слога не образует — пусто;
+      2. орфография: движок держит стечение «всадника» как [фс], а на бумаге
+         стоит «вс». Оглушение снимаем ровно там, где звонкий вариант ЕСТЬ
+         в таблице, — то есть по доказанной строке, а не по правилу.
+    """
+    disp = ortho(frame)
+    soft = disp.endswith("ь")
+    skel = disp[:-1] if soft else disp
+    table = onset_table()
+    variants = [skel]
+    if skel and skel[0] in _DEVOICED:
+        variants.append(_DEVOICED[skel[0]] + skel[1:])
+    for v in variants:
+        if v in table:
+            return v + ("ь" if soft else "")
+    return ""
+
+
 def _cluster_frames(groups: Sequence[Dict[str, Any]], syl_type: str,
                     limit: int, warnings: Optional[List[str]] = None) -> List[str]:
     """Стечения берём из ОТОБРАННЫХ слов — тогда связка «слог — слово» существует.
@@ -2201,6 +2239,14 @@ def _cluster_frames(groups: Sequence[Dict[str, Any]], syl_type: str,
             fuse = _fuses(frame)
             if fuse:
                 dropped[frame] = fuse
+                continue
+            # ⛔ 08-26. Стечение, вырезанное ЧЕРЕЗ ГРАНИЦУ СЛОГА, начала слога
+            # не образует: горшок → «рш», барсук → «рс», линза → «нз». Ребёнку
+            # предлагался слог, которого в русском нет. Сверяем с таблицей.
+            # ⚠ Только для НАЧАЛА (`cluster_onset`). У стечения в КОНЦЕ (АРТ)
+            # рамка — это конец слога, и таблица начал к ней не применяется:
+            # первый прогон отсёк её целиком и уронил лист на cluster_coda.
+            if syl_type == "cluster_onset" and not onset_display(frame):
                 continue
             counts[frame] = counts.get(frame, 0) + 1
     if dropped and warnings is not None:
@@ -2282,7 +2328,9 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
         for frame in frames:
             units = [_syllable_text(sound, v, syl_type, frame)
                      for v in syl_vowels]
-            rows.append({"units": units})
+            # Рамку кладём В САМ РЯД: ниже по орфографии нужен ЕЁ frame, а не
+            # переменная цикла, которая к тому месту держит последнюю рамку.
+            rows.append({"units": units, "frame": frame})
     else:
         syl_vowels = syl_vowels_for(sound, syl_type)
         for i in range(n_rows):
@@ -2323,9 +2371,24 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
                 f"«слог — слово» (правило 7)"
             )
             continue
-        # units — фонемные (по ним искалась связка); наружу отдаём орфографию
-        units_display = [ortho(u) for u in row["units"]]
-        bond_display = {"syllable": ortho(bond["syllable"]),
+        # units — фонемные (по ним искалась связка); наружу отдаём орфографию.
+        # ⚠ 08-26. У стечения впереди печатная форма расходится с фонемной:
+        # «кувшин» даёт [фш], а на бумаге стоит «вш». Лист печатал «ФША».
+        # Правим ровно оглушение и ровно у стечений в начале — по той же
+        # доказанной таблице `onset_frames.json`, что и звуковая дорожка.
+        _rf = row.get("frame") or ""
+
+        def _disp(u: str, _rf=_rf) -> str:
+            d = ortho(u)
+            if syl_type != "cluster_onset" or not _rf:
+                return d
+            fixed, plain = onset_display(_rf), ortho(_rf)
+            if fixed and fixed != plain and d.startswith(plain):
+                return fixed + d[len(plain):]
+            return d
+
+        units_display = [_disp(u) for u in row["units"]]
+        bond_display = {"syllable": _disp(bond["syllable"]),
                         "syllable_phon": bond["syllable"],
                         "word": bond["word"]}
         out_rows.append({

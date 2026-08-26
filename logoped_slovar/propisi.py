@@ -619,6 +619,15 @@ def build_propisi(sound: str = "р",
         _frames = C.cluster_frames_for(sound, syl_type, profile, n_rows=4,
                                        seed=seed)
         if not _frames:
+            # Причина у пустоты бывает ДВЕ, и путать их нельзя: одна снимается
+            # логопедом, другая нет. Спрашиваем движок на ПУСТОМ профиле —
+            # если и там пусто, дело не в ребёнке, а в языке (08-26: на [З] и
+            # [Щ] законных начал слога со стечением не бывает вовсе).
+            if not C.cluster_frames_for(sound, syl_type, (), n_rows=4, seed=seed):
+                raise PropisiError(
+                    "у звука [%s] стечений в начале слога не бывает: слог "
+                    "вроде «нза» или «рща» в русском не встречается. Возьмите "
+                    "прямой слог." % _P.sound_label(sound))
             raise PropisiError(
                 "стечений, чистых для этого ребёнка, в картотеке не "
                 "набирается: во всех найденных вторым согласным стоит звук, "
@@ -628,8 +637,17 @@ def build_propisi(sound: str = "р",
         # этого ребёнка, — значит их надо не прятать за кубиком, а показать и
         # дать выбрать. Волюнтаризмом выглядело именно то, что рамка была одна
         # и бралась молча (слово автора 08-26: «почему на Щ это НЩ? бред»).
-        frames_all = [C.ortho(f) for f in _frames]
-        frame = frame_pick if frame_pick in _frames else _frames[seed % len(_frames)]
+        #
+        # ⚠ Печатаем через `onset_display`, а не через `ortho`: движок держит
+        # стечение «всадника» как [фс], а на бумаге стоит «вс». До 08-26 на
+        # кнопке стояло «ФС».
+        # ⚠ Выбор логопеда приходит с экрана В ПЕЧАТНОМ виде («грь»), а рамки
+        # внутри фонемные («гр\''»). Сравнивали их напрямую — и на мягких
+        # звуках выбор молча не срабатывал: логопед жал «ПРЬ», а лист брал
+        # рамку по сиду. Сравниваем печатное с печатным.
+        frames_all = [C.onset_display(f) for f in _frames]
+        _by_disp = dict(zip(frames_all, _frames))
+        frame = _by_disp.get(frame_pick) or _frames[seed % len(_frames)]
 
     # Ряд гласных берём НЕ у листа: там четвёрка потому, что действует правило 11
     # («слоговой блок ≤ ¼ словесного»), а здесь словесного блока нет вовсе.
@@ -645,6 +663,14 @@ def build_propisi(sound: str = "р",
     else:
         phon = C._syllable_text(sound, vowel, syl_type, frame)
         syllable = C.ortho(phon)
+        # ⚠ Оглушение снимаем и с САМОГО СЛОГА, не только с кнопки: движок
+        # держит стечение «всадника» как [фс], и слог выходил «ФСО». Ребёнок
+        # читает буквы — на бумаге должно стоять «ВСО». Правим только там, где
+        # печатная форма расходится с фонемной, то есть ровно на оглушении.
+        if frame:
+            _disp, _plain = C.onset_display(frame), C.ortho(frame)
+            if _disp and _disp != _plain and syllable.startswith(_plain):
+                syllable = _disp + syllable[len(_plain):]
         # Целевой звук обязан уцелеть в том, что попадёт на бумагу. У звонких
         # в конце слова оглушение обязательно: «аж» читается [аш].
         if not C.syllable_keeps_sound(sound, syllable):
@@ -661,7 +687,7 @@ def build_propisi(sound: str = "р",
     if frame:
         _u = str(image.get("utterance") or "")
         _tail = _u.split("-", 1)[1] if "-" in _u else _u
-        image = dict(image, utterance=C.ortho(frame) + "-" + _tail)
+        image = dict(image, utterance=C.onset_display(frame) + "-" + _tail)
 
     # Виды героя и цели крутятся ОТ SEED, а не выбираются ручкой: выбор между
     # «легковая едет в гараж» и «на мост» логопеду безразличен, а вариативность
@@ -701,7 +727,7 @@ def build_propisi(sound: str = "р",
             "vowels": vowels,
             "syllable": syllable,
             "syllable_phon": phon,
-            "frame": C.ortho(frame) if frame else "",
+            "frame": C.onset_display(frame) if frame else "",
             "frames": frames_all,          # какие рамки законны у этого ребёнка
             "line": line,
             "line_label": LINE_LABEL[line],

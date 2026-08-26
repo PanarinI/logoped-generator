@@ -56,6 +56,7 @@ CLUSTER = "cluster"                # в стечении второй согла
 INTERVOCAL_LINE = "intervocal_line"  # гласная с обеих сторон линии
 REVERSE_LINE = "reverse_line"      # линия ведёт К гласной, а не от неё
 DEVOICED = "devoiced"              # звонкий в конце слова оглушается
+NO_ONSET = "no_onset"              # с таким стечением слог в русском не начинается
 
 CLUSTER_TYPES = ("cluster_onset", "cluster_coda")
 
@@ -80,6 +81,13 @@ def block_reason(material: str, sound: str, typ: str) -> str:
         probe = C.ortho(C._syllable_text(sound, C.SYL_VOWELS_TRACK[0], typ))
         if not C.syllable_keeps_sound(sound, probe):
             return DEVOICED
+    # Тоже язык, а не жанр (08-26). У [З] и [Щ] нет НИ ОДНОГО стечения, которым
+    # русский слог может начаться: «нза», «рща» не встречаются. Раньше кнопка
+    # «кРа» горела на всех звуках, потому что стечения брались просто по частоте
+    # в картотеке — и лист печатал небывалый слог. Спрашиваем на ПУСТОМ профиле:
+    # так отделяем предел ЯЗЫКА от нехватки слов у конкретного ребёнка.
+    if typ == "cluster_onset" and not C.cluster_frames_for(sound, typ, ()):
+        return NO_ONSET
     return ""
 
 
