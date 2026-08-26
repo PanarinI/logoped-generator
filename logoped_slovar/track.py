@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import html
 import math
+import os
 import random
 import sys
 from pathlib import Path
@@ -217,6 +218,9 @@ def build_track(sound: str = "р",
             "vowels": vowels,
             "hero": hero,
             "scene": scene,
+            # Сид едет в мету затем, что вёрстка выбирает по нему метки старта
+            # и финиша: кубик обязан менять и их, а не только порядок слогов.
+            "seed": int(seed),
         },
         "cells": cells,
         "instruction": task,
@@ -314,6 +318,31 @@ SHAPE_DEFAULT = "wave"
 
 
 _FLAG_W = 7.5      # ширина полотнища флажка; нужна и расчёту места, и рисунку
+
+# МЕТКИ СТАРТА И ФИНИША — рисунки из банка, а не фигуры из кода (08-26).
+# Слово автора: «флаг финиша давай нарисуем красивее, пусть это будут разные
+# сгенерированные элементы, и стрелка в начале — можем позволить себе несколько
+# вариантов, это дёшево, а облагораживает визуально».
+# Вариант крутит СИД, ручки нет: логопеду безразлично, какой именно флажок,
+# а шесть кнопок за такую мелочь — цена без пользы (закон 16).
+# Размеры взяты из словаря заказа `start_finish_prompts.json`, мм.
+_METKI_START = (("start_strelka", 9.0, 6.0),
+                ("start_ukazatel", 9.0, 9.0),
+                ("start_sled", 8.0, 8.0))
+_METKI_FINISH = (("finish_flag_kletka", 8.0, 11.0),
+                 ("finish_flag_vympel", 8.0, 11.0),
+                 ("finish_vorota", 11.0, 9.0))
+
+
+def _metka_url(name: str, colour: bool) -> str:
+    return "/metki/%s/%s.png" % ("colour" if colour else "bw", name)
+
+
+def have_metki(colour: bool = False) -> bool:
+    """Банк доехал? Нет — старт и финиш рисуются кодом, как раньше."""
+    d = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "..", "pictures", "metki", "colour" if colour else "bw")
+    return os.path.isdir(d)
 
 
 def shape_for(scene: str) -> str:
@@ -435,15 +464,25 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
             f'{e(c["syllable"].upper())}</text>')
     # старт и финиш — концы маршрута, а не украшения по краям листа
     sx, sy = _cell_xy(0, 0, cols, shape)
-    svg.insert(1,
-        f'<path d="M {sx - _R - 8.0:.1f} {sy:.1f} L {sx - _R - 1.5:.1f} {sy:.1f} '
-        f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
-        f'fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round" '
-        f'stroke-linejoin="round"/>'
+    if have_metki(colour):
+        _sd = int(m.get("seed") or 0)
+        _n, _mw, _mh = _METKI_START[_sd % len(_METKI_START)]
+        svg.insert(1,
+            f'<image href="{_metka_url(_n, colour)}" '
+            f'x="{sx - _R - 1.5 - _mw:.1f}" y="{sy - _mh / 2:.1f}" '
+            f'width="{_mw:.1f}" height="{_mh:.1f}" '
+            f'preserveAspectRatio="xMidYMid meet"/>')
+    else:
+        # Банк не доехал — рисуем как раньше: лист не имеет права остаться
+        # без метки старта только потому, что нет картинки.
+        svg.insert(1,
+            f'<path d="M {sx - _R - 8.0:.1f} {sy:.1f} L {sx - _R - 1.5:.1f} {sy:.1f} '
+            f'M {sx - _R - 4.5:.1f} {sy - 2.6:.1f} l 3.0 2.6 l -3.0 2.6" '
+            f'fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round" '
+            f'stroke-linejoin="round"/>')
         # ⚠ Слова «старт» и «финиш» сняты 08-23 по слову автора: стрелка и
         # флажок говорят то же самое, а подпись повторяла их третий раз. Место
         # у краёв листа дорого — там же лежит сцена.
-        )
     if last:
         fx, fy = last
         # Флажок ставим ПО ХОДУ движения: на обратном ряду ребёнок идёт справа
@@ -470,11 +509,24 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
         # Подпись уходит ПОД кружок с зазором, а не впритык к нему: на [щ] она
         # начиналась в полумиллиметре от края кружка и читалась как его часть.
         tx = max(8.0, min(_W - 8.0, px))
-        svg.append(
-            f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
-            f'L {px + fwd * _FLAG_W:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
-            f'fill="#000" stroke="#000" stroke-width="1.4" '
-            f'stroke-linejoin="round"/>')
+        if have_metki(colour):
+            _sd = int(m.get("seed") or 0)
+            _n, _mw, _mh = _METKI_FINISH[_sd % len(_METKI_FINISH)]
+            # Рисунок ставится ПО ХОДУ движения, как и рисованный флажок: при
+            # движении справа налево он уходит влево от кружка, иначе финиш
+            # оказывался бы позади ребёнка.
+            _x = px if fwd > 0 else px - _mw
+            svg.append(
+                f'<image href="{_metka_url(_n, colour)}" '
+                f'x="{_x:.1f}" y="{fy - _mh + 3.0:.1f}" '
+                f'width="{_mw:.1f}" height="{_mh:.1f}" '
+                f'preserveAspectRatio="xMidYMid meet"/>')
+        else:
+            svg.append(
+                f'<path d="M {px:.1f} {fy + 5.0:.1f} L {px:.1f} {fy - 7.0:.1f} '
+                f'L {px + fwd * _FLAG_W:.1f} {fy - 4.6:.1f} L {px:.1f} {fy - 2.2:.1f}" '
+                f'fill="#000" stroke="#000" stroke-width="1.4" '
+                f'stroke-linejoin="round"/>')
 
     return f"""<!DOCTYPE html>
 <html lang="ru">

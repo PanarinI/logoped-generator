@@ -471,7 +471,9 @@ GOTENBERG = os.environ.get(
 # нет папок — сервер отдаёт как раньше, и откат ничего не стоит.
 _PICT_DIRS = {"geroi/colour": "geroi", "geroi/bw": "geroi_bw", "fony": "fony",
               "fony/colour": "fony/colour", "fony/bw": "fony/bw",
-              "dorozhka/colour": "dorozhka/colour", "dorozhka/bw": "dorozhka/bw"}
+              "dorozhka/colour": "dorozhka/colour", "dorozhka/bw": "dorozhka/bw",
+              # Метки старта и финиша слоговой дорожки (08-26).
+              "metki/colour": "metki/colour", "metki/bw": "metki/bw"}
 
 
 def _embed_pictures(html: str) -> str:
@@ -512,7 +514,7 @@ def _embed_pictures(html: str) -> str:
             data = base64.b64encode(fh.read()).decode()
         return attr + '="data:image/png;base64,' + data + '"'
 
-    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony|dorozhka)/[^"]+)"',
+    return re.sub(r'\b(src|href|xlink:href)="(/(?:geroi|fony|dorozhka|metki)/[^"]+)"',
                   sub, html)
 
 
@@ -983,6 +985,11 @@ class Handler(BaseHTTPRequestHandler):
         # Банк ЗВУКОВОЙ ДОРОЖКИ (08-26): виды героев, цели и листы-спирали.
         # Две папки, `colour` и `bw`, и вторая СНЯТА с первой — не рисовалась
         # отдельно (закон дома: рисуем цветное, ч/б снимаем технически).
+        if path.startswith("/metki/"):
+            parts = path.split("/")          # ['', 'metki', <colour|bw>, <file>]
+            if len(parts) == 4 and parts[2] in ("colour", "bw"):
+                self._bank("metki/" + parts[2], urllib.parse.unquote(parts[3]))
+                return
         if path.startswith("/dorozhka/"):
             parts = path.split("/")          # ['', 'dorozhka', <colour|bw>, <file>]
             if len(parts) == 4 and parts[2] in ("colour", "bw"):

@@ -52,6 +52,9 @@ COPY --chown=app:app pictures/geroi_bw/ ./pictures/geroi_bw/
 # ⚠ Цветная половина банка тяжёлая: bw 864 КБ, colour 77 МБ (~1,5 МБ на файл).
 # Ужать до печатного размера — отдельная работа, как сделано для objects/small.
 COPY --chown=app:app pictures/dorozhka/ ./pictures/dorozhka/
+# Метки старта и финиша слоговой дорожки (08-26). Без строки прод отдавал бы
+# 404 и лист остался бы без стрелки и флажка — при том что локально всё цело.
+COPY --chown=app:app pictures/metki/ ./pictures/metki/
 
 EXPOSE 8080
 CMD ["python3", "web/server.py"]
