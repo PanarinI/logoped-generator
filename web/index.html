@@ -475,7 +475,12 @@
         <button class="chip" type="button" data-r="task">не то задание</button>
         <button class="chip" type="button" data-r="other">другое</button>
       </div>
-      <textarea id="ask-text" rows="2" placeholder="Если есть время — напишите словами. Можно не писать."></textarea>
+      <!-- ⚠ 08-26, слово автора: «убери „если есть время…“, напиши более
+           формально и кратко — типа „опишите“». Прежняя формулировка была
+           вежливой ценой двух строк: она извинялась за вопрос и тут же
+           разрешала не отвечать. Логопед и так волен закрыть окно — писать
+           это словами значит занимать место оговоркой. -->
+      <textarea id="ask-text" rows="2" placeholder="Опишите"></textarea>
       <button class="btn primary small" id="ask-send" type="button">Отправить</button>
     </div>
   </div>
