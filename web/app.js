@@ -712,7 +712,7 @@ function renderTabs() {
   // так видит на бумаге (слово автора 08-23: «вообще лишний блок»). Материалы
   // из слов — другое дело: там ров говорит про ОБЪЁМ БАНКА, а этого на листе
   // не видно.
-  { const _mb = $('moat-box'); if (_mb) _mb.hidden = soon || !USES_WORDS.has(S.tab); }
+  { const _mb = $('moat-open'); if (_mb) _mb.hidden = soon || !USES_WORDS.has(S.tab); }
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
@@ -721,7 +721,7 @@ function renderTabs() {
   if (S.tab === 'propisi') renderVowelPick();
   // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
   // на прописях было бы неправдой — там не лист, а дорожки.
-  if ($('moat-summary')) $('moat-summary').textContent = {
+  if ($('moat-open')) $('moat-open').textContent = {
     sheet:   'Из чего собран этот лист',
     phrases: 'Из чего собраны эти словосочетания',
     maze:    'Из чего собран этот лабиринт',
@@ -1207,7 +1207,7 @@ async function load() {
   // Но ров возвращаем только тем, у кого он есть: на дорожках его нет вовсе,
   // и безусловное `false` здесь показывало бы пустую коробку (renderTabs ниже
   // выставит правду, но кадр между ними логопед бы увидел).
-  { const _mb = $('moat-box'); if (_mb) _mb.hidden = !USES_WORDS.has(S.tab); }
+  { const _mb = $('moat-open'); if (_mb) _mb.hidden = !USES_WORDS.has(S.tab); }
   renderTabs();
   writeFrame(res.html);
   renderMoat(res.stats);
@@ -1297,7 +1297,7 @@ function showError(res) {
   // «всё равно распечатать», которая печатает невидимый прошлый лист.
   // Настройки несобранного материала — из той же породы: выбирать фон у
   // дорожки, которой нет, логопеду нечего.
-  { const _mb = $('moat-box'); if (_mb) _mb.hidden = true; }
+  { const _mb = $('moat-open'); if (_mb) _mb.hidden = true; }
   $('scene-card').hidden = true;
   $('game-card').hidden = true;
   $('text-card').hidden = true;
@@ -1642,6 +1642,34 @@ if (window.ResizeObserver) {
 /* ── ров: пересчёт на глазах ─────────────────────────────── */
 
 
+
+/* ГДЕ СТОИТ РЯД ДЕЙСТВИЙ («Скачать» + кубик).
+   На широком экране — первым в панели справа. На телефоне панель лежит ПОД
+   бумагой, и главное действие оказывалось за целым экраном листа: до «Скачать»
+   надо было прокрутить А4 (слово автора 08-26: «в мобайле кнопку скачать и
+   кубик разместим НАД листом, а не под»).
+   Порядком CSS этого не сделать: узел лежит ВНУТРИ панели, а `order` двигает
+   только соседей по одному контейнеру. Поэтому узел переносится — один узел,
+   два места, слушатель на смену ширины. */
+const NARROW = window.matchMedia('(max-width: 820px)');
+
+function placeActions() {
+  const box = $('actions-box');
+  const paper = document.querySelector('.paper');
+  const panel = document.querySelector('.panel');
+  if (!box || !paper || !panel) return;
+  if (NARROW.matches) {
+    if (box.nextElementSibling !== paper) paper.parentNode.insertBefore(box, paper);
+  } else if (box.parentNode !== panel || box !== panel.firstElementChild) {
+    panel.insertBefore(box, panel.firstElementChild);
+  }
+}
+
+/* Слушатели вешаются ЗДЕСЬ, а не наверху рядом с `fitFrame`: `const NARROW`
+   объявлен строкой выше, и обращение к нему раньше объявления — не
+   «неаккуратно», а ReferenceError на загрузке (временная мёртвая зона). */
+window.addEventListener('resize', placeActions);
+if (NARROW.addEventListener) NARROW.addEventListener('change', placeActions);
 
 function renderMoat(st) {
   const box = $('moat');
@@ -2595,7 +2623,28 @@ function renderMethod() {
 }
 
 
+/* РОВ ПО НАЖАТИЮ. Расчёт уже посчитан и лежит в узле `#moat` — рисует его
+   `renderMoat` на каждом ответе движка. Кнопка только показывает окно, поэтому
+   числа в нём не могут разойтись с листом: это один и тот же расчёт, а не
+   второй. */
+function openMoat() {
+  $('moat-back').hidden = false;
+  $('moat-win').hidden = false;
+}
+
+function closeMoat() {
+  $('moat-back').hidden = true;
+  $('moat-win').hidden = true;
+}
+
 function bindActions() {
+  placeActions();
+  $('moat-open').onclick = openMoat;
+  $('moat-close').onclick = closeMoat;
+  $('moat-back').onclick = closeMoat;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('moat-win').hidden) closeMoat();
+  });
   $('method-open').onclick = openMethod;
   $('method-close').onclick = closeMethod;
   $('method-back').onclick = closeMethod;

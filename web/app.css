@@ -617,8 +617,16 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
      виджет с телефона впервые мог не догадаться прокрутить до него. */
   .result { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
   .axis-corner { display: none; }
-  .rail, .paper, .tools, .panel { grid-column: 1; grid-row: auto; }
+  .rail, .paper, .tools, .panel, .actions { grid-column: 1; grid-row: auto; }
   .tools { order: 1; }
+  /* ⚠ 08-26, слово автора: «в мобайле кнопку скачать и кубик разместим НАД
+     листом, а не под». На телефоне панель лежит ПОД бумагой, и «Скачать»
+     оказывалось за экраном листа — до главного действия надо было прокрутить
+     целый А4. Сам узел переносит `placeActions()` в app.js: порядком его не
+     достать, он лежит ВНУТРИ панели, а порядок двигает только соседей. */
+  .actions { order: 2; }
+  .paper { order: 3; }
+  .panel { order: 4; }
   /* ⚠ 08-26, поймал автор с телефона: «звук Р в верхней панели выбран — а где
      другие? их нет?». Ряд ехал вбок прокруткой, и на 375 px из одиннадцати
      звуков виден был ОДИН. Прокрутка вбок не имеет вида: край не обрезан, нет
@@ -640,8 +648,7 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
      колонки. Правило `width:100%!important` перебивало расчёт, и на 390 px
      лист вылезал за экран обрезанным (поймано глазами 08-22). Один хозяин
      у размера — расчёт, а не таблица стилей. */
-  .paper { order: 2; }
-  .panel { order: 3; max-height: none; overflow: visible; }
+  .panel { max-height: none; overflow: visible; }
 }
 
 /* ── кнопка «Скачать» с выбором формата ───────────────────────────────
@@ -811,3 +818,12 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   .brand { padding: 6px 0 4px; font-size: 15px; }
   .result { height: auto; }
 }
+
+/* ── ОКНО РВА «Из чего собран этот лист» ──────────────────────────────
+   Ширина больше, чем у отзыва: внутри таблица расчёта, а не поле ввода.
+   Высота ограничена экраном — на длинных материалах ров прокручивается сам,
+   не утаскивая страницу. */
+.moat-win { width: min(560px, calc(100vw - 32px));
+            max-height: calc(100vh - 48px); overflow-y: auto; }
+.moat-win h2 { margin: 0 0 var(--s2); font-size: 1.05rem; }
+.moat-foot { display: flex; justify-content: flex-end; margin-top: var(--s3); }
