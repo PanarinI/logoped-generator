@@ -712,21 +712,13 @@ function renderTabs() {
   // так видит на бумаге (слово автора 08-23: «вообще лишний блок»). Материалы
   // из слов — другое дело: там ров говорит про ОБЪЁМ БАНКА, а этого на листе
   // не видно.
-  { const _mb = $('moat-open'); if (_mb) _mb.hidden = soon || !USES_WORDS.has(S.tab); }
+  { const _mb = $('moat'); if (_mb) _mb.hidden = soon || !USES_WORDS.has(S.tab); }
   if (S.tab === 'sheet') renderGamePick();
   if (S.tab === 'track') renderScenePick();
   if (S.tab === 'story') { renderStoryMode(); renderThemePick(); renderTextPick(); }
   renderRows();
   renderFramePick();
   if (S.tab === 'propisi') renderVowelPick();
-  // Заголовок рва называет ТОТ материал, который сейчас на экране: «этот лист»
-  // на прописях было бы неправдой — там не лист, а дорожки.
-  if ($('moat-open')) $('moat-open').textContent = {
-    sheet:   'Из чего собран этот лист',
-    phrases: 'Из чего собраны эти словосочетания',
-    maze:    'Из чего собран этот лабиринт',
-    story:   'Из чего собран этот рассказ',
-  }[S.tab] || 'Из чего это собрано';
   syncGroupTitle();
 }
 /* Что именно уберёт профиль — зависит от материала. На листе, лабиринте,
@@ -1207,7 +1199,7 @@ async function load() {
   // Но ров возвращаем только тем, у кого он есть: на дорожках его нет вовсе,
   // и безусловное `false` здесь показывало бы пустую коробку (renderTabs ниже
   // выставит правду, но кадр между ними логопед бы увидел).
-  { const _mb = $('moat-open'); if (_mb) _mb.hidden = !USES_WORDS.has(S.tab); }
+  { const _mb = $('moat'); if (_mb) _mb.hidden = !USES_WORDS.has(S.tab); }
   renderTabs();
   writeFrame(res.html);
   renderMoat(res.stats);
@@ -1297,7 +1289,7 @@ function showError(res) {
   // «всё равно распечатать», которая печатает невидимый прошлый лист.
   // Настройки несобранного материала — из той же породы: выбирать фон у
   // дорожки, которой нет, логопеду нечего.
-  { const _mb = $('moat-open'); if (_mb) _mb.hidden = true; }
+  { const _mb = $('moat'); if (_mb) _mb.hidden = true; }
   $('scene-card').hidden = true;
   $('game-card').hidden = true;
   $('text-card').hidden = true;
@@ -1765,9 +1757,21 @@ function renderMoat(st) {
   }
 
   box.appendChild(el('h2', null, 'Из чего собран этот лист'));
+  // ⚠ 08-26, слово автора: «не понятно, что это за цифры — можно только
+  // догадаться». Числа стояли голым столбцом. Теперь у столбца есть единица
+  // («слов»), а над таблицей — одна строка про то, что считается. Больше не
+  // надо: остальное читается из самих названий строк.
+  { const c = el('p', 'hint', 'Сколько слов со звуком было в картотеке и '
+                            + 'сколько из них дошло до этого листа.');
+    c.style.margin = '0 0 8px';
+    box.appendChild(c); }
 
   const t = el('table', 'ledger');
   const rows = [];
+  { const head = el('tr', 'ledger-head');
+    head.appendChild(el('td', null, ''));
+    head.appendChild(el('td', 'n', 'слов'));
+    rows.push(head); }
 
   const row = (cls, name, why, num, key) => {
     const tr = el('tr', cls);
@@ -1827,6 +1831,13 @@ function renderMoat(st) {
    они не менялись бы при смене позиции, хотя слова в клетках меняются целиком. */
 function renderMazeMoat(box, st, label) {
   box.appendChild(el('h2', null, 'Из чего собрана эта дорожка'));
+  // ⚠ 08-26, та же беда, что у листа: столбец чисел без единицы читался
+  // загадкой. Здесь заголовка столбца НЕТ намеренно — в нём и слова, и
+  // картинки, одна подпись на оба была бы неправдой. Единицу несёт строка.
+  { const c = el('p', 'hint', 'Сколько слов со звуком было в картотеке и '
+                            + 'сколько из них встало в дорожку картинками.');
+    c.style.margin = '0 0 8px';
+    box.appendChild(c); }
   const t = el('table', 'ledger');
   const rows = [];
   const row = (cls, name, why, num, key) => {
@@ -2623,28 +2634,8 @@ function renderMethod() {
 }
 
 
-/* РОВ ПО НАЖАТИЮ. Расчёт уже посчитан и лежит в узле `#moat` — рисует его
-   `renderMoat` на каждом ответе движка. Кнопка только показывает окно, поэтому
-   числа в нём не могут разойтись с листом: это один и тот же расчёт, а не
-   второй. */
-function openMoat() {
-  $('moat-back').hidden = false;
-  $('moat-win').hidden = false;
-}
-
-function closeMoat() {
-  $('moat-back').hidden = true;
-  $('moat-win').hidden = true;
-}
-
 function bindActions() {
   placeActions();
-  $('moat-open').onclick = openMoat;
-  $('moat-close').onclick = closeMoat;
-  $('moat-back').onclick = closeMoat;
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !$('moat-win').hidden) closeMoat();
-  });
   $('method-open').onclick = openMethod;
   $('method-close').onclick = closeMethod;
   $('method-back').onclick = closeMethod;

@@ -819,11 +819,8 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
   .result { height: auto; }
 }
 
-/* ── ОКНО РВА «Из чего собран этот лист» ──────────────────────────────
-   Ширина больше, чем у отзыва: внутри таблица расчёта, а не поле ввода.
-   Высота ограничена экраном — на длинных материалах ров прокручивается сам,
-   не утаскивая страницу. */
-.moat-win { width: min(560px, calc(100vw - 32px));
-            max-height: calc(100vh - 48px); overflow-y: auto; }
-.moat-win h2 { margin: 0 0 var(--s2); font-size: 1.05rem; }
-.moat-foot { display: flex; justify-content: flex-end; margin-top: var(--s3); }
+/* Заголовок столбца рва: единица у чисел. Тише самих чисел — он подпись,
+   а не строка расчёта. */
+.ledger-head td { border: 0; padding-bottom: 2px; }
+.ledger-head .n { font-size: 11px; font-weight: 600; color: var(--ink-2);
+                  text-transform: lowercase; letter-spacing: .04em; }
