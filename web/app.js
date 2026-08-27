@@ -1674,16 +1674,20 @@ window.addEventListener('resize', placeActions);
 if (NARROW.addEventListener) NARROW.addEventListener('change', placeActions);
 
 function renderMoat(st) {
+  // ⚠ 08-26, слово автора: «наверху заголовок „как собран лист“, а под ним
+  // того же размера „из чего собран лист“ — это максимально паршиво».
+  // Верно: ящик уже назвал материал своим заголовком, и ров называл его
+  // ВТОРОЙ раз, другими словами. Два имени одного места — это не два
+  // раздела, это потерянный человек. Расчёт идёт сразу таблицей.
   const box = $('moat');
-  // ⛔ 08-26: блок рва снят с экрана. Функция оставлена целой — числа рва ещё
-  // нужны справке, — но без своего узла она просто молчит.
+  // Узел рва живёт ВНУТРИ ящика «Как это устроено», первым блоком (08-26,
+  // третий заход за день). Нет узла — функция молча ничего не рисует.
   if (!box) return;
   box.innerHTML = '';
   const label = S.cfg.sounds.find((x) => x.key === S.sound).label;
 
   if (st.kind === 'maze') { renderMazeMoat(box, st, label); return; }
   if (st.kind === 'rasskaz') {
-    box.appendChild(el('h2', null, 'Рассказ для пересказа'));
     const p = el('p', 'hint',
       `«${st.title}»: ${st.sentences} ${plural(st.sentences, 'предложение', 'предложения', 'предложений')}, ` +
       `${st.words} ${plural(st.words, 'слово', 'слова', 'слов')}, ` +
@@ -1698,7 +1702,6 @@ function renderMoat(st) {
     return;
   }
   if (st.kind === 'story') {
-    box.appendChild(el('h2', null, 'Сочини рассказ'));
     const p = el('p', 'hint',
       `Тема «${st.theme}»: ${st.n_sets} набора по 3-4 слова на звук [${label}]. ` +
       'Все чисты для этого ребёнка.');
@@ -1713,7 +1716,6 @@ function renderMoat(st) {
     return;
   }
   if (st.kind === 'phrases') {
-    box.appendChild(el('h2', null, 'Словосочетания'));
     const p = el('p', 'hint',
       `${st.n} пар «прилагательное + существительное» на звук [${label}]. ` +
       'Ступень между словом и фразой: звук надо удержать в двух словах подряд.');
@@ -1731,7 +1733,6 @@ function renderMoat(st) {
     return;
   }
   if (st.kind === 'propisi') {
-    box.appendChild(el('h2', null, 'Звуковая дорожка'));
     const iso = st.mode === 'isolated';
     const p = el('p', 'hint',
       (iso ? 'только звук' : `слог ${st.syllable.toUpperCase()}`) +
@@ -1751,7 +1752,6 @@ function renderMoat(st) {
     return;
   }
   if (st.kind === 'track') {
-    box.appendChild(el('h2', null, 'Слоговая дорожка'));
     const p = el('p', 'hint',
       `${st.cells} кружков · ${st.type_label} · слоги ` +
       ((st.vowels_syl && st.vowels_syl.length)
@@ -1765,8 +1765,6 @@ function renderMoat(st) {
     S.prev = null;
     return;
   }
-
-  box.appendChild(el('h2', null, 'Из чего собран этот лист'));
   // ⚠ 08-26. Числа стояли голым столбцом («не понятно, что это за цифры»), и
   // сперва я подписал их отдельной строкой прозы. Строка снята в тот же вечер
   // вместе с предисловием ящика: единицы у столбца хватает, остальное читается
@@ -1836,7 +1834,6 @@ function renderMoat(st) {
    можно ли слово нарисовать. Показывать здесь числа словаря листа — врать:
    они не менялись бы при смене позиции, хотя слова в клетках меняются целиком. */
 function renderMazeMoat(box, st, label) {
-  box.appendChild(el('h2', null, 'Из чего собрана эта дорожка'));
   // ⚠ 08-26, та же беда, что у листа: столбец чисел без единицы читался
   // загадкой. Здесь заголовка столбца НЕТ намеренно — в нём и слова, и
   // картинки, одна подпись на оба была бы неправдой. Единицу несёт строка.
