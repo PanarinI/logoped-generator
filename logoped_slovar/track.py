@@ -454,8 +454,15 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
                         avoid=_occupied(rows, cols, len(cells), shape),
                         colour=bool(colour))] \
         if m.get("scene") else []
-    svg += [f'<path d="{_route_path(rows, cols, shape)}" fill="none" stroke="#000" '
-           f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']
+    # ОРЕОЛ У ТРОПЫ — тот же путь белым и толще, ПОД серым. Просьба автора
+    # 08-26 («контур, чтобы отделять линию от фона»): сцена лежит под тропой, и
+    # на траве или в камнях тропа местами тонула. На бумаге белый не виден, а
+    # поверх сцены он отрезает путь от мира.
+    _rp = _route_path(rows, cols, shape)
+    svg += [f'<path d="{_rp}" fill="none" stroke="#fff" '
+            f'stroke-width="5.4" stroke-linecap="round"/>',
+            f'<path d="{_rp}" fill="none" stroke="#000" '
+            f'stroke-width="3.0" stroke-linecap="round" opacity="0.42"/>']
     # ⚡ ПЕРВЫЙ И ПОСЛЕДНИЙ КРУЖОК И ЕСТЬ СТАРТ С ФИНИШЕМ (08-26, слово автора).
     # Прежде метки стояли РЯДОМ с ними, и обе мешали: стрелка уходила за левый
     # край листа и обрезалась, а флажок со своим белым полем налезал на тропу.

@@ -1042,6 +1042,14 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
       <svg class="spiral-line" viewBox="0 0 {SPIRAL_W:.0f} {SPIRAL_H:.0f}"
            width="{SPIRAL_W:.0f}mm" height="{SPIRAL_H:.0f}mm"
            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- ОРЕОЛ. Тот же путь белым и толще — лежит ПОД чёрным. Просьба
+             автора 08-26: «пусть у дорожки будет тень или контур, чтобы
+             отделять линию от фона». На бумаге белый ореол не виден вовсе
+             (бумага и есть белая), а поверх фона и спрайтов он отрезает
+             дорожку от мира — ребёнок ведёт палец по линии, а не угадывает
+             её среди веток. -->
+        <path d="{_g['d']}" fill="none" stroke="#fff" stroke-width="4.4"
+              stroke-linecap="round" stroke-linejoin="round"/>
         <path d="{_g['d']}" fill="none" stroke="#000" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="{_g['sx']:.1f}" cy="{_g['sy']:.1f}" r="2.1" fill="#000"/>
@@ -1103,6 +1111,8 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         <svg class="track" viewBox="0 0 {w:.1f} {_h:.1f}"
              width="{w:.1f}mm" height="{_h:.1f}mm"
              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="{d}" fill="none" stroke="#fff" stroke-width="2.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
           <path d="{d}" fill="none" stroke="#000" stroke-width="1.1"
                 stroke-linecap="round" stroke-linejoin="round"{dash}/>
           <circle cx="{_sx:.1f}" cy="{_sy:.1f}" r="1.1" fill="#000"/>
