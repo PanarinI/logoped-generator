@@ -1325,6 +1325,7 @@ class Handler(BaseHTTPRequestHandler):
                               "scene": t["meta"].get("scene", ""),
                               "cells": t["meta"]["n_cells"],
                               "vowels": t["meta"]["vowels"],
+                              "vowels_syl": t["meta"].get("vowels_syl") or [],
                               "type_label": t["meta"]["type_label"]},
                 })
 
@@ -1484,6 +1485,9 @@ class Handler(BaseHTTPRequestHandler):
                               "mode": p["meta"]["mode"],
                               "vowel": p["meta"]["vowel"],
                               "vowels": p["meta"].get("vowels") or [],
+                              # Ряд уходит на экран ещё и СЛОГАМИ: кнопка обязана
+                              # показывать то, что встанет на лист (08-26).
+                              "vowels_syl": p["meta"].get("vowels_syl") or [],
                               "rows": p["meta"]["n_rows"],
                               "family": p["meta"].get("family", "strips"),
                               "n_dorozhek": p["meta"].get("rows", 3),

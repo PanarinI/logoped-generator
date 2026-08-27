@@ -951,16 +951,24 @@ function renderScenePick() {
 /* Гласная слога звуковой дорожки. Ряд приходит С ЛИСТОМ: у мягкой цели он свой
    («я ё ю и е»), у твёрдой свой («а о у ы э»), и держать его вторым списком в
    интерфейсе значило бы дать ему разойтись с движком.
-   Показывается ТОЛЬКО когда включён слог: без слога гласной на бумаге нет. */
+   Показывается ТОЛЬКО когда включён слог: без слога гласной на бумаге нет.
+
+   ⚠ 08-26. На кнопке стоит СЛОГ, а не гласная. Стояла гласная — и на мягкой
+   цели кнопка врала: логопед видел «А», а лист печатал «РЯ»; «Э» → «РЕ». Это
+   та же болезнь, что ловилась у финиша полосы («слог СЁ, а у финиша О»), она
+   просто уцелела здесь. Слог считает движок тем же кодом, каким печатает лист
+   (`vowels_syl`), поэтому разойтись они больше не могут. Заодно пустышка —
+   стечение без гласной — подписывает себя сама: «ДР», а не прочерк. */
 function renderVowelPick() {
   const box = $('vowel-pick');
   if (!box) return;
   const list = (S.tab === 'propisi' && S.propisiMode === 'syllable')
     ? (S.vowelOptions || []) : [];
+  const labels = S.vowelSyl || [];
   box.hidden = !list.length;
   box.innerHTML = '';
-  list.forEach((v) => {
-    const b = el('button', 'seg-btn', v.toUpperCase());
+  list.forEach((v, i) => {
+    const b = el('button', 'seg-btn', labels[i] || v.toUpperCase());
     b.classList.toggle('is-on', v === S.vowelUsed);
     b.addEventListener('click', () => {
       if (v === S.vowelUsed) return;
@@ -1173,6 +1181,7 @@ async function load() {
   if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
   if (S.tab === 'propisi' && res.stats) {
     S.vowelOptions = res.stats.vowels || [];
+    S.vowelSyl = res.stats.vowels_syl || [];
     S.vowelUsed = res.stats.vowel || '';
     // Законные стечения приходят ВМЕСТЕ с листом: их считает движок по профилю
     // ребёнка, и на экране они появляются ровно те, что можно напечатать.
@@ -1714,8 +1723,10 @@ function renderMoat(st) {
   if (st.kind === 'track') {
     box.appendChild(el('h2', null, 'Слоговая дорожка'));
     const p = el('p', 'hint',
-      `${st.cells} кружков · ${st.type_label} · гласные ` +
-      st.vowels.map((v) => v.toUpperCase()).join(' · '));
+      `${st.cells} кружков · ${st.type_label} · слоги ` +
+      ((st.vowels_syl && st.vowels_syl.length)
+        ? st.vowels_syl.join(' · ')
+        : st.vowels.map((v) => v.toUpperCase()).join(' · ')));
     p.style.margin = '0 0 10px';
     box.appendChild(p);
     // Пояснение «ребёнок ведёт пальцем по тропе…» снято 08-23 по слову автора:

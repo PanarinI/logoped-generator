@@ -216,6 +216,13 @@ def build_track(sound: str = "р",
             "cols": COLS,
             "n_cells": len(cells),
             "vowels": vowels,
+            # ⚠ 08-26. Панель писала «гласные А · О · У · Ы · Э», пока в кружках
+            # стояли РЯ · РИ · РЁ · РЕ · РЮ: список фонемный, а лист печатает
+            # орфографию. На мягкой цели это не просто другой алфавит — там и
+            # ряд другой (и вместо ы). Отдаём ещё и печатный вид, одним домом
+            # правила (`content.syllable_display`).
+            "vowels_syl": [C.syllable_display(sound, v, syl_type).upper()
+                           for v in vowels],
             "hero": hero,
             "scene": scene,
             # Сид едет в мету затем, что вёрстка выбирает по нему метки старта

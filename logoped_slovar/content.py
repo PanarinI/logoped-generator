@@ -2180,6 +2180,28 @@ def onset_table() -> Dict[str, str]:
         return dict(json.load(fh)["frames"])
 
 
+def syllable_display(sound: str, vowel: str, syl_type: str = "direct",
+                     frame: str = "") -> str:
+    """Как слог выглядит НА БУМАГЕ: «ря», «вша», «кр».
+
+    Один дом у правила. До 08-26 каждый материал считал печатную форму сам, и
+    экран расходился с листом: на мягкой цели кнопка показывала фонемную «А», а
+    лист печатал «РЯ»; панель слоговой дорожки писала «гласные А О У Ы Э», пока
+    в кружках стояли РЯ РИ РЁ РЕ РЮ. Кто показывает слог — зовёт эту функцию.
+
+    Пустая гласная у стечения — законный случай: это ПУСТЫШКА, плашка «ДР» без
+    гласной (образцы Ольги, два листа из семи).
+    """
+    if not vowel:
+        return onset_display(frame) if frame else ""
+    out = ortho(_syllable_text(sound, vowel, syl_type, frame))
+    if frame:
+        disp, plain = onset_display(frame), ortho(frame)
+        if disp and disp != plain and out.startswith(plain):
+            out = disp + out[len(plain):]
+    return out
+
+
 def onset_display(frame: str) -> str:
     """Как стечение печатается логопеду. Пусто — начало незаконное.
 

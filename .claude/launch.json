@@ -4,8 +4,22 @@
     {
       "name": "logoped",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["web/server.py", "--port", "8784"],
+      "runtimeArgs": [
+        "web/server.py",
+        "--port",
+        "8784"
+      ],
       "port": 8784
+    },
+    {
+      "name": "logoped-check",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "web/server.py",
+        "--port",
+        "8795"
+      ],
+      "port": 8795
     }
   ]
 }
