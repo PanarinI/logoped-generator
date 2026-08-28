@@ -3251,6 +3251,10 @@ def load_adjectives(sound: str) -> Tuple[Dict[str, Any], ...]:
             spec = table["adjective_classes"][cls]
             a["comb_class"] = cls
             a["fits"] = frozenset(spec["fits"])
+            # МЕРКА — свойство, которое это прилагательное спрашивает у ВЕЩИ, а не
+            # у темы. Стоит по СЛОВУ, а не по классу: «деревянная лестница» бывает,
+            # «глиняная» нет, хотя оба лежат в классе материал-твёрдый.
+            a["merka"] = table.get("merka_prilagatelnogo", {}).get(a["word"], "")
             # причастию мало «живого»: у «летящий» подлежащее — птица или
             # насекомое, но не щука. Признак берём из уже размеченного
             # SUBJECT_CLASS, а не заводим второй такой же.
@@ -3258,6 +3262,22 @@ def load_adjectives(sound: str) -> Tuple[Dict[str, Any], ...]:
             a["subject_classes"] = frozenset(subj) if subj else None
             out.append(a)
     return tuple(out)
+
+
+def noun_merki(row: Dict[str, Any]) -> FrozenSet[str]:
+    """Мерки существительного — по чему эту вещь вообще можно мерить.
+
+    Лежат в карточке слова (`merki` в words_*.jsonl), собраны руками двумя
+    разборами со сверкой. Пусто — значит слово не размечено ИЛИ размечено и
+    ни одной мерки не имеет; разницу знает `merki_sobrany`, а не это поле."""
+    return frozenset(row.get("merki") or ())
+
+
+def merki_sobrany(sound: str) -> bool:
+    """Размечен ли словарь этого звука. Пока размечены не все, у остальных
+    проверка мерок молчит и блок работает по старой таблице тем.
+    ⚠ Костыль стройки: исчезает, когда список дорастёт до одиннадцати звуков."""
+    return sound in set(load_combinability().get("slova_razmecheny", ()))
 
 
 def noun_class(row: Dict[str, Any]) -> Optional[str]:
@@ -3341,6 +3361,12 @@ def build_phrases(nouns: Sequence[Dict[str, Any]], sound: str,
             f"сочетаемости в словаре не нашлось")
         return None
 
+    razmechen = merki_sobrany(sound)
+    if not razmechen:
+        warnings.append(
+            f"словарь [{sound}] ещё не размечен мерками — узкие прилагательные "
+            f"на нём отбираются по старой таблице тем")
+
     nouns = list(nouns)
     rnd.shuffle(nouns)
 
@@ -3361,9 +3387,14 @@ def build_phrases(nouns: Sequence[Dict[str, Any]], sound: str,
         # у некоторых слов признак задан ими самими: соль солёная, мёд сладкий
         forbidden = frozenset(
             load_combinability()["noun_exceptions"].get(noun["word"], ()))
+        merki = noun_merki(noun)
         cands = [a for a in adjectives
                  if ncls in a["fits"] and a["comb_class"] not in forbidden
-                 and used_adj.get(a["word"], 0) < 2]
+                 and used_adj.get(a["word"], 0) < 2
+                 # Мерка — главные ворота: тема пускает «вязаную» к заколке,
+                 # потому что заколка лежит в «одежда/аксессуары», а мерка
+                 # спрашивает у самой заколки, бывает ли она из ткани.
+                 and (not razmechen or not a["merka"] or a["merka"] in merki)]
         rnd.shuffle(cands)
         subj_cls = subject_class(noun)
         for adj in cands:

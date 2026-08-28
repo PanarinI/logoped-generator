@@ -951,7 +951,12 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
     # слог в конце линии, а на спирали нет ни того, ни другого, ни третьего —
     # там один непрерывный путь и награда в центре. Закон 2 проекта: материал не
     # имеет права утверждать больше, чем мы можем показать.
-    spiral_head = ('<h1>Звуковая дорожка · звук <b>[' + _e(label) + ']</b></h1>')
+    # ⚠ 08-27. Заголовок спирали говорил «звук [Р]» и на слоговой ступени —
+    # остаток тех суток, когда слог на спираль не печатался. Теперь в центре
+    # стоит РА, и заголовок обязан называть то же, что полоса (закон 18).
+    spiral_head = ('<h1>Звуковая дорожка · звук <b>[' + _e(label) + ']</b></h1>'
+                   if isolated else
+                   '<h1>Звуковая дорожка · слог <b>' + _e(syll.upper()) + '</b></h1>')
     # ⚠ 08-26. В центре спирали теперь стоит либо награда, либо СЛОГ (см.
     # `spiral_geometry`), и задание обязано называть то, что там на самом деле:
     # на слоговой ступени палец приходит к слогу и ребёнок его говорит.
@@ -984,8 +989,13 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
     _pg = "A4 landscape" if _strips else "A4"
     _pw, _ph = (PAGE_H, PAGE_W) if _strips else (PAGE_W, PAGE_H)
     _lw = _pw - MARGIN_L - MARGIN_R
-    _vw = 26.0                                   # колонка героя, мм
-    _tw = 20.0                                   # цель у финиша, мм
+    # ⚡ 08-27, слово автора: «размер героев мелковат». Замер объяснил, почему:
+    # колонка была 26 мм при высоте строки 43 мм, а у картинки банка ещё и
+    # прозрачные поля — у легковой машины содержимое занимает 80 % ширины и
+    # 78 % высоты, то есть на бумаге герой выходил ~21 мм чернил в строке 43 мм.
+    # Колонка взята 40 мм; линии остаётся 192-210 мм из 264, места вдоволь.
+    _vw = 40.0                                   # колонка героя, мм
+    _tw = 26.0                                   # цель у финиша, мм
     # ⚠ 08-26. Считалось «поля 20 · шапка 26 · подвал 16», и лист уезжал на
     # ВТОРУЮ страницу — все шесть пробных PDF вышли двухстраничными. Замер по
     # вёрстке: шапка с заголовком и заданием берёт ~34 мм (10.5pt строка +
@@ -1003,6 +1013,10 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
     # снизу (~4 мм), а высота строки задана жёстко. Поймано глазами: «р-р-р»
     # второй дорожки печаталось поверх подсказки первой.
     _th = max(16.0, _rh - 15.0)
+    # Потолок высоты картинки — от СТРОКИ, а не от ширины колонки. Пока колонка
+    # была 26 мм, эти два числа случайно совпадали; на 40 мм высокий герой
+    # (светофор 1024×1536) полез бы в соседнюю дорожку.
+    _vh = min(_vw, max(18.0, _rh - 10.0))
 
     # Подпись взрослому перечисляет РЕАЛЬНЫЕ строки этого листа, а не выученные
     # три. Иначе на двух дорожках она обещала бы третью, которой нет (закон 2).
@@ -1035,6 +1049,16 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         else:
             _scentre = ('<div class="spiral-syll" ' + _sctr + '>'
                         + _e(syll.upper()) + '</div>')
+        # ⚠ 08-27, поймал автор: «разве на листе на звук не должно быть звука?
+        # сейчас если выбрать 1 на лист — звука нет». Правда: на полосе над
+        # каждой линией стоит «Р-Р-Р», а на спирали не стояло НИЧЕГО — звук
+        # называл только текст задания прозой. Симметричное место, чинится
+        # парой (закон 18). Подпись встаёт СПРАВА ОТ ГЕРОЯ: он и издаёт звук,
+        # он же стоит у старта. Место считается от героя, а не отступом на глаз,
+        # и лежит ниже самого нижнего витка — на линию не налезет.
+        _sutter = ('<div class="spiral-utter" style="left:%.1fmm;top:%.1fmm">%s</div>'
+                   % (_g["hero_left"] + SPIRAL_HERO + 2.0,
+                      _g["hero_top"] + SPIRAL_HERO * 0.34, _e(utter)))
         _sfon = spiral_fon(m["image_name"])
         _sfon_html = (('<img class="spiral-fon" alt="" src="/dorozhka/%s/%s.png">'
                        % (_sdir, _sfon)) if _sfon else "")
@@ -1053,7 +1077,7 @@ def render_propisi(p: Dict[str, Any], colour: bool = False) -> str:
         <path d="{_g['d']}" fill="none" stroke="#000" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="{_g['sx']:.1f}" cy="{_g['sy']:.1f}" r="2.1" fill="#000"/>
-      </svg>{_shero}{_scentre}
+      </svg>{_shero}{_sutter}{_scentre}
     </div></div>"""
 
     rows: List[str] = []
@@ -1160,16 +1184,21 @@ h1 b {{ font-size:20pt; }}
 .track-row {{ display:flex; align-items:center; gap:2mm; }}
 .track {{ display:block; flex:0 0 auto; }}
 .hint {{ font-size:8.5pt; color:#444; margin:2mm 0 0 6mm; }}
-.finish {{ font-size:20pt; font-weight:700; line-height:1; }}
+.finish {{ font-size:26pt; font-weight:700; line-height:1; }}
 .adult {{ margin-top:6mm; padding-top:2mm; border-top:0.4pt solid #000;
    font-size:9.5pt; line-height:1.45; }}
 .board {{ display:flex; align-items:center; gap:4mm; }}
 .hero-col {{ width:34mm; flex:0 0 34mm; }}
 .vid-box {{ width:{_vw}mm; flex:0 0 {_vw}mm; display:flex; align-items:center;
    justify-content:center; }}
-.vid {{ max-width:100%; max-height:{_vw}mm; display:block; }}
+/* ⚠ Размеры полос заданы ВНУТРИ строки, а не по голому классу: герой и цель
+   спирали носят те же классы `vid`/`tsel`, и потолок полосы срезал им размер
+   (поймано глазами 08-27: гараж в центре спирали ужался с 52 до 26 мм).
+   Порядок правил тут не защита — он и был единственной защитой до сих пор. */
+.row .vid {{ max-width:100%; max-height:{_vh}mm; display:block; }}
 .vid.flip {{ transform:scaleX(-1); }}
-.tsel {{ width:{_tw}mm; height:auto; display:block; flex:0 0 auto; }}
+.track-row .tsel {{ max-width:{_tw}mm; max-height:{_th}mm; width:auto;
+   height:auto; display:block; flex:0 0 auto; }}
 .spiral-wrap {{ display:flex; justify-content:center; margin-top:2mm; }}
 .spiral-stage {{ position:relative; width:{SPIRAL_W:.0f}mm; height:{SPIRAL_H:.0f}mm; }}
 .spiral-line {{ position:absolute; left:0; top:0; display:block; }}
@@ -1193,6 +1222,10 @@ h1 b {{ font-size:20pt; }}
 .spiral-tsel, .spiral-syll {{ position:absolute; transform:translate(-50%, -50%); }}
 .spiral-tsel {{ width:{SPIRAL_TSEL:.0f}mm; height:auto; }}
 .spiral-syll {{ font-size:30pt; font-weight:700; line-height:1; }}
+/* Что тянуть, пока ведёшь палец. Та же подпись, что над линией полосы, и тот
+   же кегль по смыслу: на полосе она одна на строку, здесь одна на лист. */
+.spiral-utter {{ position:absolute; font-size:16pt; font-weight:700;
+   letter-spacing:.04em; white-space:nowrap; }}
 .tracks {{ flex:1 1 auto; }}
 </style></head><body><div class="page">
 

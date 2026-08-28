@@ -1,0 +1,828 @@
+<meta charset="utf-8">
+<title>Как собран Логозвук</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap">
+<style>
+:root{
+  --paper:#f7f5f1; --card:#ffffff; --stage:#ece9e3;
+  --ink:#16191d; --ink-2:#565d66; --ink-3:#8b929b;
+  --line:#e6e2da; --line-2:#d5d0c6;
+  --accent:#2f6b4f; --accent-bg:#e2ede7;
+  --ochre:#b8701a; --ochre-bg:#fdf5ea;
+  --stop:#9d3535; --stop-bg:#fdeeee;
+  --r:10px; --r-sm:6px;
+  --measure:40rem;
+  --shadow:0 1px 2px rgba(22,25,29,.05), 0 10px 30px rgba(22,25,29,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#15171a; --card:#1c1f23; --stage:#101215;
+    --ink:#e9e6e0; --ink-2:#a8afb7; --ink-3:#767d85;
+    --line:#2c3137; --line-2:#3a4149;
+    --accent:#74b992; --accent-bg:#1d2a24;
+    --ochre:#d99a4e; --ochre-bg:#2a2119;
+    --stop:#d98484; --stop-bg:#2b1c1c;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15171a; --card:#1c1f23; --stage:#101215;
+  --ink:#e9e6e0; --ink-2:#a8afb7; --ink-3:#767d85;
+  --line:#2c3137; --line-2:#3a4149;
+  --accent:#74b992; --accent-bg:#1d2a24;
+  --ochre:#d99a4e; --ochre-bg:#2a2119;
+  --stop:#d98484; --stop-bg:#2b1c1c;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font:17px/1.62 "PT Sans","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:Alegreya,"PT Serif",Georgia,serif; text-wrap:balance; margin:0}
+code,.mono,.num{font-family:"PT Mono","SFMono-Regular",Menlo,monospace}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px}
+
+/* ── каркас ───────────────────────────────────────────────────────── */
+.wrap{max-width:78rem; margin:0 auto; padding:0 clamp(16px,4vw,40px)}
+.col{max-width:var(--measure)}
+section{padding:clamp(40px,6vw,72px) 0; border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+
+.eyebrow{
+  font-family:"PT Mono",monospace; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 10px
+}
+h2{font-size:clamp(26px,3.4vw,34px); line-height:1.15; font-weight:700; margin:0 0 6px}
+h2 .sec{
+  font-family:"PT Mono",monospace; font-size:.5em; font-weight:400;
+  color:var(--accent); vertical-align:.5em; margin-right:.5em; letter-spacing:.04em
+}
+h3{font-size:20px; line-height:1.25; font-weight:700; margin:0 0 8px}
+.lead{font-size:19px; color:var(--ink-2); margin:0 0 24px; max-width:var(--measure)}
+p{margin:0 0 16px; max-width:var(--measure)}
+.stack{display:flex; flex-direction:column; gap:26px}
+
+/* ── шапка ────────────────────────────────────────────────────────── */
+header{padding:clamp(48px,8vw,96px) 0 clamp(32px,5vw,56px)}
+.brandline{
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  font-family:"PT Mono",monospace; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); margin-bottom:20px
+}
+.brandline b{color:var(--accent); font-weight:400}
+h1{font-size:clamp(40px,7vw,72px); line-height:1.02; font-weight:700; letter-spacing:-.015em}
+h1 em{font-style:normal; color:var(--accent)}
+.subtitle{font-size:20px; color:var(--ink-2); margin:20px 0 0; max-width:36rem}
+
+.figures{
+  display:grid; gap:1px; background:var(--line); border:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+  margin:44px 0 0; border-radius:var(--r); overflow:hidden
+}
+.fig{background:var(--card); padding:18px 16px}
+.fig .n{
+  font-family:"PT Mono",monospace; font-size:26px; line-height:1;
+  font-variant-numeric:tabular-nums; display:block; margin-bottom:6px
+}
+.fig .t{font-size:13px; color:var(--ink-2); line-height:1.35; display:block}
+
+/* ── тиры ─────────────────────────────────────────────────────────── */
+.tier{
+  display:inline-block; font-family:"PT Mono",monospace; font-size:11px;
+  letter-spacing:.06em; padding:2px 7px; border-radius:var(--r-sm);
+  vertical-align:1px; white-space:nowrap
+}
+.t-book{background:var(--accent-bg); color:var(--accent)}
+.t-ours{background:var(--ochre-bg); color:var(--ochre)}
+.t-off {background:var(--stop-bg);  color:var(--stop)}
+
+.legend{display:flex; flex-wrap:wrap; gap:10px 22px; margin:0 0 28px; padding:0; list-style:none}
+.legend li{display:flex; align-items:baseline; gap:8px; font-size:14px; color:var(--ink-2)}
+
+/* ── карточки и таблицы ───────────────────────────────────────────── */
+.card{
+  background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r); padding:22px; box-shadow:var(--shadow)
+}
+.scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+table{border-collapse:collapse; width:100%; font-size:15px; min-width:34rem}
+th,td{text-align:left; padding:9px 14px 9px 0; border-bottom:1px solid var(--line); vertical-align:top}
+th{
+  font-family:"PT Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:400; white-space:nowrap
+}
+td.num,th.num{text-align:right; font-family:"PT Mono",monospace; font-variant-numeric:tabular-nums; padding-right:20px}
+tbody tr:last-child td{border-bottom:0}
+
+.note{
+  font-size:15px; color:var(--ink-2); border-left:2px solid var(--line-2);
+  padding:2px 0 2px 16px; margin:0 0 16px; max-width:var(--measure)
+}
+.note.warn{border-left-color:var(--ochre)}
+.note.stop{border-left-color:var(--stop)}
+.quote{
+  font-family:Alegreya,Georgia,serif; font-size:20px; line-height:1.45;
+  border-left:2px solid var(--accent); padding-left:18px; margin:0 0 16px;
+  max-width:var(--measure); color:var(--ink)
+}
+.quote cite{display:block; font:400 13px/1.5 "PT Sans",sans-serif; color:var(--ink-3); font-style:normal; margin-top:8px}
+
+/* ── ров ──────────────────────────────────────────────────────────── */
+.rov{background:var(--stage); border-radius:var(--r); padding:clamp(18px,3vw,30px); margin-top:8px}
+.rov-grid{display:grid; gap:26px; grid-template-columns:minmax(0,1fr)}
+@media (min-width:940px){ .rov-grid{grid-template-columns:minmax(0,1fr) 22rem} }
+
+.rail{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 20px; padding:0; list-style:none}
+.snd{
+  font:700 15px/1 "PT Sans",sans-serif; padding:9px 12px; min-width:44px;
+  background:var(--card); color:var(--ink); border:1px solid var(--line-2);
+  border-radius:var(--r-sm); cursor:pointer; transition:background .12s,border-color .12s
+}
+.snd[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; list-style:none}
+.chip{
+  font:400 14px/1 "PT Sans",sans-serif; padding:8px 11px;
+  background:var(--card); color:var(--ink); border:1px solid var(--line-2);
+  border-radius:var(--r-sm); cursor:pointer
+}
+.chip[aria-pressed="true"]{background:var(--accent-bg); border-color:var(--accent); color:var(--accent); font-weight:700}
+.chip[disabled]{opacity:.42; cursor:default; text-decoration:line-through}
+.field-label{
+  font-family:"PT Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 10px
+}
+.readout{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.big{font-family:"PT Mono",monospace; font-size:44px; line-height:1; font-variant-numeric:tabular-nums}
+.big small{font-size:17px; color:var(--ink-3)}
+.bar{height:8px; background:var(--stage); border-radius:99px; overflow:hidden; margin:14px 0 10px}
+.bar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .25s ease}
+@media (prefers-reduced-motion:reduce){ .bar i{transition:none} }
+.dropped{
+  font-family:"PT Mono",monospace; font-size:12px; line-height:1.7; color:var(--ink-3);
+  max-height:8.5rem; overflow-y:auto; margin-top:12px; word-spacing:.2em
+}
+.hint{font-size:14px; color:var(--ink-3); margin:10px 0 0; max-width:var(--measure)}
+
+/* ── карточка слова ───────────────────────────────────────────────── */
+.wordcard{display:grid; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.wordcard div{background:var(--card); padding:11px 14px; display:grid; grid-template-columns:12rem 1fr; gap:16px; font-size:15px; align-items:baseline}
+.wordcard dt,.wordcard b{font-family:"PT Mono",monospace; font-size:13px; color:var(--ink-3); font-weight:400}
+.wordcard span{color:var(--ink)}
+.wordcard em{font-style:normal; color:var(--ink-2); font-size:14px; display:block; margin-top:3px; line-height:1.45}
+@media (max-width:560px){ .wordcard div{grid-template-columns:1fr; gap:2px} }
+
+/* ── схема движка ─────────────────────────────────────────────────── */
+.flow{margin:0; width:100%; min-width:40rem}
+.flow text{font-family:"PT Sans",sans-serif; fill:var(--ink)}
+.flow .lbl{font-family:"PT Mono",monospace; font-size:10px; letter-spacing:.1em; fill:var(--ink-3)}
+.flow .box{fill:var(--card); stroke:var(--line-2)}
+.flow .box-a{fill:var(--accent-bg); stroke:var(--accent)}
+.flow .wire{stroke:var(--line-2); fill:none}
+.flow .ttl{font-size:13px; font-weight:700}
+.flow .sub{font-size:11px; fill:var(--ink-2)}
+
+/* ── законы ───────────────────────────────────────────────────────── */
+.laws{display:grid; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.laws details{background:var(--card)}
+.laws summary{
+  cursor:pointer; padding:13px 18px 13px 52px; position:relative;
+  font-weight:700; font-size:16px; list-style:none
+}
+.laws summary::-webkit-details-marker{display:none}
+.laws summary::before{
+  content:attr(data-n); position:absolute; left:16px; top:13px;
+  font-family:"PT Mono",monospace; font-size:13px; font-weight:400; color:var(--accent)
+}
+.laws summary:hover{background:var(--accent-bg)}
+.laws p{margin:0 18px 15px 52px; font-size:15px; color:var(--ink-2); max-width:none}
+
+/* ── источники ────────────────────────────────────────────────────── */
+.src{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:14px}
+.src li{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:baseline; font-size:15px}
+.src b{font-weight:700}
+.src span{color:var(--ink-2); display:block; font-size:14px}
+
+footer{
+  border-top:1px solid var(--line); padding:36px 0 64px;
+  font-size:14px; color:var(--ink-3)
+}
+footer p{max-width:var(--measure)}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="brandline"><span>Защита инструмента</span> <b>logozvuk.com</b> <span>27 августа 2026</span></p>
+  <h1>Как собран <em>Логозвук</em></h1>
+  <p class="subtitle">Генератор печатных материалов на автоматизацию звука, который
+  собирает лист под конкретного ребёнка. Здесь — устройство, словарь и способ проверки:
+  что откуда взято, чем доказано и где кончается доказанное.</p>
+
+  <div class="figures">
+    <div class="fig"><span class="n">11</span><span class="t">звуков: Р Рь Л Ль С Сь З Зь Ш Ж Щ</span></div>
+    <div class="fig"><span class="n">1596</span><span class="t">существительных в одиннадцати картотеках</span></div>
+    <div class="fig"><span class="n">609</span><span class="t">глаголов и прилагательных отдельными файлами</span></div>
+    <div class="fig"><span class="n">1960</span><span class="t">предметных рисунков — цветных и снятых с них ч/б</span></div>
+    <div class="fig"><span class="n">6</span><span class="t">печатных материалов из одного входа</span></div>
+    <div class="fig"><span class="n">5278</span><span class="t">проверок в шести тестовых файлах</span></div>
+  </div>
+</header>
+
+<!-- ══ 1 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Предмет</p>
+  <h2><span class="sec">§1</span>Что защищаем</h2>
+  <div class="col">
+    <p>Логопед печатает лист на автоматизацию звука. Лист собран не «на звук [Р] вообще»,
+    а на ребёнка, у которого кроме [Р] не поставлены ещё, скажем, [Ш] и [Ж]: слова с ними
+    на лист не попадают. Бумажный альбом так не может — он напечатан один раз для всех.</p>
+
+    <p>Инструмент — веб-страница на своём домене. Логопед отмечает звук, отмечает непоставленные
+    звуки ребёнка, выбирает ступень и получает готовый лист А4: PDF, Word или прямо на принтер.</p>
+
+    <p class="note">Что здесь <em>не</em> защищается. Инструмент не ставит звук, не диагностирует
+    и не заменяет логопеда: он готовит бумагу, а что с ней делать, решает специалист. И он не
+    конспект-генератор — это другой продукт.</p>
+  </div>
+</section>
+
+<!-- ══ 2 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Задача</p>
+  <h2><span class="sec">§2</span>Боль нормативна, а не выдумана</h2>
+  <div class="col">
+    <p>Нагрузка логопеда задана документами, а не ощущениями. Отсюда и объём бумаги, которую
+    он готовит руками каждый день.</p>
+  </div>
+
+  <div class="scroll card" style="margin:0 0 20px">
+    <table>
+      <thead><tr><th>Что</th><th class="num">Сколько</th><th>Откуда</th></tr></thead>
+      <tbody>
+        <tr><td>Детей на ставку</td><td class="num">25</td><td>норматив ДОО <span class="tier t-book">✅</span></td></tr>
+        <tr><td>Занятий в неделю, ДОО</td><td class="num">не менее 2</td>
+            <td>Распоряжение Минпросвещения РФ от 06.08.2020 № Р-75, п. 3.4 <span class="tier t-book">✅ документ</span></td></tr>
+        <tr><td>Занятий в неделю, школа при ТНР</td><td class="num">не менее 3</td>
+            <td>там же, п. 4.3 <span class="tier t-book">✅ документ</span></td></tr>
+        <tr><td>«Изготовление пособий» в циклограмме ДОУ</td><td class="num">час в день</td>
+            <td>циклограмма <span class="tier t-book">✅</span></td></tr>
+        <tr><td>Материалов на ребёнка в неделю</td><td class="num">≈ 4–10</td>
+            <td>наш расчёт из строк выше <span class="tier t-ours">🔶 расчёт</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <p class="note warn"><b>Закон дома:</b> любая клиническая цифра идёт с тиром. Закон родился на
+    ошибке: «автоматизация — 4–10 занятий» было названо автору без пометки, а при проверке
+    оказалось, что это про <em>постановку</em>, и источник — коммерческий сайт без автора.
+    Литература даёт другое: от слогов до самостоятельной речи ≈35–45 дней при дислалии (Хватцев),
+    при дизартрии заведомо дольше. Честная формулировка — «нормативного срока нет».</p>
+  </div>
+</section>
+
+<!-- ══ 3 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Механизм</p>
+  <h2><span class="sec">§3</span>Ров: фильтр чистоты по профилю ребёнка</h2>
+  <p class="lead">Единственное, чего не делает ни один проверенный конкурент. Ниже — сам фильтр:
+  настоящие словари, настоящая логика движка.</p>
+
+  <div class="rov">
+    <div class="rov-grid">
+      <div>
+        <p class="field-label">Звук, который ставим</p>
+        <ul class="rail" id="rail"></ul>
+
+        <p class="field-label">Какие ещё звуки у ребёнка не получаются</p>
+        <ul class="chips" id="chips"></ul>
+        <p class="hint" id="chips-note"></p>
+      </div>
+
+      <div class="readout">
+        <p class="field-label" style="margin-bottom:6px">Слов остаётся в словаре</p>
+        <p class="big" id="left">159 <small id="of">из 168</small></p>
+        <div class="bar"><i id="bar" style="width:95%"></i></div>
+        <p class="hint" id="pct"></p>
+        <p class="field-label" style="margin:16px 0 0">Что ушло</p>
+        <div class="dropped" id="dropped"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col" style="margin-top:26px">
+    <p>Фильтр считает не буквы, а звуки. «Ложка» звучит как [лошка] и содержит [ш], хотя буквы Ш
+    в ней нет, — на лист ребёнка с непоставленным [ш] она не пойдёт. Транскрипция в каждой карточке
+    проставлена по звучанию именно для этого.</p>
+
+    <p>К профилю движок сам добавляет три вещи: мягкого близнеца каждого отмеченного звука
+    (нарушенный [л] почти всегда означает и [л']), звуки, смешиваемые с целевым, и оппозиционную
+    пару. Поэтому на листе [Р] слов с [Л] нет никогда, даже если логопед про [Л] не спрашивал, —
+    оппозиционный сосед хуже просто чужого звука.</p>
+
+    <p class="note"><b>Профиль сквозной.</b> Отметил «нет [Ш]» — [Ш] уходит из всего, что ребёнок
+    сегодня получит: из листа, дорожки, лабиринта, словосочетаний, рассказа. Второй склад слов или
+    второй фильтр чистоты в этой конструкции — брак по определению.</p>
+
+    <p class="note stop"><b>Дыра, названная вслух.</b> Фильтр проверяет <em>задуманное</em> слово,
+    а ребёнок называет <em>то, что увидел на картинке</em>. База норм называния Центра языка и мозга
+    ВШЭ: «кошка 55, кот 41» — то есть 41&nbsp;% детей назовут картинку словом без [ш], и упражнение
+    не состоится. Так же «шмель → пчела» 35&nbsp;%, «матрос → моряк» 42&nbsp;%, «киоск → ларёк»
+    43&nbsp;%. Нормы покрывают 39–41&nbsp;% наших слов; словарь из них строить нельзя, а как отсев
+    до отрисовки они годны. Сегодня фильтр альтернативных названий не знает.</p>
+  </div>
+</section>
+
+<!-- ══ 4 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Данные</p>
+  <h2><span class="sec">§4</span>Словарь: тринадцать полей, проставленных рукой</h2>
+  <p class="lead">Один звук — одна картотека. Твёрдый и мягкий разведены: [р] и [р'] —
+  разные цели коррекции, смешивать нельзя ни одним словом.</p>
+
+  <div class="stack">
+    <div>
+      <h3>Карточка слова</h3>
+      <p>Настоящая запись из картотеки [Р]. Каждое поле кем-то заполнено и зачем-то нужно.</p>
+      <div class="wordcard">
+        <div><b>word</b><span>рысь</span></div>
+        <div><b>transcription</b><span><span class="mono">рыс'</span><em>по звучанию, не по написанию: апостроф — мягкость</em></span></div>
+        <div><b>stress_syllable</b><span>1<em>ставится рукой; правилами ударение не берётся</em></span></div>
+        <div><b>semantic_category</b><span>животные/дикие<em>нужна «Четвёртому лишнему»: категория полезна от четырёх слов</em></span></div>
+        <div><b>familiarity</b><span>2<em>3 знают все · 2 знают многие · 1 не берём вовсе</em></span></div>
+        <div><b>age_min</b><span>5</span></div>
+        <div><b>ambiguous</b><span>false<em>true, если картинку назовут по-разному (ручка пишущая / дверная)</em></span></div>
+        <div><b>plural</b><span>рыси</span></div>
+        <div><b>gender</b><span>f<em>род решает форму прилагательного в словосочетании</em></span></div>
+        <div><b>markova_v1_guess</b><span>3<em>тип слоговой структуры; движок пересчитает и покажет расхождение</em></span></div>
+        <div><b>other_correctable</b><span><span class="mono">["с'"]</span><em>прочие корригируемые звуки — по звучанию; на них и работает ров</em></span></div>
+        <div><b>note</b><span>мягкий свистящий на конце</span></div>
+        <div><b>merki</b><span><span class="mono">[]</span><em>по чему вещь можно мерить; заведено 27 августа, размечен один звук из одиннадцати</em></span></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>Ворота отбора</h3>
+      <p>Слово не берём, если: нет целевого звука в нужной твёрдости <span class="mono">(«река» = [р'ика] — для [р] негодна)</span> ·
+      это не существительное в именительном единственном · его нельзя нарисовать одним предметом ·
+      оно пугает ребёнка · оно редкое.</p>
+      <p>Требование покрытия — не менее 150 слов на звук, заполнены все позиции звука и по
+      возможности все 14 типов слоговой структуры. Пустая ячейка законна, если так устроен язык,
+      но её надо <em>назвать</em> в отчёте, а не умолчать.</p>
+    </div>
+
+    <div class="col">
+      <h3>Обязательная самосверка</h3>
+      <p>Словарь не считается собранным, пока не прогнан через фонетический движок: он независимо
+      от руки пересчитывает транскрипцию, набор корригируемых звуков и тип слоговой структуры.
+      Сверка первой картотеки нашла <b>10 ошибок из 162</b> — то есть она работает, а не подтверждает.</p>
+    </div>
+
+    <div>
+      <h3>Словоизменительные таблицы</h3>
+      <p class="col">Формы для игр «Посчитай 1–5» и «Назови ласково». Собраны двумя независимыми
+      разборами со сверкой; при расхождении форма не печатается.</p>
+      <div class="scroll card">
+        <table>
+          <thead><tr><th>Таблица</th><th class="num">Форм</th><th class="num">Было</th><th>Сверка двух разборов</th></tr></thead>
+          <tbody>
+            <tr><td>Родительный единственного</td><td class="num">590</td><td class="num">23</td><td>99,7&nbsp;%, ноль расхождений с ручной таблицей</td></tr>
+            <tr><td>Родительный множественного</td><td class="num">595</td><td class="num">32</td><td>там же</td></tr>
+            <tr><td>Уменьшительные</td><td class="num">306</td><td class="num">108</td><td>94,7&nbsp;%; 24 спорных ушли в стоп-лист</td></tr>
+            <tr><td>Стоп-лист уменьшительных</td><td class="num">269</td><td class="num">17</td><td>слова, где формы нет или она меняет значение</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">Почти каждое расхождение оказалось ловушкой смысла, а не размера:
+      «корона → коронка» — это зуб, «пила → пилочка» — для ногтей. Расхождение двух разборов
+      здесь не шум, а датчик двусмысленности.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 5 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Устройство</p>
+  <h2><span class="sec">§5</span>Один вход — много выходов</h2>
+  <p class="lead">Это один инструмент, а не набор автономных. Вход — ребёнок: звук, профиль,
+  ступень автоматизации. Выходов шесть.</p>
+
+  <div class="scroll card" style="margin-bottom:26px">
+    <svg class="flow" viewBox="0 0 720 300" role="img"
+         aria-label="Схема: вход «ребёнок» через общий движок и фильтр чистоты даёт шесть печатных материалов">
+      <text class="lbl" x="0" y="14">ВХОД</text>
+      <rect class="box box-a" x="0" y="26" width="150" height="86" rx="8"/>
+      <text class="ttl" x="14" y="50">Ребёнок</text>
+      <text class="sub" x="14" y="70">звук · профиль</text>
+      <text class="sub" x="14" y="86">ступень</text>
+      <text class="sub" x="14" y="102">домой или на занятие</text>
+
+      <text class="lbl" x="196" y="14">ОБЩЕЕ ЯДРО</text>
+      <rect class="box" x="196" y="26" width="176" height="86" rx="8"/>
+      <text class="ttl" x="210" y="50">Один словарь</text>
+      <text class="ttl" x="210" y="70">Один фильтр чистоты</text>
+      <text class="sub" x="210" y="90">второй склад слов = брак</text>
+
+      <path class="wire" d="M150 69 H196"/>
+      <path class="wire" d="M372 69 H420"/>
+
+      <text class="lbl" x="420" y="14">ВЫХОДЫ</text>
+      <g>
+        <rect class="box" x="420" y="26" width="300" height="34" rx="7"/>
+        <text class="ttl" x="434" y="48">Лист автоматизации</text>
+        <text class="sub" x="706" y="48" text-anchor="end">7 блоков</text>
+
+        <rect class="box" x="420" y="66" width="300" height="34" rx="7"/>
+        <text class="ttl" x="434" y="88">Слоговая дорожка</text>
+        <text class="sub" x="706" y="88" text-anchor="end">30 кружков</text>
+
+        <rect class="box" x="420" y="106" width="300" height="34" rx="7"/>
+        <text class="ttl" x="434" y="128">Звуковая дорожка</text>
+        <text class="sub" x="706" y="128" text-anchor="end">полосы · спираль</text>
+
+        <rect class="box" x="420" y="146" width="300" height="34" rx="7"/>
+        <text class="ttl" x="434" y="168">Словосочетания</text>
+        <text class="sub" x="706" y="168" text-anchor="end">12 пар</text>
+
+        <rect class="box" x="420" y="186" width="300" height="34" rx="7"/>
+        <text class="ttl" x="434" y="208">Лабиринт</text>
+        <text class="sub" x="706" y="208" text-anchor="end">набор из 9 картинок</text>
+
+        <rect class="box" x="420" y="226" width="300" height="34" rx="7"/>
+        <text class="ttl" x="434" y="248">Рассказ</text>
+        <text class="sub" x="706" y="248" text-anchor="end">пересказ · сочини сам</text>
+      </g>
+      <path class="wire" d="M420 43 H404 V243 H420"/>
+      <path class="wire" d="M404 83 H420 M404 123 H420 M404 163 H420 M404 203 H420"/>
+      <text class="lbl" x="196" y="150">ГДЕ ФОРМАТАМ ПОЗВОЛЕНО РАСХОДИТЬСЯ</text>
+      <rect class="box" x="196" y="162" width="176" height="66" rx="8"/>
+      <text class="sub" x="210" y="184">1 — ось ступени:</text>
+      <text class="sub" x="210" y="200">тип слога или позиция</text>
+      <text class="sub" x="210" y="220">2 — требования к рисунку</text>
+      <text class="sub" x="0" y="184">Всё остальное</text>
+      <text class="sub" x="0" y="200">расхождение —</text>
+      <text class="sub" x="0" y="216">дублирование,</text>
+      <text class="sub" x="0" y="232">то есть будущая</text>
+      <text class="sub" x="0" y="248">рассинхронизация.</text>
+    </svg>
+  </div>
+
+  <div class="col">
+    <p>Перемножать оси запрещено отдельно: словесная ступень режется позицией звука в слове,
+    слоговая — типом слога, и произведение этих осей рождает несуществующие слоги вроде «АПЛА».</p>
+  </div>
+
+  <h3 style="margin-top:32px">Лист автоматизации по блокам</h3>
+  <div class="scroll card">
+    <table>
+      <thead><tr><th class="num">Блок</th><th>Что делает</th><th>На чём стоит</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0</td><td>Шапка-документ: ребёнок, звук, неделя, клетки отметок</td><td><span class="tier t-ours">🔶</span> практика логопунктов, в изданных пособиях не найдена</td></tr>
+        <tr><td class="num">1</td><td>Артикуляционная гимнастика — 4 названия с подсказками</td><td><span class="tier t-book">✅</span> Фомичёва, 1989</td></tr>
+        <tr><td class="num">2</td><td>Изолированный звук: «заведи мотор»</td><td><span class="tier t-book">✅</span> Фомичёва · Спивак, с провенансом у каждого образа</td></tr>
+        <tr><td class="num">3</td><td>Слоги: ряд одного типа плюс связка «слог — слово»</td><td><span class="tier t-book">✅</span> правило «слоговой блок ≤ ¼ словесного»</td></tr>
+        <tr><td class="num">4</td><td>Слова: 12–24 колонками по гласной</td><td>ядро листа, держится на словаре</td></tr>
+        <tr><td class="num">5</td><td>Грамматическая игра: «один — много» · «назови ласково» · «посчитай 1–5»</td><td>все три живые, выбирает логопед: «один — много» на всех листах, «посчитай 1–5» на 28 из 29, «назови ласково» на 14 из 29 — ласкательный суффикс несёт [ч]</td></tr>
+        <tr><td class="num">6</td><td>Предложения со шкалой длины</td><td><span class="tier t-book">✅</span> Фомичёва: «желательно, чтобы в каждом слове был автоматизируемый звук»</td></tr>
+        <tr><td class="num">7</td><td>Чистоговорка: «ра-ра-ра — тут нора»</td><td>строится на 11 листах из 19 — предел языка</td></tr>
+        <tr><td class="num">9</td><td>Подвал взрослому — три строки бытовым языком</td><td>через переводчик машинных фраз</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">Блок 8, графический, — осознанный вычет первой версии.</p>
+</section>
+
+<!-- ══ 6 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Метод</p>
+  <h2><span class="sec">§6</span>Чем в этом проекте доказывают утверждение</h2>
+  <p class="lead">Методика должна быть прослеживаемой: профессионал обязан мочь увидеть,
+  что здесь методично, а где закралась ошибка. Прослеживаемость тут не украшение,
+  а условие доверия.</p>
+
+  <ul class="legend">
+    <li><span class="tier t-book">✅ источник</span> изданное пособие, документ или замер</li>
+    <li><span class="tier t-ours">🔶 наше</span> наш расчёт, наше оформление или практика без издания</li>
+    <li><span class="tier t-off">⛔ снято</span> утверждение, которое проверка опровергла</li>
+  </ul>
+
+  <div class="stack">
+    <div>
+      <h3>Правило врёт — таблица работает</h3>
+      <p class="col">За один день это повторилось пять раз, и каждый раз сначала пробовали правило
+      по хвосту слова.</p>
+      <div class="scroll card">
+        <table>
+          <thead><tr><th>Признак</th><th>Что дало правило</th><th>Чем кончилось</th></tr></thead>
+          <tbody>
+            <tr><td>Уменьшительные</td><td>«ворона → воронка»</td><td>выключено, таблица</td></tr>
+            <tr><td>Падежи</td><td>«пять стулов · два угола» — 15 ошибок из 16</td><td>выключено, таблица</td></tr>
+            <tr><td>Ударение множественного</td><td>не бралось вовсе</td><td>таблица 11 → 49</td></tr>
+            <tr><td>Вид глагола</td><td>«прыгать» несов. и «взять» сов. — оба на -ать</td><td>таблица 34</td></tr>
+            <tr><td>Одушевлённость</td><td>из категории: «животные/части» = <em>лапа</em></td><td>таблица категорий</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">Следствие для каждого нового блока: прежде чем строить, спроси — на каком
+      признаке он стоит и есть ли этот признак данными. Нет признака — блок будет печатать брак
+      ровно с той частотой, с какой врёт правило, и поймать это можно только глазами.</p>
+    </div>
+
+    <div class="col">
+      <h3>Как выдумка становится каноном</h3>
+      <p>Механизм найден и воспроизводим — цепочка на три звена.</p>
+      <p class="note stop"><b>Звено 1.</b> В отчёте стоит «линия дорожки кодирует выдох
+      <span class="tier t-book">✅</span>». Цитата под этой галочкой — «произноси звук [л] длительно
+      на одном выдохе» — <em>никакой линии не содержит</em>: это инструкция к изолированному звуку.
+      Тир приписан выводу, которого источник не делает.<br>
+      <b>Звено 2.</b> В журнале голосов написано честно: «<em>наш</em> разбор канона говорит обратное».<br>
+      <b>Звено 3.</b> В коде слово «наш» исчезло. Модуль процитировал нашу же гипотезу как канон
+      и сослался при этом на нас.</p>
+      <p>Отсюда закон: <b>тир ставится цитате, а не выводу.</b> Если цитата доказывает соседнее
+      утверждение — это <span class="tier t-ours">🔶</span>, каким бы очевидным ни казался вывод.
+      Ложная галочка в отчёте опаснее ошибки в коде: код проверяется тестами, отчёт не перечитывает
+      никто.</p>
+    </div>
+
+    <div class="col">
+      <h3>Две независимые сборки и молчание при расхождении</h3>
+      <p>Таблицы на тысячу форм собираются двумя разборами с разной формулировкой задания и
+      сверяются построчно. Лучший довод за метод — не рассуждение о нём: на падежах двойной
+      разбор дал <b>ноль расхождений</b> с формами, выверенными руками двумя днями раньше,
+      то есть воспроизвёл уже проверенное.</p>
+      <p>При расхождении форма <em>не печатается</em>. Не «берём убедительную», не «решаем
+      большинством».</p>
+    </div>
+
+    <div class="col">
+      <h3>Прав источник, а не задание</h3>
+      <p>На листе [Ш] задание требовало образ «шипит змея» — в источниках такого нет,
+      а «шипит гусь» относится к постановке, и канон запрещает постановочные образы на листе
+      автоматизации. Генератор взял «песенку змеи» (Спивак) и был прав против задания.</p>
+      <p>Там, где источники спорят, выигрывает книга: у [С] «песенка водички» есть только
+      в сетевых картотеках <span class="tier t-ours">🔶</span>, а «песенка насоса» — у Фомичёвой
+      <span class="tier t-book">✅</span>. Понизить провенанс может логопед, не автоматика.</p>
+    </div>
+
+    <div class="col">
+      <h3>Правовая рамка</h3>
+      <p>Методбаза защищена авторским правом. Метод — последовательность, типы упражнений,
+      принципы — не охраняется. Речевой материал и иллюстрации собственные; имена авторов
+      пособий не идут в бренд. Отдельные слова не охраняются, но готовая картотека — результат
+      труда составителя, и переносить её нельзя.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 7 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Дисциплина</p>
+  <h2><span class="sec">§7</span>Восемнадцать законов</h2>
+  <p class="lead">Ни один не выведен из принципов. Каждый записан после конкретного брака,
+  и брак назван рядом.</p>
+
+  <div class="laws">
+    <details><summary data-n="1">Методическое утверждение без источника — брак</summary>
+      <p>Прав источник, а не задание и не интуиция. Доказано на «песенке змеи»: генератор взял
+      канонный образ, задание расходилось с литературой — прав был генератор.</p></details>
+    <details><summary data-n="2">Материал не имеет права утверждать больше, чем мы можем показать</summary>
+      <p>Провенанс вычисляется из данных, а не декларируется. На этом с листа снято пять неправд.</p></details>
+    <details><summary data-n="3">На экране нет ни одного слова, которое существует только у нас в коде</summary>
+      <p>Новый машинный текст сначала получает правило перевода на человеческий, потом
+      показывается. Незнакомая строка до экрана не доходит вовсе.</p></details>
+    <details><summary data-n="4">Если правка добавляет сущность, а не убирает — диагноз неверен</summary>
+      <p>Записано, когда починка интерфейса по кусочкам сделала его хуже исходного.</p></details>
+    <details><summary data-n="5">Тир ставится цитате, а не выводу</summary>
+      <p>Ложная галочка за два шага цитирования превратилась в «канон» внутри кода.
+      Ложный тир в отчёте опаснее бага: код ловится тестами, отчёт не перечитывает никто.</p></details>
+    <details><summary data-n="6">Печатный материал проверяется глазами до показа</summary>
+      <p>«Тесты зелёные» ≠ «сделано». Записано после трёх подряд показов брака: линии не от точки
+      старта, каракуля вместо дорожки, буква у края листа.</p></details>
+    <details><summary data-n="7">Правило врёт — таблица работает</summary>
+      <p>Русская морфология и семантика не берутся хвостом слова. Прежде чем строить блок —
+      спроси, на каком признаке он стоит и есть ли этот признак данными. И признак мало завести,
+      его надо довезти: карточка при отборе пересобирается, и поле, не переписанное туда, дальше
+      не существует.</p></details>
+    <details><summary data-n="8">Порядок слева направо = порядок звучания</summary>
+      <p>Обратный слог печатал персонажа слева и гласную справа: ребёнок вёл палец от [л] к [а] и
+      читал «ла» вместо «ал» — материал на обратный слог учил прямому.</p></details>
+    <details><summary data-n="9">Когда два канонных блока спорят за последние миллиметры, спор решает адресат листа</summary>
+      <p>Подсказки «как делать» доживали до бумаги на 2 листах из 19, потому что снимались первыми
+      как «не речевой материал». Но печатаются они только на домашнем листе, где ведёт родитель,
+      и без них он не проведёт разминку вовсе.</p></details>
+    <details><summary data-n="10">Чужая уверенная фраза — не источник</summary>
+      <p>Утверждение из отчёта или из нашего же старого файла ложится в рассуждение без
+      сопротивления. Трижды за день поймал автор, и каждая проверка меняла решение.
+      А если приём визуальный — открой его картинки: у источника с картинками текст без картинок
+      тоже не источник.</p></details>
+    <details><summary data-n="11">Узнаваемость картинки решает отбор слова, а не манера рисунка</summary>
+      <p>У шестилеток согласие по ожидаемому имени ≈0,56, у 13,5&nbsp;% картинок модальное имя
+      расходится со взрослым. Значит спор «какой стиль» вторичен: борщ назовут супом при любой
+      манере, пока не добавлен цвет.</p></details>
+    <details><summary data-n="12">Кнопка не имеет права предлагать то, чего материал не сделает</summary>
+      <p>Молчаливая подмена выбора — «выбрал АЛА, получил ЛА» — запрещена отдельно: она делает
+      интерфейс неотлаживаемым для того, кто им пользуется. Одна болезнь нашлась сразу в четырёх
+      местах.</p></details>
+    <details><summary data-n="13">Рисуем цветное, ч/б снимаем технически. Обратно нельзя</summary>
+      <p>Два варианта по цене одной генерации; заказать ч/б значит закрыть цветную ветку навсегда.
+      Поймано на семидесяти картинках сразу.</p></details>
+    <details><summary data-n="14">Если чего-то нельзя — не выноси это на экран</summary>
+      <p>Погашенные кнопки с объяснениями «почему нельзя» — не честность, а шум: рендерятся только
+      живые варианты. И наоборот: знает движок набор законных вариантов — покажи его, а не прячь
+      за кубиком.</p></details>
+    <details><summary data-n="15">Своя уверенная фраза — тоже не источник</summary>
+      <p>Закон 10, развёрнутый на себя. Трижды за сессию повторил автору цифру, опровергнутую
+      записью в журнале голосов, лежавшей рядом. Особенно опасна фраза, которую уже сказал вслух.</p></details>
+    <details><summary data-n="16">Каждый элемент управления имеет цену — и половина её это лишнее слово на экране</summary>
+      <p>Где выбор из двух, названным остаётся один: частый вариант молчит и стоит по умолчанию,
+      редкий берётся залипающей кнопкой, заголовок-вопрос над парой снимается вовсе.</p></details>
+    <details><summary data-n="17">Перезаказал материю — пересмотри всё, что про неё записано</summary>
+      <p>Таблица зеркалирования героев мерилась по старым рисункам, и после перезаказа зеркало
+      разворачивало грузовик спиной к пути. Ни один тест этого не ловит: файлы на месте, имена те
+      же, картинка другая.</p></details>
+    <details><summary data-n="18">Симметричные места чинятся парой</summary>
+      <p>Поставил ворота на одном конце слога — спроси про другой в тот же час. За один вечер это
+      повторилось трижды.</p></details>
+  </div>
+</section>
+
+<!-- ══ 8 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Опора</p>
+  <h2><span class="sec">§8</span>Источники, и что из них взято</h2>
+
+  <div class="stack">
+    <div class="col">
+      <h3>Изданное <span class="tier t-book">✅</span></h3>
+      <ul class="src">
+        <li><b>Фомичёва М.&nbsp;Ф.</b><div>«Воспитание у детей правильного произношения», 1989 — артикуляционная гимнастика, образы звука, порядок работы над рассказом, формулировка про плотность звука в предложении</div></li>
+        <li><b>Спивак Е.&nbsp;Н.</b><div>«Речевой материал для автоматизации и дифференциации звуков у детей 5–7 лет» (ГНОМ) — пункт «Повтори словосочетания» стоит во всех десяти разделах; 44 пары из 45 — «прилагательное + существительное», объём 9–12</div></li>
+        <li><b>Борисова Е.&nbsp;А.</b><div>«Индивидуальные логопедические занятия с дошкольниками», ТЦ Сфера, 2008 — «обведи трафарет и произнеси: с-са». Доказывает, что обводка здесь носитель речевого материала, а не моторика в довесок</div></li>
+        <li><b>Глухов В.&nbsp;П.</b><div>«Комплексный подход к формированию связной речи», В.&nbsp;Секачёв, 2014, с.&nbsp;72 — «детям предлагаются 3–4 слова, связанные по смыслу»; образец начала обязателен, когда картинок нет</div></li>
+        <li><b>Пеньевская Л.&nbsp;А., Усова А.&nbsp;П.</b><div>цит. по Алексеевой и Яшиной, с.&nbsp;291 и 341 — план из трёх вопросов и почему не из пяти; несколько наборов слов на выбор</div></li>
+        <li><b>Филичева, Чевелева, Чиркина</b><div>1989 — лестница автоматизации: слоги → слова → предложения → чистоговорки → рассказы → разговорная речь</div></li>
+        <li><b>Комарова</b><div>альбом; посчитан лично — один набор из девяти картинок обслуживает 3–4 упражнения. Методическая находка, а не экономия</div></li>
+        <li><b>Snodgrass &amp; Vanderwart</b><div>1980 — приёмка картинки это согласие по имени, а не красота. Сарафан, названный «платьем», — брак при любом качестве рисунка</div></li>
+        <li><b>Центр языка и мозга ВШЭ</b><div>база норм называния — альтернативные номинации, из которых видна дыра в рву</div></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3>Практика без издания <span class="tier t-ours">🔶</span></h3>
+      <ul class="src">
+        <li><b>Попова Н.&nbsp;О.</b><div>«Звуковые дорожки для автоматизации звука Р», nsportal, 19.05.2022 — три варианта линии с задачами голосу. Самодельное пособие практика: доказывает бытование приёма, не канон издания</div></li>
+        <li><b>Сетевые картотеки</b><div>nsportal, 15.01.2015 — формула приёма: «ведёт пальчиком по дорожке и тянет звук, либо соединяет закрепляемый звук с каким-либо гласным»</div></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3>Наше оформление, названное вслух <span class="tier t-ours">🔶</span></h3>
+      <p>Извилистость тропы, флажок у финиша и формулировка «проведи до финиша» — наши. Ни одного
+      методического утверждения они не добавляют. Укладка трёх отдельных листов Поповой в три
+      строки одного нашего листа — тоже наша: у неё это три разных листа.</p>
+    </div>
+
+    <div class="col">
+      <h3>Снято проверкой <span class="tier t-off">⛔</span></h3>
+      <ul class="src">
+        <li><b>«6–9 опорных слов»</b><div>стояло со ссылкой на Ефименкову. Скачан полный текст: словосочетание «опорные слова» — ноль вхождений, а формула есть в другой её книге и для первоклассников. Атрибуция пришла из анонимного студенческого файла</div></li>
+        <li><b>«Улитка — первая строка дорожки»</b><div>открыт файл слайдов самой Поповой: у неё улитка это отдельный лист со спиралью во всю страницу, ход снаружи внутрь, в центре кость, а не буква. По тексту приём строили дважды и дважды промахнулись в разные стороны</div></li>
+        <li><b>«Линия кодирует выдох»</b><div>цитата под галочкой никакой линии не содержала</div></li>
+        <li><b>«Логопеды жалуются, что ИИ-картинки неузнаваемы»</b><div>источника в проекте нет, а единственный живой голос говорит обратное</div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 9 ═══════════════════════════════════════════════════════════ -->
+<section>
+  <p class="eyebrow">Границы</p>
+  <h2><span class="sec">§9</span>Где кончается доказанное</h2>
+  <p class="lead">Раздел обязателен по правилу дома: пустая ячейка законна, но её надо назвать,
+  а не умолчать.</p>
+
+  <div class="scroll card">
+    <table>
+      <thead><tr><th>Предел</th><th>Замер</th><th>Природа</th></tr></thead>
+      <tbody>
+        <tr><td>Чистоговорка строится не везде</td><td>11 листов из 19; на прямом слоге работает у 3 звуков из 11</td><td>язык: русских слов с ударным конечным открытым слогом мало</td></tr>
+        <tr><td>Плотность целевого звука в предложениях</td><td>3–35&nbsp;%</td><td>конструкция: каркас предложения обязан быть из чистых служебных слов. Источник говорит «желательно», не «обязательно»</td></tr>
+        <tr><td>Обратного листа нет у З, Зь, Ж</td><td>—</td><td>язык: звонкий в конце оглушается, слог «аж» звучит [аш]</td></tr>
+        <tr><td>Ров не знает альтернативных названий картинки</td><td>«кошка 55 / кот 41»</td><td>дыра, чинится разметкой альтернатив</td></tr>
+        <tr><td>Слоговая дорожка короче образца</td><td>30 кружков против ~40</td><td>геометрия: тропа занимает 212 мм из ~208 доступных</td></tr>
+        <tr><td>Словосочетания стоят на признаке, которого нет в данных</td><td>3200 пар из 8227 — 39&nbsp;%</td><td>чинится мерками; размечен 1 звук из 11</td></tr>
+        <tr><td>Три материала из запроса логопеда не построены</td><td>прописи-обводка · «4-й лишний» · зашумлённые</td><td>блокер снят — банк картинок есть, блоков нет</td></tr>
+        <tr><td>Свидетельств, что по листу вели занятие, нет</td><td>—</td><td>инструментом пользуются, правки присылают; о занятии по листу данных нет</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note" style="margin-top:24px">Отдельно про галочки. Две строки трекера стояли
+  подтверждёнными месяцами и обе оказались неправдой; поймала их сверка с первоисточником,
+  а не перечитывание собственных файлов. Галочка в трекере — не доказательство.</p>
+</section>
+
+<footer>
+  <p>Числа на странице сняты с рабочего дерева проекта 27 августа 2026 года: словари, банки
+  картинок и тесты посчитаны кодом, а не выписаны по памяти. Фильтр в §3 — не макет: он держит
+  все 1596 слов и повторяет логику движка; сверка на 330 случайных профилях дала ноль расхождений.</p>
+</footer>
+
+</div>
+
+<script id="rov-data" type="application/json">{"sounds":{"р":{"label":"Р","base":["л","л'","р'"],"words":[["рак","к|р|"],["рама","р|"],["роза","з|р|"],["рыба","б|р|"],["рука","к|р|"],["рот","р|т|"],["рог","к|р|"],["ромб","п|р|"],["рысь","р|с'|"],["рынок","к|р|"],["рукав","к|р|"],["рыбак","б|к|р|"],["ранец","р|ц|"],["ручей","й|р|ч|"],["ручка","к|р|ч|"],["ракета","к'|р|т|"],["радуга","г|д|р|"],["радио","д'|р|"],["ромашка","к|р|ш|"],["рубашка","б|к|р|ш|"],["ракушка","к|р|ш|"],["розетка","з'|к|р|т|"],["русалка","к|л|р|с|"],["рукавица","к|р|ц|"],["корова","к|р|"],["ворона","р|"],["корона","к|р|"],["сорока","к|р|с|"],["дорога","г|д|р|"],["борода","б|д|р|"],["корыто","к|р|т|"],["озеро","з'|р|"],["конура","к|р|"],["гитара","г'|р|т|"],["ворота","р|т|"],["гора","г|р|"],["нора","р|"],["кора","к|р|"],["барабан","б|р|"],["карандаш","д|к|р|ш|"],["сарафан","р|с|"],["таракан","к|р|т|"],["паровоз","п|р|с|"],["пароход","п|р|т|х|"],["помидор","д|п|р|"],["мухомор","р|х|"],["светофор","р|с|т|"],["самовар","р|с|"],["подарок","д|к|п|р|"],["пирожок","ж|к|п'|р|"],["огород","г|р|т|"],["воробей","б'|й|р|"],["муравей","й|р|"],["каравай","й|к|р|"],["баран","б|р|"],["комар","к|р|"],["топор","п|р|т|"],["забор","б|з|р|"],["мотор","р|т|"],["ковёр","к|р|"],["шофёр","р|ш|"],["сахар","р|с|х|"],["катер","к|р|т'|"],["ветер","р|т'|"],["город","г|р|т|"],["гараж","г|р|ш|"],["сарай","й|р|с|"],["пирог","к|п'|р|"],["мороз","р|с|"],["жираф","ж|р|"],["горох","г|р|х|"],["король","к|л'|р|"],["горшок","г|к|р|ш|"],["курочка","к|р|ч|"],["картина","к|р|т'|"],["крапива","к|п'|р|"],["пирамида","д|п'|р|"],["макароны","к|р|"],["кукуруза","з|к|р|"],["сковорода","д|к|р|с|"],["мороженое","ж|й|р|"],["творог","к|р|т|"],["хор","р|х|"],["шар","р|ш|"],["сыр","р|с|"],["пар","п|р|"],["торт","р|т|"],["парк","к|п|р|"],["корм","к|р|"],["шарф","р|ш|"],["борщ","б|р|щ|"],["морж","р|ш|"],["парта","п|р|т|"],["арка","к|р|"],["марка","к|р|"],["норка","к|р|"],["горка","г|к|р|"],["шорты","р|т|ш|"],["арбуз","б|р|с|"],["барсук","б|к|р|с|"],["карман","к|р|"],["фартук","к|р|т|"],["морковь","к|р|"],["персик","к|п'|р|с'|"],["корзина","з'|к|р|"],["зеркало","з'|к|л|р|"],["картошка","к|р|т|ш|"],["морковка","к|р|"],["кормушка","к|р|ш|"],["форточка","к|р|т|ч|"],["перчатка","к|п'|р|т|ч|"],["отвёртка","к|р|т|"],["гармошка","г|к|р|ш|"],["куртка","к|р|т|"],["портфель","л'|п|р|т|"],["верблюд","б|л'|р|т|"],["вертолёт","л'|р|т|"],["корабль","б|к|л'|р|"],["остров","р|с|т|"],["трава","р|т|"],["дрова","д|р|"],["груша","г|р|ш|"],["крыша","к|р|ш|"],["крыло","к|л|р|"],["труба","б|р|т|"],["зебра","б|з'|р|"],["ведро","д|р|"],["метро","р|т|"],["сестра","р|с|с'|т|"],["гроза","г|з|р|"],["кран","к|р|"],["крот","к|р|т|"],["круг","к|р|"],["краб","к|п|р|"],["брат","б|р|т|"],["пруд","п|р|т|"],["трон","р|т|"],["врач","р|ч|"],["двор","д|р|"],["фрукт","к|р|т|"],["тигр","г|р|т'|"],["бобр","б|р|"],["кровать","к|р|т'|"],["дракон","д|к|р|"],["страус","р|с|т|"],["тетрадь","р|т|т'|"],["укроп","к|п|р|"],["сугроб","г|п|р|с|"],["костёр","к|р|с|т'|"],["доктор","д|к|р|т|"],["пробка","к|п|р|"],["краска","к|р|с|"],["трактор","к|р|т|"],["трамвай","й|р|т|"],["грузовик","г|з|к|р|"],["крокодил","д'|к|л|р|"],["виноград","г|р|т|"],["тропинка","к|п'|р|т|"],["ватрушка","к|р|т|ш|"],["петрушка","к|п'|р|т|ш|"],["игрушка","г|к|р|ш|"],["свитер","р|с|т'|"],["перо","п'|р|"],["кенгуру","г|к'|р|"],["дыра","д|р|"],["икра","к|р|"],["кожура","ж|к|р|"],["мишура","р|ш|"]]},"р'":{"label":"Рь","base":["л","л'","р"],"words":[["река","к|р'|"],["речка","к|р'|ч|"],["репка","к|п|р'|"],["репа","п|р'|"],["редиска","д'|к|р'|с|"],["редька","к|р'|т'|"],["ремень","р'|"],["ремешок","к|р'|ш|"],["ресница","р'|с|ц|"],["решето","р'|т|ш|"],["решётка","к|р'|т|ш|"],["ребёнок","б'|к|р'|"],["рельс","л'|р'|с|"],["рюкзак","г|з|к|р'|"],["рябина","б'|р'|"],["рис","р'|с|"],["рисунок","к|р'|с|"],["ребус","б|р'|с|"],["репей","й|п'|р'|"],["репейник","й|к|п'|р'|"],["море","р'|"],["берег","б'|к|р'|"],["орех","р'|х|"],["орешек","к|р'|ш|"],["курица","к|р'|ц|"],["корица","к|р'|ц|"],["царица","р'|ц|"],["царевна","р'|ц|"],["царевич","р'|ц|ч|"],["парик","к|п|р'|"],["варежка","к|р'|ш|"],["верёвка","к|р'|"],["серёжка","к|р'|с'|ш|"],["тарелка","к|л|р'|т|"],["огурец","г|р'|ц|"],["мандарин","д|р'|"],["сирень","р'|с'|"],["сирена","р'|с'|"],["перина","п'|р'|"],["берёза","б'|з|р'|"],["деревня","д'|р'|"],["дерево","д'|р'|"],["деревце","д'|р'|ц|"],["варенье","й|р'|"],["вареник","к|р'|"],["карета","к|р'|т|"],["ириска","к|р'|с|"],["ирис","р'|с|"],["батарея","б|й|р'|т|"],["моряк","к|р'|"],["фонарик","к|р'|"],["сухарик","к|р'|с|х|"],["перец","п'|р'|ц|"],["терем","р'|т'|"],["теремок","к|р'|т'|"],["корень","к|р'|"],["берет","б'|р'|т|"],["передник","д|к|п'|р'|"],["перила","л|п'|р'|"],["черешня","р'|ч|ш|"],["черепаха","п|р'|х|ч|"],["черёмуха","р'|х|ч|"],["поварёшка","к|п|р'|ш|"],["погремушка","г|к|п|р'|ш|"],["тигрёнок","г|к|р'|т'|"],["зверёк","з|к|р'|"],["хорёк","к|р'|х|"],["жеребёнок","б'|ж|к|р'|"],["перепёлка","к|л|п'|р'|"],["курятник","к|р'|т|"],["пузырёк","з|к|п|р'|"],["корешок","к|р'|ш|"],["гребешок","б'|г|к|р'|ш|"],["переход","п'|р'|т|х|"],["перекрёсток","к|п'|р'|с|т|"],["аквариум","к|р'|"],["арена","р'|"],["гиря","г'|р'|"],["кипарис","к'|п|р'|с|"],["тетерев","р'|т'|"],["пескарь","к|п'|р'|с|"],["деревяшка","д'|к|р'|ш|"],["зверинец","з|р'|ц|"],["трибуна","б|р'|т|"],["прилавок","к|л|п|р'|"],["фонарь","р'|"],["якорь","й|к|р'|"],["сухарь","р'|с|х|"],["словарь","л|р'|с|"],["букварь","б|к|р'|"],["календарь","д|к|л'|р'|"],["пекарь","к|п'|р'|"],["токарь","к|р'|т|"],["слесарь","л'|р'|с|"],["аптекарь","к|п|р'|т'|"],["снегирь","г'|р'|с|"],["богатырь","б|г|р'|т|"],["пластырь","л|п|р'|с|т|"],["дверь","д|р'|"],["зверь","з|р'|"],["лагерь","г'|л|р'|"],["пузырь","з|п|р'|"],["янтарь","й|р'|т|"],["глухарь","г|л|р'|х|"],["пристань","п|р'|с|т|"],["гриб","г|п|р'|"],["грибок","б|г|к|р'|"],["грибник","б|г|к|р'|"],["гребень","б'|г|р'|"],["гребёнка","б'|г|к|р'|"],["гречка","г|к|р'|ч|"],["гренка","г|к|р'|"],["грелка","г|к|л|р'|"],["грива","г|р'|"],["грядка","г|к|р'|т|"],["бревно","б|р'|"],["брелок","б|к|л|р'|"],["брюки","б|к'|р'|"],["тряпка","к|п|р'|т|"],["пряник","к|п|р'|"],["пряжа","ж|п|р'|"],["пряжка","к|п|р'|ш|"],["прялка","к|л|п|р'|"],["прищепка","к|п|р'|щ|"],["принц","п|р'|ц|"],["принцесса","п|р'|с|ц|"],["приз","п|р'|с|"],["прибой","б|й|п|р'|"],["прицеп","п|р'|ц|"],["крем","к|р'|"],["креветка","к|р'|т|"],["крендель","д'|к|л'|р'|"],["крепость","к|п|р'|с|т'|"],["кресло","к|л|р'|с|"],["крючок","к|р'|ч|"],["дрель","д|л'|р'|"],["хрен","р'|х|"],["треугольник","г|к|л'|р'|т|"],["трещотка","к|р'|т|щ|"],["стриж","р'|с|т|ш|"],["стрелка","к|л|р'|с|т|"],["стрекоза","з|к|р'|с|т|"],["стремянка","к|р'|с|т|"],["матрёшка","к|р'|т|ш|"],["кастрюля","к|л'|р'|с|т|"],["абрикос","б|к|р'|с|"],["свирель","л'|р'|с|"],["зверюшка","з|к|р'|ш|"],["витрина","р'|т|"],["кудри","д|к|р'|"],["фрикаделька","д'|к|л'|р'|"],["табурет","б|р'|т|"],["серьга","г|р'|с'|"],["гирька","г'|к|р'|"],["перья","й|п'|р'|"],["вихрь","р'|х|"],["заря","з|р'|"],["ноздря","д|з|р'|"],["пюре","п'|р'|"]]},"л":{"label":"Л","base":["л'","р","р'"],"words":[["лапа","л|п|"],["лампа","л|п|"],["лапша","л|п|ш|"],["ладонь","д|л|"],["лодка","к|л|т|"],["ложка","к|л|ш|"],["лошадь","л|т'|ш|"],["лопата","л|п|т|"],["лоб","л|п|"],["лось","л|с'|"],["лужа","ж|л|"],["луна","л|"],["лук","к|л|"],["лупа","л|п|"],["лыжник","ж|к|л|"],["ласточка","к|л|с|т|ч|"],["лавка","к|л|"],["лавочка","к|л|ч|"],["ластик","к|л|с|т'|"],["лампочка","к|л|п|ч|"],["лошадка","к|л|т|ш|"],["ландыш","д|л|ш|"],["лукошко","к|л|ш|"],["лужайка","ж|й|к|л|"],["лапка","к|л|п|"],["лосось","л|с|с'|"],["лото","л|т|"],["лабиринт","б'|л|р'|т|"],["локоть","к|л|т'|"],["локон","к|л|"],["лама","л|"],["лайка","й|к|л|"],["лопух","л|п|х|"],["ласка","к|л|с|"],["лодочка","д|к|л|ч|"],["ладошка","д|к|л|ш|"],["лоза","з|л|"],["ласты","л|с|т|"],["лапти","л|п|т'|"],["лужица","ж|л|ц|"],["луковица","к|л|ц|"],["пила","л|п'|"],["юла","й|л|"],["мыло","л|"],["сало","л|с|"],["шило","л|ш|"],["золото","з|л|т|"],["солома","л|с|"],["болото","б|л|т|"],["голова","г|л|"],["молоко","к|л|"],["полоса","л|п|с|"],["колобок","б|к|л|"],["молоток","к|л|т|"],["потолок","к|л|п|т|"],["шоколад","к|л|т|ш|"],["колодец","д'|к|л|ц|"],["колокол","к|л|"],["голубь","г|л|п'|"],["голубка","г|к|л|п|"],["голубцы","г|л|п|ц|"],["голубика","б'|г|к|л|"],["солонка","к|л|с|"],["малыш","л|ш|"],["халат","л|т|х|"],["салат","л|с|т|"],["калач","к|л|ч|"],["шалаш","л|ш|"],["кулак","к|л|"],["кулон","к|л|"],["жёлудь","ж|л|т'|"],["пилот","л|п'|т|"],["булавка","б|к|л|"],["булочка","б|к|л|ч|"],["палочка","к|л|п|ч|"],["ёлочка","й|к|л|ч|"],["белочка","б'|к|л|ч|"],["одеяло","д'|й|л|"],["полотно","л|п|т|"],["колосок","к|л|с|"],["палатка","к|л|п|т|"],["полоска","к|л|п|с|"],["калоши","к|л|ш|"],["зеркало","з'|к|л|р|"],["вешалка","к|л|ш|"],["мочалка","к|л|ч|"],["фиалка","к|л|"],["велосипед","л|п'|с'|т|"],["холодильник","д'|к|л|л'|х|"],["полотенце","л|п|т'|ц|"],["балалайка","б|й|к|л|"],["стол","л|с|т|"],["стул","л|с|т|"],["пол","л|п|"],["мел","л|"],["угол","г|л|"],["пенал","л|п'|"],["футбол","б|д|л|"],["узел","з'|л|"],["дятел","д'|л|т'|"],["козёл","з'|к|л|"],["орёл","л|р'|"],["осёл","л|с'|"],["вокзал","г|з|л|"],["канал","к|л|"],["чехол","л|х|ч|"],["котёл","к|л|т'|"],["бокал","б|к|л|"],["факел","к'|л|"],["журнал","ж|л|р|"],["самосвал","л|с|"],["мотоцикл","к|л|т|ц|"],["слон","л|с|"],["слонёнок","к|л|с|"],["слойка","й|к|л|с|"],["клубок","б|к|л|"],["клоун","к|л|"],["клубника","б|к|л|"],["клумба","б|к|л|"],["клад","к|л|т|"],["глаз","г|л|с|"],["глобус","б|г|л|с|"],["глыба","б|г|л|"],["платок","к|л|п|т|"],["платье","й|л|п|т'|"],["плот","л|п|т|"],["плащ","л|п|щ|"],["плов","л|п|"],["плакат","к|л|п|т|"],["пластилин","л|л'|п|с|т'|"],["плотина","л|п|т'|"],["пловец","л|п|ц|"],["плуг","к|л|п|"],["флаг","к|л|"],["флажок","ж|к|л|"],["фламинго","г|л|"],["блокнот","б|к|л|т|"],["блузка","б|к|л|с|"],["хлопушка","к|л|п|х|ш|"],["шланг","к|л|ш|"],["масло","л|с|"],["весло","л|с|"],["дупло","д|л|п|"],["седло","д|л|с'|"],["стекло","к|л|с|т'|"],["метла","л|т|"],["крыло","к|л|р|"],["скала","к|л|с|"],["смола","л|с|"],["пчела","л|п|ч|"],["волк","к|л|"],["полка","к|л|п|"],["белка","б'|к|л|"],["вилка","к|л|"],["ёлка","й|к|л|"],["палка","к|л|п|"],["галка","г|к|л|"],["булка","б|к|л|"],["иголка","г|к|л|"],["футболка","б|д|к|л|"],["копилка","к|л|п'|"],["метёлка","к|л|т'|"],["скакалка","к|л|с|"],["тарелка","к|л|р'|т|"],["бутылка","б|к|л|т|"],["заколка","з|к|л|"],["пчёлка","к|л|п|ч|"],["грелка","г|к|л|р'|"],["скалка","к|л|с|"],["колба","б|к|л|"],["халва","л|х|"],["волна","л|"],["солдат","д|л|с|т|"],["балкон","б|к|л|"],["колпак","к|л|п|"],["волчок","к|л|ч|"],["галстук","г|к|л|с|т|"],["столб","л|п|с|т|"],["болт","б|л|т|"],["холм","л|х|"],["шёлк","к|л|ш|"],["колготки","г|к|к'|л|т|"],["молния","й|л|"],["игла","г|л|"],["стрела","л|р'|с|т|"],["сверло","л|р|с|"],["пастила","л|п|с|т'|"]]},"л'":{"label":"Ль","base":["л","р","р'"],"words":[["лиса","л'|с|"],["лисёнок","к|л'|с'|"],["лисичка","к|л'|с'|ч|"],["лев","л'|"],["лебедь","б'|л'|т'|"],["лягушка","г|к|л'|ш|"],["лягушонок","г|к|л'|ш|"],["лещ","л'|щ|"],["лимон","л'|"],["лимонад","л'|т|"],["лист","л'|с|т|"],["листок","к|л'|с|т|"],["липа","л'|п|"],["лилия","й|л'|"],["лютик","к|л'|т'|"],["лепесток","к|л'|п'|с|т|"],["лепёшка","к|л'|п'|ш|"],["леденец","д'|л'|ц|"],["лес","л'|с|"],["лестница","л'|с|ц|"],["лента","л'|т|"],["лейка","й|к|л'|"],["линейка","й|к|л'|"],["лёд","л'|т|"],["лётчик","к|л'|т|ч|"],["люстра","л'|р|с|т|"],["люк","к|л'|"],["лифт","л'|т|"],["лицо","л'|ц|"],["леопард","л'|п|р|т|"],["малина","л'|"],["калина","к|л'|"],["поляна","л'|п|"],["полянка","к|л'|п|"],["колесо","к|л'|с|"],["колено","к|л'|"],["полено","л'|п|"],["телега","г|л'|т'|"],["телефон","л'|т'|"],["телевизор","з|л'|р|т'|"],["телёнок","к|л'|т'|"],["пеликан","к|л'|п'|"],["василёк","к|л'|с'|"],["олень","л'|"],["тюлень","л'|т'|"],["филин","л'|"],["билет","б'|л'|т|"],["салют","л'|с|т|"],["улитка","к|л'|т|"],["улей","й|л'|"],["калитка","к|л'|т|"],["коляска","к|л'|с|"],["качели","к|л'|ч|"],["карусель","к|л'|р|с'|"],["кастрюля","к|л'|р'|с|т|"],["кисель","к'|л'|с'|"],["учитель","л'|т'|ч|"],["мотылёк","к|л'|т|"],["великан","к|л'|"],["долина","д|л'|"],["аллея","й|л'|"],["селёдка","к|л'|с'|т|"],["пелёнка","к|л'|п'|"],["оливка","к|л'|"],["валенок","к|л'|"],["сандалия","д|й|л'|с|"],["хамелеон","л'|х|"],["автомобиль","б'|л'|т|"],["самолёт","л'|с|т|"],["вертолёт","л'|р|т|"],["король","к|л'|р|"],["кулёк","к|л'|"],["колечко","к|л'|ч|"],["оленёнок","к|л'|"],["земляника","з'|к|л'|"],["колёсико","к|л'|с'|"],["телятина","л'|т'|"],["телескоп","к|л'|п|с|т'|"],["цыплёнок","к|л'|п|ц|"],["поле","л'|п|"],["соль","л'|с|"],["ель","й|л'|"],["моль","л'|"],["пыль","л'|п|"],["шаль","л'|ш|"],["медаль","д|л'|"],["педаль","д|л'|п'|"],["метель","л'|т'|"],["фасоль","л'|с|"],["тополь","л'|п|т|"],["уголь","г|л'|"],["миндаль","д|л'|"],["газель","г|з'|л'|"],["постель","л'|п|с|т'|"],["мебель","б'|л'|"],["картофель","к|л'|р|т|"],["портфель","л'|п|р|т|"],["строитель","л'|р|с|т|т'|"],["шмель","л'|ш|"],["ноль","л'|"],["рояль","й|л'|р|"],["циркуль","к|л'|р|ц|"],["стебель","б'|л'|с|т'|"],["пальто","л'|п|т|"],["пальма","л'|п|"],["пальчик","к|л'|п|ч|"],["мальчик","к|л'|ч|"],["дельфин","д'|л'|"],["апельсин","л'|п'|с'|"],["кольцо","к|л'|ц|"],["будильник","б|д'|к|л'|"],["мельница","л'|ц|"],["мельник","к|л'|"],["тюльпан","л'|п|т'|"],["бельчонок","б'|к|л'|ч|"],["пульт","л'|п|т|"],["фильм","л'|"],["пельмень","л'|п'|"],["асфальт","л'|с|т|"],["мультик","к|л'|т'|"],["фольга","г|л'|"],["тельняшка","к|л'|т'|ш|"],["слива","л'|с|"],["след","л'|с|т|"],["сливки","к'|л'|с|"],["блин","б|л'|"],["блюдо","б|д|л'|"],["блюдце","б|л'|т|ц|"],["бублик","б|к|л'|"],["плита","л'|п|т|"],["плитка","к|л'|п|т|"],["плед","л'|п|т|"],["плечо","л'|п|ч|"],["плюс","л'|п|с|"],["плюшка","к|л'|п|ш|"],["клён","к|л'|"],["клетка","к|л'|т|"],["клей","й|к|л'|"],["клюв","к|л'|"],["ключ","к|л'|ч|"],["клюква","к|л'|"],["клюшка","к|л'|ш|"],["клеёнка","й|к|л'|"],["хлеб","л'|п|х|"],["хлебница","б|л'|х|ц|"],["шляпа","л'|п|ш|"],["шлем","л'|ш|"],["глина","г|л'|"],["флейта","й|л'|т|"],["вафля","л'|"],["туфля","л'|т|"],["капля","к|л'|п|"],["цапля","л'|п|ц|"],["петля","л'|п'|т|"],["земля","з'|л'|"],["котлета","к|л'|т|"],["павлин","л'|п|"],["корабль","б|к|л'|р|"],["рубль","б|л'|р|"],["журавль","ж|л'|р|"],["бинокль","б'|к|л'|"],["палец","л'|п|ц|"],["тля","л'|т|"],["желе","ж|л'|"],["суфле","л'|с|"]]},"с":{"label":"С","base":["ж","з","з'","с'","ц","ч","ш","щ"],"words":[["сад","с|т|"],["сани","с|"],["сапог","к|п|с|"],["салат","л|с|т|"],["салют","л'|с|т|"],["самолёт","л'|с|т|"],["самокат","к|с|т|"],["самовар","р|с|"],["сарафан","р|с|"],["сахар","р|с|х|"],["сокол","к|л|с|"],["сова","с|"],["совёнок","к|с|"],["совок","к|с|"],["сом","с|"],["сомик","к|с|"],["сок","к|с|"],["соль","л'|с|"],["соловей","й|л|с|"],["солома","л|с|"],["сорока","к|р|с|"],["соска","к|с|"],["сосна","с|"],["сосулька","к|л'|с|"],["собака","б|к|с|"],["суп","п|с|"],["сумка","к|с|"],["сук","к|с|"],["сурок","к|р|с|"],["сундук","д|к|с|"],["сухарь","р'|с|х|"],["судак","д|к|с|"],["сурикат","к|р'|с|т|"],["сын","с|"],["сынок","к|с|"],["сыр","р|с|"],["салфетка","к|л|с|т|"],["сарай","й|р|с|"],["сало","л|с|"],["садик","д'|к|с|"],["сойка","й|к|с|"],["солонка","к|л|с|"],["соты","с|т|"],["салака","к|л|с|"],["сорняк","к|р|с|"],["соломка","к|л|с|"],["садовник","д|к|с|"],["санитар","р|с|т|"],["самосвал","л|с|"],["соус","с|"],["судно","д|с|"],["стол","л|с|т|"],["стул","л|с|т|"],["стакан","к|с|т|"],["стадо","д|с|т|"],["станок","к|с|т|"],["старик","к|р'|с|т|"],["страус","р|с|т|"],["струна","р|с|т|"],["ступа","п|с|т|"],["стог","к|с|т|"],["стрела","л|р'|с|т|"],["стадион","д'|с|т|"],["стройка","й|к|р|с|т|"],["стрелка","к|л|р'|с|т|"],["столб","л|п|с|т|"],["скала","к|л|с|"],["скакалка","к|л|с|"],["скамейка","й|к|с|"],["скатерть","к|р|с|т'|"],["сковорода","д|к|р|с|"],["скорлупа","к|л|п|р|с|"],["скот","к|с|т|"],["склад","к|л|с|т|"],["скалка","к|л|с|"],["скрипка","к|п|р'|с|"],["сказка","к|с|"],["скакун","к|с|"],["слон","л|с|"],["слоник","к|л|с|"],["сноп","п|с|"],["спутник","к|п|с|т|"],["спрут","п|р|с|т|"],["свадьба","б|д'|с|"],["спальня","л'|п|с|"],["оса","с|"],["коса","к|с|"],["роса","р|с|"],["лиса","л'|с|"],["весы","с|"],["усы","с|"],["бусы","б|с|"],["посуда","д|п|с|"],["колесо","к|л'|с|"],["полоса","л|п|с|"],["носок","к|с|"],["кусок","к|с|"],["песок","к|п'|с|"],["мясо","с|"],["просо","п|р|с|"],["носорог","к|р|с|"],["пылесос","л'|п|с|"],["насос","с|"],["колбаса","б|к|л|с|"],["фасоль","л'|с|"],["посылка","к|л|п|с|"],["посадка","к|п|с|т|"],["рассада","д|р|с|"],["осока","к|с|"],["посудина","д'|п|с|"],["гусыня","г|с|"],["касса","к|с|"],["трасса","р|с|т|"],["колосок","к|л|с|"],["касатка","к|с|т|"],["полоска","к|л|п|с|"],["колбаска","б|к|л|с|"],["масло","л|с|"],["весло","л|с|"],["весна","с|"],["паста","п|с|т|"],["маска","к|с|"],["каска","к|с|"],["миска","к|с|"],["краска","к|р|с|"],["коляска","к|л'|с|"],["капуста","к|п|с|т|"],["кастрюля","к|л'|р'|с|т|"],["кастрюлька","к|л'|р'|с|т|"],["барсук","б|к|р|с|"],["такса","к|с|т|"],["тесто","с|т|т'|"],["остров","р|с|т|"],["пастух","п|с|т|х|"],["листок","к|л'|с|т|"],["листопад","л'|п|с|т|"],["космос","к|с|"],["космонавт","к|с|т|"],["космодром","д|к|р|с|"],["простыня","п|р|с|т|"],["конструктор","к|р|с|т|"],["оркестр","к'|р|с|т|"],["всадник","д|к|с|"],["подсолнух","л|п|с|т|х|"],["подставка","к|п|с|т|"],["пустыня","п|с|т|"],["листва","л'|с|т|"],["сарделька","д'|к|л'|р|с|"],["рассказ","к|р|с|"],["смородина","д'|р|с|"],["автобус","б|с|т|"],["глобус","б|г|л|с|"],["кактус","к|с|т|"],["фикус","к|с|"],["компас","к|п|с|"],["парус","п|р|с|"],["кокос","к|с|"],["троллейбус","б|й|л'|р|с|т|"],["ананас","с|"],["квас","к|с|"],["нос","с|"],["лес","л'|с|"],["пёс","п'|с|"],["овёс","с|"],["пояс","й|п|с|"],["волос","л|с|"],["колос","к|л|с|"],["матрос","р|с|т|"],["поднос","д|п|с|"],["абрикос","б|к|р'|с|"],["мороз","р|с|"],["арбуз","б|р|с|"],["паровоз","п|р|с|"],["воз","с|"],["груз","г|р|с|"],["таз","с|т|"],["глаз","г|л|с|"],["алмаз","л|с|"],["мост","с|т|"],["куст","к|с|т|"],["лист","л'|с|т|"],["хвост","с|т|х|"],["аист","с|т|"],["воск","к|с|"],["киоск","к|к'|с|"],["диск","д'|к|с|"],["холст","л|с|т|х|"],["крест","к|р'|с|т|"],["кекс","к|к'|с|"],["тракторист","к|р|р'|с|т|"],["футболист","б|д|л'|с|т|"],["артист","р|с|т|т'|"],["турист","р'|с|т|"],["гимнаст","г'|с|т|"],["поезд","й|п|с|т|"],["часы","с|ч|"],["трусы","р|с|т|"]]},"с'":{"label":"Сь","base":["ж","з","з'","с","ц","ч","ш","щ"],"words":[["сено","с'|"],["сетка","к|с'|т|"],["сеть","с'|т'|"],["сеточка","к|с'|т|ч|"],["сито","с'|т|"],["ситечко","к|с'|т'|ч|"],["сирень","р'|с'|"],["сироп","п|р|с'|"],["сирена","р'|с'|"],["село","л|с'|"],["селёдка","к|л'|с'|т|"],["селёдочка","д|к|л'|с'|ч|"],["сельдь","л'|с'|т'|"],["сельдерей","д'|й|л'|р'|с'|"],["селезень","з'|л'|с'|"],["сёмга","г|с'|"],["семья","й|с'|"],["семечко","к|с'|ч|"],["семёрка","к|р|с'|"],["сейф","й|с'|"],["серьга","г|р'|с'|"],["серёжка","к|р'|с'|ш|"],["сердечко","д'|к|р|с'|ч|"],["сердце","р|с'|ц|"],["силач","л|с'|ч|"],["седло","д|л|с'|"],["серп","п|р|с'|"],["семафор","р|с'|"],["синичка","к|с'|ч|"],["синица","с'|ц|"],["сеновал","л|с'|"],["секундомер","д|к|р|с'|"],["осина","с'|"],["осинка","к|с'|"],["осень","с'|"],["осёл","л|с'|"],["осётр","р|с'|т|"],["осьминог","к|с'|"],["осьминожка","к|с'|ш|"],["ясень","й|с'|"],["бусина","б|с'|"],["бусинка","б|к|с'|"],["бисеринка","б'|к|р'|с'|"],["росинка","к|р|с'|"],["бисер","б'|р|с'|"],["поросёнок","к|п|р|с'|"],["лисёнок","к|л'|с'|"],["лосёнок","к|л|с'|"],["гусёнок","г|к|с'|"],["рысёнок","к|р|с'|"],["лисичка","к|л'|с'|ч|"],["лисица","л'|с'|ц|"],["гусеница","г|с'|ц|"],["гусеничка","г|к|с'|ч|"],["косичка","к|с'|ч|"],["носик","к|с'|"],["пёсик","к|п'|с'|"],["автобусик","б|к|с'|т|"],["ананасик","к|с'|"],["абрикосик","б|к|р'|с'|"],["кактусик","к|с'|т|"],["матросик","к|р|с'|т|"],["поясик","й|к|п|с'|"],["велосипед","л|п'|с'|т|"],["василёк","к|л'|с'|"],["василёчек","к|л'|с'|ч|"],["кисель","к'|л'|с'|"],["карусель","к|л'|р|с'|"],["лесенка","к|л'|с'|"],["песенка","к|п'|с'|"],["беседка","б'|к|с'|т|"],["бассейн","б|й|с'|"],["кассир","к|р|с'|"],["такси","к|с'|т|"],["письмо","п'|с'|"],["посёлок","к|л|п|с'|"],["апельсин","л'|п'|с'|"],["апельсинчик","к|л'|п'|с'|ч|"],["апельсинка","к|л'|п'|с'|"],["персик","к|п'|р|с'|"],["колёсико","к|л'|с'|"],["восьмёрка","к|р|с'|"],["десерт","д'|р|с'|т|"],["пасека","к|п|с'|"],["месяц","с'|ц|"],["лосины","л|с'|"],["миксер","к|р|с'|"],["боксёр","б|к|р|с'|"],["тесёмка","к|с'|т'|"],["карасик","к|р|с'|"],["гусь","г|с'|"],["лось","л|с'|"],["рысь","р|с'|"],["карась","к|р|с'|"],["стена","с|т'|"],["стенка","к|с|т'|"],["степь","п'|с|т'|"],["стекло","к|л|с|т'|"],["стёклышко","к|л|с|т'|ш|"],["стебель","б'|л'|с|т'|"],["стебелёк","б'|к|л'|с|т'|"],["костёр","к|р|с|т'|"],["мостик","к|с|т'|"],["листик","к|л'|с|т'|"],["кустик","к|с|т'|"],["хвостик","к|с|т'|х|"],["ластик","к|л|с|т'|"],["аистёнок","к|с|т'|"],["пастила","л|п|с|т'|"],["кость","к|с|т'|"],["гость","г|с|т'|"],["гостиница","г|с|т'|ц|"],["костюм","к|с|т'|"],["костюмчик","к|с|т'|ч|"],["постель","л'|п|с|т'|"],["трость","р|с|т|т'|"],["шерсть","р|с|т'|ш|"],["шестёрка","к|р|с|т'|ш|"],["кисть","к'|с|т'|"],["мастер","р|с|т'|"],["фломастер","л|р|с|т'|"],["пластилин","л|л'|п|с|т'|"],["гвоздь","г|с|т'|"],["снег","к|с|"],["снеговик","г|к|с|"],["снегирь","г'|р'|с|"],["снежинка","ж|к|с|"],["снежок","ж|к|с|"],["снегопад","г|п|с|т|"],["песня","п'|с|"],["лестница","л'|с|ц|"],["лесник","к|л'|с|"],["фокусник","к|с|"],["слива","л'|с|"],["сливки","к'|л'|с|"],["след","л'|с|т|"],["ослик","к|л'|с|"],["гусли","г|л'|с|"],["маслина","л'|с|"],["маслёнка","к|л'|с|"],["свёкла","к|л|с|"],["свитер","р|с|т'|"],["свинья","й|с|"],["свинка","к|с|"],["свеча","с|ч|"],["свечка","к|с|ч|"],["светофор","р|с|т|"],["светлячок","к|л'|с|т|ч|"],["спина","п'|с|"],["спинка","к|п'|с|"],["спица","п'|с|ц|"],["сметана","с|т|"]]},"з":{"label":"З","base":["ж","з'","с","с'","ч","ш","щ"],"words":[["забор","б|з|р|"],["заборчик","б|з|к|р|ч|"],["завод","з|т|"],["завтрак","з|к|р|т|"],["заварка","з|к|р|"],["заварник","з|к|р|"],["задвижка","д|з|к|ш|"],["зажим","ж|з|"],["загон","г|з|"],["загородка","г|з|к|р|т|"],["зайка","з|й|к|"],["зайчик","з|й|к|ч|"],["зайчиха","з|й|х|ч|"],["зайчонок","з|й|к|ч|"],["закат","з|к|т|"],["закладка","з|к|л|т|"],["заклёпка","з|к|л'|п|"],["заколка","з|к|л|"],["закорючка","з|к|р'|ч|"],["закуска","з|к|с|"],["зал","з|л|"],["залив","з|л'|"],["замок","з|к|"],["замазка","з|к|с|"],["занавес","з|с|"],["занавеска","з|к|с|"],["запеканка","з|к|п'|"],["записка","з|к|п'|с|"],["заплатка","з|к|л|п|т|"],["заплата","з|л|п|т|"],["заправка","з|к|п|р|"],["заря","з|р'|"],["засов","з|с|"],["защёлка","з|к|л|щ|"],["застёжка","з|к|с|т'|ш|"],["затылок","з|к|л|т|"],["завязка","з|к|с|"],["заяц","з|й|ц|"],["замочек","з|к|ч|"],["заноза","з|"],["запятая","з|й|п'|т|"],["золото","з|л|т|"],["зонт","з|т|"],["зонтик","з|к|т'|"],["зоопарк","з|к|п|р|"],["зуб","з|п|"],["зубик","б'|з|к|"],["зубец","б'|з|ц|"],["зубчик","з|к|п|ч|"],["зубочистка","б|з|к|с|т|ч|"],["зубр","б|з|р|"],["зубрёнок","б|з|к|р'|"],["звонок","з|к|"],["звоночек","з|к|ч|"],["здание","д|з|й|"],["знак","з|к|"],["знамя","з|"],["значок","з|к|ч|"],["зрачок","з|к|р|ч|"],["базар","б|з|р|"],["берёза","б'|з|р'|"],["бизон","б'|з|"],["бирюза","б'|з|р'|"],["блуза","б|з|л|"],["ваза","з|"],["вазочка","з|к|ч|"],["газон","г|з|"],["глазок","г|з|к|л|"],["глазунья","г|з|й|л|"],["глазурь","г|з|л|р'|"],["горизонт","г|з|р'|т|"],["гроза","г|з|р|"],["грузовик","г|з|к|р|"],["грузовичок","г|з|к|р|ч|"],["динозавр","д'|з|р|"],["изумруд","з|р|т|"],["казак","з|к|"],["казачок","з|к|ч|"],["коза","з|к|"],["козочка","з|к|ч|"],["козырёк","з|к|р'|"],["комбинезон","б'|з|к|"],["кузов","з|к|"],["кукуруза","з|к|р|"],["лоза","з|л|"],["лизун","з|л'|"],["медуза","д|з|"],["мимоза","з|"],["мозаика","з|к|"],["музыкант","з|к|т|"],["незабудка","б|з|к|т|"],["пузырь","з|п|р'|"],["пузырёк","з|к|п|р'|"],["роза","з|р|"],["розочка","з|к|р|ч|"],["слеза","з|л'|с|"],["стрекоза","з|к|р'|с|т|"],["телевизор","з|л'|р|т'|"],["узор","з|р|"],["фазан","з|"],["язык","з|й|к|"],["язычок","з|й|к|ч|"],["огрызок","г|з|к|р|"],["грызун","г|з|р|"],["газонокосилка","г|з|к|л|с'|"],["пузо","з|п|"],["лазанья","з|й|л|"],["азбука","б|з|к|"],["изба","б|з|"],["избушка","б|з|к|ш|"],["разбойник","б|з|й|к|р|"],["изгородь","г|з|р|т'|"],["гнездо","г|д|з|"],["гнёздышко","г|д|з|к|ш|"],["узда","д|з|"],["пазл","з|л|п|"],["шезлонг","з|к|л|ш|"],["бронза","б|з|р|"],["линза","з|л'|"],["бальзам","б|з|л'|"],["вокзал","г|з|л|"],["рюкзак","г|з|к|р'|"],["рюкзачок","г|з|к|р'|ч|"],["бензовоз","б'|з|с|"],["автовокзал","г|з|л|т|"],["бензоколонка","б'|з|к|л|"],["бензопила","б'|з|л|п'|"],["спортзал","д|з|л|п|р|с|"]]},"з'":{"label":"Зь","base":["ж","з","с","с'","ч","ш","щ"],"words":[["зима","з'|"],["зеркало","з'|к|л|р|"],["зеркальце","з'|к|л'|р|ц|"],["зерно","з'|р|"],["зёрнышко","з'|к|р|ш|"],["зебра","б|з'|р|"],["зелень","з'|л'|"],["земля","з'|л'|"],["земляника","з'|к|л'|"],["земляничка","з'|к|л'|ч|"],["землянка","з'|к|л'|"],["зефир","з'|р|"],["зефирка","з'|к|р|"],["зяблик","б|з'|к|л'|"],["зелье","з'|й|л'|"],["зимородок","д|з'|к|р|"],["землекоп","з'|к|л'|п|"],["зебрёнок","б|з'|к|р'|"],["зелёнка","з'|к|л'|"],["газета","г|з'|т|"],["слизень","з'|л'|с|"],["селезень","з'|л'|с'|"],["кизил","з'|к'|л|"],["озерцо","з'|р|ц|"],["газель","г|з'|л'|"],["газировка","г|з'|к|р|"],["магазин","г|з'|"],["магазинчик","г|з'|к|ч|"],["резина","з'|р'|"],["резинка","з'|к|р'|"],["резиночка","з'|к|р'|ч|"],["музей","з'|й|"],["озеро","з'|р|"],["розетка","з'|к|р|т|"],["изюм","з'|"],["изюминка","з'|к|"],["хозяин","з'|х|"],["хозяйка","з'|й|к|х|"],["козёл","з'|к|л|"],["козявка","з'|к|"],["морозилка","з'|к|л|р|"],["морозильник","з'|к|л'|р|"],["тазик","з'|к|т|"],["арбузик","б|з'|к|р|"],["глазик","г|з'|к|л|"],["грузик","г|з'|к|р|"],["паровозик","з'|к|п|р|"],["визитка","з'|к|т|"],["жалюзи","ж|з'|л'|"],["узел","з'|л|"],["узелок","з'|к|л|"],["лазер","з'|л|р|"],["бульдозер","б|д|з'|л'|р|"],["дизель","д'|з'|л'|"],["безе","б'|з'|"],["козинаки","з'|к|к'|"],["вазелин","з'|л'|"],["базилик","б|з'|к|л'|"],["бузина","б|з'|"],["лимузин","з'|л'|"],["мизинец","з'|ц|"],["мизинчик","з'|к|ч|"],["карапузик","з'|к|п|р|"],["слезинка","з'|к|л'|с|"],["корзина","з'|к|р|"],["корзинка","з'|к|р|"],["корзиночка","з'|к|р|ч|"],["бензин","б'|з'|"],["гейзер","г'|з'|й|р|"],["подземелье","д|з'|й|л'|п|"],["обезьяна","б'|з'|й|"],["обезьянка","б'|з'|й|к|"],["обезьянник","б'|з'|й|к|"],["гнездо","г|д|з|"],["гвоздика","г|д'|з|к|"],["гвоздик","г|д'|з|к|"],["кузнечик","з|к|ч|"],["кузнец","з|к|ц|"],["кузница","з|к|ц|"],["слизняк","з|к|л'|с|"],["шимпанзе","з'|п|ш|"]]},"ш":{"label":"Ш","base":["ж","з","з'","с","с'","ц","ч","щ"],"words":[["шар","р|ш|"],["шарф","р|ш|"],["шарфик","к|р|ш|"],["шарик","к|р'|ш|"],["шапка","к|п|ш|"],["шуба","б|ш|"],["шайба","б|й|ш|"],["шея","й|ш|"],["шило","л|ш|"],["шина","ш|"],["шип","п|ш|"],["шов","ш|"],["шёлк","к|л|ш|"],["шут","т|ш|"],["шуруп","п|р|ш|"],["шакал","к|л|ш|"],["шаль","л'|ш|"],["шатёр","р|т'|ш|"],["шишка","к|ш|"],["шалаш","л|ш|"],["шашлык","к|л|ш|"],["шампунь","п|ш|"],["шахматы","т|х|ш|"],["шашка","к|ш|"],["шоколад","к|л|т|ш|"],["шоколадка","к|л|т|ш|"],["шофёр","р|ш|"],["шорты","р|т|ш|"],["ширма","р|ш|"],["шиповник","к|п|ш|"],["шелуха","л|х|ш|"],["шарманка","к|р|ш|"],["шаровары","р|ш|"],["шевелюра","л'|р|ш|"],["шкаф","к|ш|"],["школа","к|л|ш|"],["шкура","к|р|ш|"],["шкатулка","к|л|т|ш|"],["шляпа","л'|п|ш|"],["шляпка","к|л'|п|ш|"],["шлем","л'|ш|"],["шланг","к|л|ш|"],["шлюпка","к|л'|п|ш|"],["шмель","л'|ш|"],["шнур","р|ш|"],["шнурок","к|р|ш|"],["шпага","г|п|ш|"],["шпагат","г|п|т|ш|"],["шпилька","к|л'|п'|ш|"],["шпиль","л'|п'|ш|"],["шпинат","п'|т|ш|"],["шпора","п|р|ш|"],["штаны","т|ш|"],["штора","р|т|ш|"],["штанга","г|т|ш|"],["штамп","п|т|ш|"],["штопор","п|р|т|ш|"],["штурвал","л|р|т|ш|"],["шлагбаум","б|г|л|ш|"],["машина","ш|"],["машинка","к|ш|"],["афиша","ш|"],["галоша","г|л|ш|"],["каша","к|ш|"],["крыша","к|р|ш|"],["груша","г|р|ш|"],["мешок","к|ш|"],["петушок","к|п'|т|ш|"],["пушок","к|п|ш|"],["мышонок","к|ш|"],["лягушонок","г|к|л'|ш|"],["камешек","к|ш|"],["орешек","к|р'|ш|"],["барашек","б|к|р|ш|"],["капюшон","к|п'|ш|"],["кармашек","к|р|ш|"],["горошина","г|р|ш|"],["пушинка","к|п|ш|"],["ушанка","к|ш|"],["ошейник","й|к|ш|"],["лошадь","л|т'|ш|"],["лошадка","к|л|т|ш|"],["вешалка","к|л|ш|"],["решётка","к|р'|т|ш|"],["решето","р'|т|ш|"],["мишура","р|ш|"],["кошка","к|ш|"],["мишка","к|ш|"],["мышка","к|ш|"],["пушка","к|п|ш|"],["вышка","к|ш|"],["крышка","к|р|ш|"],["фишка","к|ш|"],["пышка","к|п|ш|"],["мошка","к|ш|"],["букашка","б|к|ш|"],["ромашка","к|р|ш|"],["рубашка","б|к|р|ш|"],["ракушка","к|р|ш|"],["подушка","д|к|п|ш|"],["кукушка","к|ш|"],["лягушка","г|к|л'|ш|"],["бабушка","б|к|ш|"],["дедушка","д|д'|к|ш|"],["девушка","д'|к|ш|"],["ватрушка","к|р|т|ш|"],["матрёшка","к|р'|т|ш|"],["картошка","к|р|т|ш|"],["гармошка","г|к|р|ш|"],["кормушка","к|р|ш|"],["игрушка","г|к|р|ш|"],["хлопушка","к|л|п|х|ш|"],["погремушка","г|к|п|р'|ш|"],["катушка","к|т|ш|"],["макушка","к|ш|"],["верхушка","к|р|х|ш|"],["ладошка","д|к|л|ш|"],["лепёшка","к|л'|п'|ш|"],["лукошко","к|л|ш|"],["окошко","к|ш|"],["крошка","к|р|ш|"],["плюшка","к|л'|п|ш|"],["клюшка","к|л'|ш|"],["хрюшка","к|р'|х|ш|"],["неваляшка","к|л'|ш|"],["мартышка","к|р|т|ш|"],["мышеловка","к|л|ш|"],["пёрышко","к|п'|р|ш|"],["крылышко","к|л|р|ш|"],["горлышко","г|к|л|р|ш|"],["тельняшка","к|л'|т'|ш|"],["вишня","ш|"],["башня","б|ш|"],["наушник","к|ш|"],["мошкара","к|р|ш|"],["кувшин","к|ш|"],["кувшинка","к|ш|"],["горшок","г|к|р|ш|"],["вершина","р|ш|"],["лапша","л|п|ш|"],["ложка","к|л|ш|"],["ножка","к|ш|"],["книжка","к|ш|"],["варежка","к|р'|ш|"],["кружка","к|р|ш|"],["подружка","д|к|п|р|ш|"],["дорожка","д|к|р|ш|"],["тележка","к|л'|т'|ш|"],["бумажка","б|к|ш|"],["нож","ш|"],["морж","р|ш|"],["ёж","й|ш|"],["уж","ш|"],["этаж","т|ш|"],["багаж","б|г|ш|"],["гараж","г|р|ш|"],["душ","д|ш|"],["малыш","л|ш|"],["камыш","к|ш|"],["ландыш","д|л|ш|"],["карандаш","д|к|р|ш|"],["мышь","ш|"],["гуашь","г|ш|"],["ковш","к|ш|"],["ёрш","й|р|ш|"],["клешня","к|л'|ш|"]]},"ж":{"label":"Ж","base":["з","з'","с","с'","ц","ч","ш","щ"],"words":[["жук","ж|к|"],["жучок","ж|к|ч|"],["жаба","б|ж|"],["жираф","ж|р|"],["жилет","ж|л'|т|"],["жилетка","ж|к|л'|т|"],["жакет","ж|к'|т|"],["живот","ж|т|"],["животик","ж|к|т'|"],["журавль","ж|л'|р|"],["журнал","ж|л|р|"],["жёлудь","ж|л|т'|"],["желток","ж|к|л|т|"],["желе","ж|л'|"],["жетон","ж|т|"],["жемчужина","ж|ч|"],["жеребёнок","б'|ж|к|р'|"],["жаворонок","ж|к|р|"],["жонглёр","г|ж|л'|р|"],["жокей","ж|й|к'|"],["жасмин","ж|с|"],["жалюзи","ж|з'|л'|"],["женщина","ж|щ|"],["жвачка","ж|к|ч|"],["жар-птица","ж|п|р|т'|ц|"],["пижама","ж|п'|"],["лужа","ж|л|"],["лужайка","ж|й|к|л|"],["лужок","ж|к|л|"],["кожура","ж|к|р|"],["ужин","ж|"],["ежевика","ж|й|к|"],["ёжик","ж|й|к|"],["ежиха","ж|й|х|"],["ежонок","ж|й|к|"],["медвежонок","д|ж|к|"],["верблюжонок","б|ж|к|л'|р|"],["моржонок","ж|к|р|"],["баклажан","б|ж|к|л|"],["абажур","б|ж|р|"],["хижина","ж|х'|"],["пружина","ж|п|р|"],["ожерелье","ж|й|л'|р'|"],["рыжик","ж|к|р|"],["чижик","ж|к|ч|"],["флажок","ж|к|л|"],["снежок","ж|к|с|"],["сапожок","ж|к|п|с|"],["пирожок","ж|к|п'|р|"],["творожок","ж|к|р|т|"],["утюжок","ж|к|т'|"],["кружок","ж|к|р|"],["рожок","ж|к|р|"],["мороженое","ж|й|р|"],["пирожное","ж|й|п'|р|"],["кружево","ж|к|р|"],["дирижабль","б|д'|ж|л'|р'|"],["дирижёр","д'|ж|р|р'|"],["пассажир","ж|п|р|с|"],["снежинка","ж|к|с|"],["крыжовник","ж|к|р|"],["ножовка","ж|к|"],["пряжа","ж|п|р'|"],["этажерка","ж|к|р|т|"],["лыжи","ж|л|"],["художник","д|ж|к|х|"],["ножницы","ж|ц|"],["лыжник","ж|к|л|"],["багажник","б|г|ж|к|"],["бумажник","б|ж|к|"],["сапожник","ж|к|п|с|"],["подснежник","ж|к|п|с|т|"],["подорожник","д|ж|к|п|р|"],["одежда","д|д'|ж|"],["дождик","д|д'|ж|к|"],["дождевик","д|д'|ж|к|"],["коржик","ж|к|р|"],["баржа","б|ж|р|"],["пиджак","д|ж|к|п'|"],["джем","д|ж|"],["джип","д|ж|п|"],["джинсы","д|ж|с|"],["джинн","д|ж|"],["джойстик","д|ж|й|к|с|т'|"],["джемпер","д|ж|п'|р|"],["инжир","ж|р|"],["пожарный","ж|й|п|р|"],["драже","д|ж|р|"]]},"щ":{"label":"Щ","base":["ж","з","з'","с","с'","ц","ч","ш"],"words":[["щука","к|щ|"],["щётка","к|т|щ|"],["щенок","к|щ|"],["щека","к|щ|"],["щавель","л'|щ|"],["щи","щ|"],["щипцы","п|ц|щ|"],["щегол","г|л|щ|"],["щепка","к|п|щ|"],["щетина","т'|щ|"],["щиколотка","к|л|т|щ|"],["щупальце","л'|п|ц|щ|"],["щебень","б'|щ|"],["щебёнка","б'|к|щ|"],["щит","т|щ|"],["щучка","к|ч|щ|"],["щёчка","к|ч|щ|"],["щёточка","к|т|ч|щ|"],["щеночек","к|ч|щ|"],["щипчики","к'|п|ч|щ|"],["щепочка","к|п|ч|щ|"],["щепотка","к|п|т|щ|"],["щелкунчик","к|л|ч|щ|"],["счёты","т|щ|"],["счётчик","к|т|ч|щ|"],["счёт","т|щ|"],["щель","л'|щ|"],["щёлка","к|л|щ|"],["щёлочка","к|л|ч|щ|"],["щетинка","к|т'|щ|"],["щиток","к|т|щ|"],["щеколда","д|к|л|щ|"],["ящик","й|к|щ|"],["ящичек","й|к|ч|щ|"],["ящерица","й|р'|ц|щ|"],["ящерка","й|к|р|щ|"],["ящер","й|р|щ|"],["пещера","п'|р|щ|"],["роща","р|щ|"],["рощица","р|ц|щ|"],["чаща","ч|щ|"],["пища","п'|щ|"],["туловище","л|т|щ|"],["жилище","ж|л'|щ|"],["сокровище","к|р|с|щ|"],["трещина","р'|т|щ|"],["мужчина","щ|"],["дощечка","д|к|ч|щ|"],["пищалка","к|л|п'|щ|"],["ищейка","й|к|щ|"],["сыщик","к|с|щ|"],["расчёска","к|р|с|щ|"],["площадь","л|п|т'|щ|"],["площадка","к|л|п|т|щ|"],["клещи","к|л'|щ|"],["прищепка","к|п|р'|щ|"],["песчинка","к|п'|щ|"],["трещотка","к|р'|т|щ|"],["сгущёнка","г|з|к|щ|"],["гуща","г|щ|"],["пещерка","к|п'|р|щ|"],["трещинка","к|р'|т|щ|"],["защёлка","з|к|л|щ|"],["плащик","к|л|п|щ|"],["погрузчик","г|к|п|р|щ|"],["угощение","г|й|щ|"],["женщина","ж|щ|"],["морщина","р|щ|"],["барабанщик","б|к|р|щ|"],["каменщик","к|щ|"],["уборщица","б|р|ц|щ|"],["часовщик","к|с|ч|щ|"],["сварщик","к|р|с|щ|"],["крановщик","к|р|щ|"],["гонщик","г|к|щ|"],["дрессировщик","д|к|р|р'|с'|щ|"],["носильщик","к|л'|с'|щ|"],["болельщик","б|к|л'|щ|"],["мороженщик","ж|к|р|щ|"],["продавщица","д|п|р|ц|щ|"],["танцовщица","т|ц|щ|"],["грузчик","г|к|р|щ|"],["гардеробщик","г|д'|к|п|р|щ|"],["регулировщик","г|к|л'|р|р'|щ|"],["морщинка","к|р|щ|"],["мусорщик","к|р|с|щ|"],["уборщик","б|к|р|щ|"],["фонарщик","к|р|щ|"],["шарманщик","к|р|ш|щ|"],["бетонщик","б'|к|т|щ|"],["стекольщик","к|л'|с|т'|щ|"],["кладовщик","д|к|л|щ|"],["мойщик","й|к|щ|"],["защитник","з|к|т|щ|"],["хищник","к|х'|щ|"],["борщ","б|р|щ|"],["плащ","л|п|щ|"],["лещ","л'|щ|"],["плющ","л'|п|щ|"],["овощ","щ|"],["вещь","щ|"],["товарищ","р'|т|щ|"],["хвощ","х|щ|"],["клещ","к|л'|щ|"],["щеглёнок","г|к|л'|щ|"]]}},"twin":{"х":"х'","с":"с'","р'":"р","з'":"з","с'":"с","б'":"б","т":"т'","х'":"х","к'":"к","д":"д'","п":"п'","з":"з'","п'":"п","к":"к'","л'":"л","б":"б'","г'":"г","г":"г'","л":"л'","р":"р'","т'":"т","д'":"д"},"options":[{"k":"с","l":"С"},{"k":"з","l":"З"},{"k":"ц","l":"Ц"},{"k":"ш","l":"Ш"},{"k":"ж","l":"Ж"},{"k":"щ","l":"Щ"},{"k":"ч","l":"Ч"},{"k":"л","l":"Л"},{"k":"р","l":"Р"},{"k":"й","l":"Й"},{"k":"к","l":"К"},{"k":"г","l":"Г"},{"k":"х","l":"Х"},{"k":"п","l":"П"},{"k":"б","l":"Б"},{"k":"т","l":"Т"},{"k":"д","l":"Д"}]}</script>
+<script>
+(function(){
+  var D = JSON.parse(document.getElementById('rov-data').textContent);
+  var rail = document.getElementById('rail');
+  var chips = document.getElementById('chips');
+  var note = document.getElementById('chips-note');
+  var elLeft = document.getElementById('left'), elOf = document.getElementById('of');
+  var elBar = document.getElementById('bar'), elPct = document.getElementById('pct');
+  var elDrop = document.getElementById('dropped');
+  var order = ['р',"р'",'л',"л'",'с',"с'",'з',"з'",'ш','ж','щ'];
+  var cur = 'р';
+  var picked = {};
+
+  function bannedSet(){
+    var d = D.sounds[cur], b = {};
+    d.base.forEach(function(p){ b[p] = 1; });
+    Object.keys(picked).forEach(function(p){
+      if(!picked[p]) return;
+      b[p] = 1;
+      if(D.twin[p]) b[D.twin[p]] = 1;
+    });
+    delete b[cur];
+    return b;
+  }
+
+  function draw(){
+    var d = D.sounds[cur], b = bannedSet(), kept = 0, gone = [];
+    d.words.forEach(function(w){
+      var ps = w[1].split('|'), dirty = false;
+      for(var i = 0; i < ps.length; i++){ if(ps[i] && b[ps[i]]){ dirty = true; break; } }
+      if(dirty) gone.push(w[0]); else kept++;
+    });
+    var total = d.words.length;
+    elLeft.childNodes[0].nodeValue = kept + ' ';
+    elOf.textContent = 'из ' + total;
+    elBar.style.width = (total ? Math.round(kept / total * 100) : 0) + '%';
+    elPct.textContent = gone.length
+      ? 'Убрано ' + gone.length + ' слов — ' + Math.round(gone.length / total * 100) + ' %.'
+      : 'Пока не убрано ничего сверх того, что снимает сам звук.';
+    elDrop.textContent = gone.length ? gone.join(' · ') : '—';
+
+    var off = [];
+    D.options.forEach(function(o){
+      if(o.k !== cur && d.base.indexOf(o.k) >= 0) off.push(o.l);
+    });
+    note.textContent = off.length
+      ? off.join(', ') + ' — уже убраны: их путают с [' + d.label + '].'
+      : '';
+    paintChips(d);
+  }
+
+  function paintChips(d){
+    chips.innerHTML = '';
+    D.options.forEach(function(o){
+      if(o.k === cur) return;
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = o.l;
+      if(d.base.indexOf(o.k) >= 0){
+        b.disabled = true;
+        b.title = 'уже убрано: [' + o.l + '] смешивается с [' + d.label + ']';
+      } else {
+        b.setAttribute('aria-pressed', picked[o.k] ? 'true' : 'false');
+        b.addEventListener('click', function(){
+          picked[o.k] = !picked[o.k];
+          draw();
+        });
+      }
+      li.appendChild(b); chips.appendChild(li);
+    });
+  }
+
+  order.forEach(function(k){
+    var li = document.createElement('li');
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'snd'; b.textContent = D.sounds[k].label;
+    b.setAttribute('aria-pressed', k === cur ? 'true' : 'false');
+    b.addEventListener('click', function(){
+      cur = k; picked = {};
+      rail.querySelectorAll('.snd').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      b.setAttribute('aria-pressed','true');
+      draw();
+    });
+    li.appendChild(b); rail.appendChild(li);
+  });
+
+  draw();
+})();
+</script>
