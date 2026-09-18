@@ -1476,6 +1476,7 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
 # один «cluster»; движок различает стечение перед гласной и после неё.
 TYPE_ALIASES = {
     "cluster": "cluster_onset",
+    "cluster_td": "cluster_td",
     "cluster_onset": "cluster_onset",
     "cluster_coda": "cluster_coda",
     "direct": "direct", "reverse": "reverse", "intervocal": "intervocal",

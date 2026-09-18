@@ -65,7 +65,8 @@ import re
 import sys
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import (Any, Callable, Dict, FrozenSet, Iterable, List, Optional,
+                    Sequence, Set, Tuple)
 
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:                       # чтобы модуль работал из любой cwd
@@ -258,18 +259,12 @@ CANON_MIN_WORDS: int = 12
 CANON_MIN_WORDS_CLUSTER: int = 7
 
 
-def canon_min_words(syl_type: str = "") -> int:
-    """Канонный минимум слов блока [4] для этого типа слога."""
-    return (CANON_MIN_WORDS_CLUSTER
-            if syl_type in ("cluster_onset", "cluster_coda")
-            else CANON_MIN_WORDS)
-
-
 SYL_TYPES: Tuple[str, ...] = (
     "direct",         # РА  — прямой (открытый) слог
     "reverse",        # АР  — обратный
     "intervocal",     # АРА — интервокальный
-    "cluster_onset",  # ТРА — со стечением в начале слога
+    "cluster_td",     # ТРА — стечение только после опорных Т, Д (см. ниже)
+    "cluster_onset",  # КРА — со стечением в начале слога
     "cluster_coda",   # АРТ — со стечением в конце слога
 )
 
@@ -277,9 +272,46 @@ SYL_TYPE_LABEL: Dict[str, str] = {
     "direct":        "прямые слоги",
     "reverse":       "обратные слоги",
     "intervocal":    "звук между гласными",
+    "cluster_td":    "слоги со стечением ТР, ДР",
     "cluster_onset": "слоги со стечением (стечение перед гласной)",
     "cluster_coda":  "слоги со стечением (стечение после гласной)",
 }
+
+# ── СТЕЧЕНИЕ ПОСЛЕ ОПОРНЫХ Т, Д (09-18, просьба логопеда Ольги) ──────────
+# [Р], поставленный от опорного Т/Д, сначала живёт только в сочетании «д-р».
+# В КРА/ГРА работает задняя часть языка, в ПРА/БРА — губы, и туда ребёнок
+# переходит не сразу: «Приходится сидеть какое-то время на тра/дра»
+# (ГОЛОСА.md, 09-18). Картотеки практиков ведут ТР/ДР отдельной ступенью;
+# у Фомичёвой (1989) «тррр» стоит в игре на автоматизацию (gymnastics.json).
+#
+# Общее стечение («КРА») этого не умеет: рамки там берутся по ЧАСТОТЕ в
+# картотеке — КР · ГР · ТР · БР, и ДР на [Р] не выпадало вовсе. Обход через
+# профиль («не поставлены К Г П Б») выбрасывал слово целиком, даже когда К
+# стоит далеко от Р («дракон»), и не мог убрать ВР — В в профиль не отметить.
+# Здесь отбор по тому, какой звук стоит ПЕРЕД целевым: это поле разбора движка
+# (`prev_phoneme`), а не правило по буквам (локальный закон 7).
+#
+# Ступень строже остальных типов: КАЖДОЕ [р] в слове обязано стоять после Т/Д,
+# во всех блоках листа — в словах, играх, предложениях. Второе [р] в другой
+# позиции («трактор» — «-тор», «ведро → ведёрко») требует от ребёнка ровно
+# того, чего он на этой ступени ещё не умеет. Сторож — `verify_support_td`.
+#
+# Только [Р]. [Рь] — тот же приём (тряпка, трещотка, матрёшка — 10 слов), но
+# его не просили: автор спросит логопеда, когда покажем ступень (STATE 09-18).
+SUPPORT_TD: FrozenSet[str] = frozenset({"т", "д"})
+SUPPORT_TD_SOUNDS: FrozenSet[str] = frozenset({"р"})
+
+# Стечение ПЕРЕД гласной — оба типа устроены одинаково (рамка + гласная), и
+# всё, что спрашивает «это стечение в начале?», спрашивает через этот кортеж.
+ONSET_TYPES: Tuple[str, ...] = ("cluster_td", "cluster_onset")
+CLUSTER_TYPES: Tuple[str, ...] = ONSET_TYPES + ("cluster_coda",)
+
+
+def canon_min_words(syl_type: str = "") -> int:
+    """Канонный минимум слов блока [4] для этого типа слога."""
+    return (CANON_MIN_WORDS_CLUSTER
+            if syl_type in CLUSTER_TYPES
+            else CANON_MIN_WORDS)
 
 # Звуки, СМЕШИВАЕМЫЕ с целевым (правило 2): исключаются, даже если у ребёнка
 # они сохранны.
@@ -1779,6 +1811,8 @@ def occurrence_kind(occ: Dict[str, Any],
     if occ["in_cluster"]:
         if v_after in vowels and occ["cluster_role"] != "first":
             kinds.add("cluster_onset")            # ТРА: р перед гласной внутри стечения
+            if (occ.get("prev_phoneme") or "").rstrip("'") in SUPPORT_TD:
+                kinds.add("cluster_td")           # и перед ним опорный Т или Д
         if v_before in vowels and occ["cluster_role"] == "first":
             kinds.add("cluster_coda")             # АРТ: р открывает стечение после гласной
         return kinds
@@ -1791,10 +1825,34 @@ def occurrence_kind(occ: Dict[str, Any],
     return kinds
 
 
+def _all_after_td(a: ph.Analysis, sound: str) -> bool:
+    """Каждое [звук] в разборе стоит после опорного Т/Д перед гласной.
+
+    Слово без целевого звука ступени не мешает — это служебные слова и
+    числительные; есть ли звук вообще, проверяет тот, кто спрашивает.
+    """
+    return all("cluster_td" in occurrence_kind(o)
+               for o in a.sound_occurrences if o["phoneme"] == sound)
+
+
+def keeps_support_td(word: str, sound: str,
+                     stress: Optional[int] = None) -> bool:
+    """Держит ли слово или форма ступень ТР/ДР (см. SUPPORT_TD).
+
+    Нужна там, где слово приходит НЕ из отбора блока [4]: формы игр («ведро →
+    ведёрко» уводит [р] за гласную, «пять вёдер» — в конец), глаголы
+    предложений («прыгает» вернул бы на лист ПР).
+    """
+    try:
+        return _all_after_td(_analyze(word, stress), sound)
+    except Exception:
+        return False
+
+
 def _group_vowel(occ: Dict[str, Any], syl_type: str,
                  vowels: Sequence[str] = VOWELS) -> Optional[str]:
     """Гласная, по которой слово попадает в колонку блока [4]."""
-    if syl_type in ("direct", "intervocal", "cluster_onset"):
+    if syl_type in ("direct", "intervocal") + ONSET_TYPES:
         v = occ["vowel_after"]
     else:
         v = occ["vowel_before"]
@@ -1909,7 +1967,7 @@ def ortho(syl: str) -> str:
 
 
 def _group_header(sound: str, vowel: str, syl_type: str) -> str:
-    if syl_type in ("direct", "intervocal", "cluster_onset"):
+    if syl_type in ("direct", "intervocal") + ONSET_TYPES:
         syl = sound + vowel
     else:
         syl = vowel + sound
@@ -1957,6 +2015,11 @@ def _select_words(sound: str, syl_type: str, banned: FrozenSet[str],
                 if o["phoneme"] == sound
                 and syl_type in occurrence_kind(o)]
         if not occs:
+            rejected["позиция"] += 1
+            continue
+        # Ступень ТР/ДР строже прочих: второе [р] в другой позиции («трактор»
+        # — «-тор») ребёнку на ней ещё недоступно. См. SUPPORT_TD.
+        if syl_type == "cluster_td" and not _all_after_td(a, sound):
             rejected["позиция"] += 1
             continue
         if markova_max is not None and (a.markova_v1 is None or a.markova_v1 > markova_max):
@@ -2064,7 +2127,8 @@ def _last_syllable_forms(item: Dict[str, Any]) -> List[Tuple[str, Optional[int],
 
 
 def _rhymes_on(item: Dict[str, Any], syllables: Sequence[str],
-               banned: FrozenSet[str]) -> bool:
+               banned: FrozenSet[str],
+               keeps: Optional[Callable[[str], bool]] = None) -> bool:
     """Может ли это слово закрыть чистоговорку на одном из слогов ряда.
 
     Мало срифмовать — слово должно ещё встать во фразу. Каркасы «Вот …» и
@@ -2077,6 +2141,8 @@ def _rhymes_on(item: Dict[str, Any], syllables: Sequence[str],
         return False
     for form, stress, _ in _last_syllable_forms(item):
         if not is_clean(form, banned, stress):
+            continue
+        if keeps and not keeps(form):
             continue
         try:
             a = _analyze(form, stress)
@@ -2091,7 +2157,8 @@ def _rhymes_on(item: Dict[str, Any], syllables: Sequence[str],
 
 def _ensure_rhyme(groups: List[Dict[str, Any]], leftovers: Dict[str, List[Dict[str, Any]]],
                   syllables: Sequence[str], banned: FrozenSet[str],
-                  warnings: List[str]) -> None:
+                  warnings: List[str],
+                  keeps: Optional[Callable[[str], bool]] = None) -> None:
     """Если рифмовать не на что — меняем ОДНО слово на рифмуемое.
 
     Канон сквозного словаря (правило 13) требует, чтобы слово чистоговорки
@@ -2104,11 +2171,12 @@ def _ensure_rhyme(groups: List[Dict[str, Any]], leftovers: Dict[str, List[Dict[s
     (слоговой блок ≤ ¼ словесного) не сдвигается. Жертвуем САМЫМ НИЗКИМ
     в ранге словом той же колонки — оно последнее в списке.
     """
-    if any(_rhymes_on(it, syllables, banned) for g in groups for it in g["items"]):
+    if any(_rhymes_on(it, syllables, banned, keeps)
+           for g in groups for it in g["items"]):
         return
     for g in groups:
         for cand in leftovers.get(g["vowel"], []):
-            if not _rhymes_on(cand, syllables, banned):
+            if not _rhymes_on(cand, syllables, banned, keeps):
                 continue
             victim = g["items"][-1]
             g["items"][-1] = cand
@@ -2151,7 +2219,7 @@ def _syllable_text(sound: str, vowel: str, syl_type: str, frame: str = "") -> st
         return vowel + sound
     if syl_type == "intervocal":
         return vowel + sound + vowel
-    if syl_type == "cluster_onset":
+    if syl_type in ONSET_TYPES:
         return frame + vowel
     if syl_type == "cluster_coda":
         return vowel + frame
@@ -2263,8 +2331,12 @@ def _cluster_frames(groups: Sequence[Dict[str, Any]], syl_type: str,
             spans = _cons_spans(cl)
             if i >= len(spans):
                 continue
-            if syl_type == "cluster_onset":
+            if syl_type in ONSET_TYPES:
                 frame = cl[:spans[i][1]]                    # от начала до цели включительно
+                # На ступени ТР/ДР слоговой ряд — это сами тра/дра: из «сестры»
+                # и «острова» берём опорный согласный с целью, а не всё «стр».
+                if syl_type == "cluster_td" and i >= 1:
+                    frame = cl[spans[i - 1][0]:spans[i][1]]
             else:
                 if i + 1 >= len(spans):
                     continue                               # второго согласного нет
@@ -2282,7 +2354,7 @@ def _cluster_frames(groups: Sequence[Dict[str, Any]], syl_type: str,
             # ⚠ Только для НАЧАЛА (`cluster_onset`). У стечения в КОНЦЕ (АРТ)
             # рамка — это конец слога, и таблица начал к ней не применяется:
             # первый прогон отсёк её целиком и уронил лист на cluster_coda.
-            if syl_type == "cluster_onset" and not onset_display(frame):
+            if syl_type in ONSET_TYPES and not onset_display(frame):
                 continue
             # ⛔ 08-26, вечер. У КОНЦА слога ворот не было вовсе — и это видно
             # из абзаца выше: таблицу начал к нему применять нельзя, а своей не
@@ -2323,7 +2395,7 @@ def _bond_place(word: str, syllable: str, syl_type: str) -> int:
     (ар — комар). «гра — виноград» формально верно, но слог спрятан в середине —
     берём такое только когда лучшего нет.
     """
-    if syl_type in ("direct", "cluster_onset"):
+    if syl_type in ("direct",) + ONSET_TYPES:
         return 0 if word.startswith(syllable) else 1
     if syl_type in ("reverse", "cluster_coda"):
         return 0 if word.endswith(syllable) else 1
@@ -2385,7 +2457,7 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
         )
 
     rows: List[Dict[str, Any]] = []
-    if syl_type in ("cluster_onset", "cluster_coda"):
+    if syl_type in CLUSTER_TYPES:
         frames = _cluster_frames(groups, syl_type, n_rows, warnings)
         if not frames:
             raise ContentError(
@@ -2393,9 +2465,18 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
                 f"связку «слог — слово» построить не из чего"
             )
         syl_vowels = syl_vowels_for(sound, syl_type)
-        for frame in frames:
-            units = [_syllable_text(sound, v, syl_type, frame)
-                     for v in syl_vowels]
+        # На ступени ТР/ДР рамок ровно две по самому её смыслу. Ряды добираются
+        # сдвигом гласных, как у прямого слога («тра тро тру тры» → «тро тру
+        # тры тра»); иначе блок выходил бы вдвое короче скелета (4 ряда).
+        plan = [(f, 0) for f in frames]
+        k = len(frames)
+        while syl_type == "cluster_td" and len(plan) < n_rows:
+            plan.append((frames[k % len(frames)], k // len(frames)))
+            k += 1
+        for frame, shift in plan:
+            order = [syl_vowels[(shift + j) % len(syl_vowels)]
+                     for j in range(len(syl_vowels))]
+            units = [_syllable_text(sound, v, syl_type, frame) for v in order]
             # Рамку кладём В САМ РЯД: ниже по орфографии нужен ЕЁ frame, а не
             # переменная цикла, которая к тому месту держит последнюю рамку.
             rows.append({"units": units, "frame": frame})
@@ -2449,7 +2530,7 @@ def _build_syllables(sound: str, syl_type: str, groups: Sequence[Dict[str, Any]]
 
         def _disp(u: str, _rf=_rf) -> str:
             d = ortho(u)
-            if syl_type != "cluster_onset" or not _rf:
+            if syl_type not in ONSET_TYPES or not _rf:
                 return d
             fixed, plain = onset_display(_rf), ortho(_rf)
             if fixed and fixed != plain and d.startswith(plain):
@@ -2515,13 +2596,17 @@ def _countable(item: Dict[str, Any]) -> bool:
 
 def _game_one_many(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                    derived: Dict[str, str],
-                   stat: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+                   stat: Optional[Dict[str, Any]] = None,
+                   keeps: Optional[Callable[[str], bool]] = None
+                   ) -> Optional[Dict[str, Any]]:
     pairs: List[Dict[str, str]] = []
     for it in items:
         if not _countable(it):
             continue
         pl = it["plural"]
         if not is_clean(pl, banned):
+            continue
+        if keeps and not keeps(pl):               # форма увела звук с позиции ступени
             continue
         pairs.append({"prompt": it["word"], "answer": pl})
     if stat is not None:
@@ -2542,7 +2627,9 @@ def _game_one_many(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
 def _game_diminutive(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                      derived: Dict[str, str], notes: List[str],
                      allow_rule: bool,
-                     stat: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+                     stat: Optional[Dict[str, Any]] = None,
+                     keeps: Optional[Callable[[str], bool]] = None
+                     ) -> Optional[Dict[str, Any]]:
     pairs: List[Dict[str, Any]] = []
     blocked: List[str] = []
     for it in items:
@@ -2558,6 +2645,9 @@ def _game_diminutive(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
             continue
         if not is_clean(form, banned):
             blocked.append(f"{w} → {form} — грязно по профилю")
+            continue
+        if keeps and not keeps(form):
+            blocked.append(f"{w} → {form} — звук уходит с позиции ступени")
             continue
         pairs.append({"prompt": w, "answer": form, "source": source})
     if blocked:
@@ -2580,7 +2670,9 @@ def _game_diminutive(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
 def _game_count(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                 derived: Dict[str, str],
                 service: Dict[str, int],
-                stat: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+                stat: Optional[Dict[str, Any]] = None,
+                keeps: Optional[Callable[[str], bool]] = None
+                ) -> Optional[Dict[str, Any]]:
     # числительные — тоже речевой материал: если хоть одно не прошло фильтр
     # профиля, игру не строим (лучше другая игра, чем грязная строка)
     if not {"один", "одна", "одно", "два", "две", "пять"} <= set(service):
@@ -2596,6 +2688,8 @@ def _game_count(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
         if not gs or not gp:
             continue
         if not (is_clean(gs, banned) and is_clean(gp, banned)):
+            continue
+        if keeps and not (keeps(gs) and keeps(gp)):   # «пять вёдер»: [р] в конце
             continue
         one = {"m": "один", "f": "одна", "n": "одно"}[g]
         two = "две" if g == "f" else "два"
@@ -2627,8 +2721,13 @@ def _build_game(groups: Sequence[Dict[str, Any]], banned: FrozenSet[str],
                 n_items: int = 6,
                 want: str = "",
                 offer: Optional[Dict[str, Dict[str, Any]]] = None,
+                keeps: Optional[Callable[[str], bool]] = None,
                 ) -> Optional[Dict[str, Any]]:
     """Грамматическая игра блока [5].
+
+    `keeps` — ворота ступени для ПРОИЗВОДНЫХ форм (сейчас одна: ТР/ДР, см.
+    SUPPORT_TD). Слово блока [4] ступень держит, а его форма может и не держать:
+    «ведро → ведёрко» уводит [р] за гласную.
 
     Все три игры канонные — ТЗ, ЯРУС А: «один-много» · «назови ласково» ·
     «посчитай 1-5». Раньше выбор делал только сид, и логопед повлиять не мог;
@@ -2651,12 +2750,12 @@ def _build_game(groups: Sequence[Dict[str, Any]], banned: FrozenSet[str],
         local_notes: List[str] = []
         stat: Dict[str, Any] = {}
         if kind == "one_many":
-            game = _game_one_many(items, banned, local_derived, stat)
+            game = _game_one_many(items, banned, local_derived, stat, keeps)
         elif kind == "diminutive":
             game = _game_diminutive(items, banned, local_derived, local_notes,
-                                    allow_rule_diminutive, stat)
+                                    allow_rule_diminutive, stat, keeps)
         else:
-            game = _game_count(items, banned, local_derived, service, stat)
+            game = _game_count(items, banned, local_derived, service, stat, keeps)
         built[kind] = game
         made[kind] = {"derived": local_derived, "notes": local_notes,
                       "stat": stat}
@@ -2787,7 +2886,9 @@ def _service_pool(sound: str, banned: FrozenSet[str]) -> Dict[str, int]:
 def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
                      banned: FrozenSet[str], service: Dict[str, int],
                      rnd: random.Random, n_sentences: int,
-                     warnings: List[str]) -> Dict[str, Any]:
+                     warnings: List[str],
+                     keeps: Optional[Callable[[str], bool]] = None
+                     ) -> Dict[str, Any]:
     items = [it for g in groups for it in g["items"]]
     if not items:
         raise ContentError("предложения строить не из чего: блок [4] пуст")
@@ -2829,6 +2930,10 @@ def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
         # Поймано сразу: «слушает» несёт [ш] и на лист [С] не имеет права.
         if not is_clean(v["form_3sg"], banned, v.get("form_3sg_stress")):
             continue
+        # На ступени ТР/ДР глагол держит тот же закон, что и слово блока [4]:
+        # «прыгает» вернул бы на лист ПР, от которого ступень уводит.
+        if keeps and not keeps(v["form_3sg"]):
+            continue
         for it in items:
             cls = subject_class({"semantic_category": it.get("semantic_category")})
             if cls and cls in v["subject_classes"]:
@@ -2849,7 +2954,12 @@ def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
         if want == 3 and verb_pairs and VERB_FRAMES:
             pick = None
             for i, (it, v) in enumerate(verb_pairs):
-                if it["word"] not in used_subjects:
+                # Глагол — один раз на лист (09-18). Замер: на 157 листах из 500
+                # глагол повторялся — «Тут … порхает» трижды подряд. На ступени
+                # ТР/ДР, где глагол один («дрожит»), повтор был бы на каждом
+                # листе. Нет свежего глагола — фраза собирается без него.
+                if (it["word"] not in used_subjects
+                        and v["form_3sg"] not in used_verbs):
                     pick = verb_pairs.pop(i); break
             if pick:
                 it, v = pick
@@ -2973,6 +3083,7 @@ def _template_ok(template: str, service: Dict[str, int]) -> bool:
 def _rhyme_candidates(groups: Sequence[Dict[str, Any]], syllable: str,
                       banned: FrozenSet[str],
                       pool: Optional[Sequence[Dict[str, Any]]] = None,
+                      keeps: Optional[Callable[[str], bool]] = None,
                       ) -> List[Tuple[str, Dict[str, Any], bool]]:
     """Слова, у которых ПОСЛЕДНИЙ слог = целевой и он УДАРНЫЙ.
 
@@ -2993,6 +3104,8 @@ def _rhyme_candidates(groups: Sequence[Dict[str, Any]], syllable: str,
                 forms.append((pl, PLURAL_STRESS[pl], True))
             for form, stress, is_plural in forms:
                 if not is_clean(form, banned, stress):
+                    continue
+                if keeps and not keeps(form):         # форма ушла с позиции ступени
                     continue
                 a = _analyze(form, stress)
                 if not a.transcription.endswith(syllable):
@@ -3110,6 +3223,7 @@ def _build_chistogovorka(groups: Sequence[Dict[str, Any]], sound: str,
                          derived: Dict[str, str],
                          warnings: List[str],
                          pool: Optional[Sequence[Dict[str, Any]]] = None,
+                         keeps: Optional[Callable[[str], bool]] = None,
                          ) -> Optional[Dict[str, Any]]:
     # Рифмуемся слогом ТОГО ЖЕ шага, что и блок [3]: «ра-ра-ра — тут гора»
     # на прямом листе и «ор-ор-ор — вот забор» на обратном. Слово обязано
@@ -3130,7 +3244,7 @@ def _build_chistogovorka(groups: Sequence[Dict[str, Any]], sound: str,
         return None
 
     for syl in order:
-        cands = _rhyme_candidates(groups, syl, banned, pool)
+        cands = _rhyme_candidates(groups, syl, banned, pool, keeps)
         pairs = [(form, item, is_pl, f, kind)
                  for form, item, is_pl in cands
                  for f, kind in frames if _frame_ok(item, kind)]
@@ -3490,6 +3604,28 @@ def verify_purity(content: Dict[str, Any]) -> None:
             "нарушен фильтр чистоты (правила 1-3):\n  " + "\n  ".join(bad))
 
 
+class SupportTdViolation(ContentError):
+    """На листе ступени ТР/ДР звук встал не после Т/Д."""
+
+
+def verify_support_td(content: Dict[str, Any]) -> None:
+    """Ступень ТР/ДР: каждое [звук] во всём речевом материале — после Т/Д.
+
+    Падает, а не предупреждает (как verify_purity). Отбор слов держит это сам,
+    но слова приходят на лист и другими дверями — формы игр, глаголы, рифмы, —
+    и у каждой двери свои ворота. Сторож ловит ту, где ворот забыли.
+    """
+    sound = content["meta"]["sound"]
+    bad: List[str] = []
+    for block, text in _material_texts(content):
+        for tok in _tokens(text):
+            if not keeps_support_td(tok, sound):
+                bad.append(f"[{block}] {tok!r}")
+    if bad:
+        raise SupportTdViolation(
+            "на листе ТР/ДР звук стоит не после Т/Д: " + ", ".join(bad))
+
+
 def verify_crosscut(content: Dict[str, Any]) -> None:
     """Правило 13. Падает, если игра/предложения/чистоговорка используют слово,
     которого нет ни в блоке [4], ни в объявленных производных, ни в служебных."""
@@ -3552,7 +3688,9 @@ def cluster_frames_for(sound: str, syl_type: str,
 
     Пусто — законных стечений нет; звать материал не о чем.
     """
-    if syl_type not in ("cluster_onset", "cluster_coda"):
+    if syl_type not in CLUSTER_TYPES:
+        return []
+    if syl_type == "cluster_td" and sound not in SUPPORT_TD_SOUNDS:
         return []
     profile = frozenset(profile)
     banned = banned_phonemes(sound, profile)
@@ -3584,13 +3722,18 @@ def build_content(sound: str = "р",
 
     sound      — целевой звук (ключ фонемы движка: 'р').
     syl_type   — один тип слога на лист: direct | reverse | intervocal |
-                 cluster_onset | cluster_coda  (правило 8).
+                 cluster_td | cluster_onset | cluster_coda  (правило 8).
+                 cluster_td — ступень ТР/ДР, только у [р] (см. SUPPORT_TD).
     profile    — множество НАРУШЕННЫХ у ребёнка фонем.
     sheet_no   — номер листа; сдвигает срез словаря (лист №2 ≠ листу №1).
     seed       — детерминированная вариативность (в т. ч. выбор игры).
     """
     if syl_type not in SYL_TYPES:
         raise ContentError(f"syl_type={syl_type!r}; допустимы: {', '.join(SYL_TYPES)}")
+    if syl_type == "cluster_td" and sound not in SUPPORT_TD_SOUNDS:
+        raise ContentError(
+            f"ступень ТР/ДР заведена только для "
+            f"[{', '.join(sorted(SUPPORT_TD_SOUNDS))}], у [{sound}] её нет")
     if not (12 <= n_words <= 24):
         raise ContentError("n_words вне канона: 12-24 слова в блоке [4]")
     if not (6 <= n_sentences <= 10):
@@ -3602,6 +3745,11 @@ def build_content(sound: str = "р",
     banned = banned_phonemes(sound, profile)
     rnd = random.Random(f"{sound}|{syl_type}|{sorted(profile)}|{sheet_no}|{seed}")
     warnings: List[str] = []
+    # Ворота ступени для слов, которые приходят НЕ из отбора блока [4]: формы
+    # игр, глаголы, рифмы. На прочих типах слога ворот нет (None).
+    keeps: Optional[Callable[[str], bool]] = (
+        (lambda w: keeps_support_td(w, sound)) if syl_type == "cluster_td"
+        else None)
 
     rows = load_words(_words_path(sound, words_path))
     groups, rejected, leftovers = _select_words(
@@ -3636,13 +3784,13 @@ def build_content(sound: str = "р",
     _row_syls = [u for r in syllables.get("rows", [])
                  for u in r.get("units_phon", r.get("units", []))]
     if _row_syls:
-        _ensure_rhyme(groups, leftovers, _row_syls, banned, warnings)
+        _ensure_rhyme(groups, leftovers, _row_syls, banned, warnings, keeps)
     games_offer: Dict[str, Dict[str, Any]] = {}
     game = _build_game(groups, banned, seed, sheet_no, derived, warnings,
                        allow_rule_diminutive, service, n_game_items, game_kind,
-                       offer=games_offer)
+                       offer=games_offer, keeps=keeps)
     sentences = _build_sentences(groups, sound, banned, service, rnd,
-                                 n_sentences, warnings)
+                                 n_sentences, warnings, keeps=keeps)
     # ⚠ Рифму НЕЛЬЗЯ искать по всему словарю: правило 13 «сквозной словарь»
     # требует, чтобы каждое слово блоков [5][6][7] пришло из блока [4].
     # Это КАНОН (Фомичёва: «автоматизация в предложениях проводится на базе
@@ -3651,7 +3799,7 @@ def build_content(sound: str = "р",
     # не расширение поиска, а СЛОВАРЬ (слова с ударным конечным слогом) плюс
     # предпочтение таких слов при отборе в блок [4].
     chisto = _build_chistogovorka(groups, sound, syllables, banned, service,
-                                  rnd, derived, warnings)
+                                  rnd, derived, warnings, keeps=keeps)
     # «Вставь пропущенный слог» — ✅ Жихарева с. 36. Стоит рядом со словами:
     # он работает на них же, значит сквозной словарь не нарушается.
     fill = _build_fill_syllable(groups, syl_type, syllables)
@@ -3732,6 +3880,8 @@ def build_content(sound: str = "р",
 
     verify_purity(content)               # правила 1-3 — падают, а не молчат
     verify_crosscut(content)             # правило 13
+    if syl_type == "cluster_td":
+        verify_support_td(content)       # ступень ТР/ДР держится во всех блоках
     return content
 
 

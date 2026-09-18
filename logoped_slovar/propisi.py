@@ -134,7 +134,9 @@ class PropisiError(Exception):
 # Стечение в КОНЦЕ (АРТ) не заводим и не заведём: на прописи линия — это сам
 # тянущийся звук, значит согласный обязан стоять В НАЧАЛЕ пути. Обратный порядок
 # запрещён отдельно (локальный закон 8) и вдобавок ломается оглушением.
-PROPISI_TYPES = ("direct", "cluster_onset")
+# ⚡ 09-18: ступень ТР/ДР (`cluster_td`, только [Р]) — то же стечение в начале,
+# но рамки только ТР и ДР. Её образцы и есть те две плашки Ольги.
+PROPISI_TYPES = ("direct", "cluster_td", "cluster_onset")
 
 ROWS_DEFAULT = 4
 
@@ -725,7 +727,7 @@ def build_propisi(sound: str = "р",
     # пустая строка), значит и стечения нет: выбор висел над тем, чего лист не
     # печатает. Закон 12.
     frame, frames_all = "", []
-    if syl_type == "cluster_onset" and mode != "isolated":
+    if syl_type in C.ONSET_TYPES and mode != "isolated":
         _frames = C.cluster_frames_for(sound, syl_type, profile, n_rows=4,
                                        seed=seed)
         if not _frames:
@@ -771,7 +773,7 @@ def build_propisi(sound: str = "р",
     # Только у стечения впереди: у прямого слога «без гласной» — это ступень
     # «только звук», она уже есть отдельной кнопкой, и вторая дверь в ту же
     # комнату сбивала бы с толку.
-    if syl_type == "cluster_onset" and frame:
+    if syl_type in C.ONSET_TYPES and frame:
         vowels.insert(0, NO_VOWEL)
     if vowel not in vowels:
         # Умолчание — всегда ГЛАСНАЯ, даже когда пустышка стоит в ряду первой:

@@ -107,6 +107,20 @@ def test_offer_counts_are_real():
                   state["found"] >= state["need"], state["ok"])
 
 
+def test_support_td_offered_only_for_r():
+    """Кнопка ТР/ДР: у [Р] живая на всех трёх слоговых материалах, у
+    остальных звуков её нет вовсе (закон 14 — мёртвое на экран не выносим)."""
+    for snd in SOUNDS:
+        for mat in ("sheet", "track", "propisi"):
+            ok = not CAP.block_reason(mat, snd, "cluster_td")
+            check(f"ТР/ДР [{snd}] {mat}", ok, snd in C.SUPPORT_TD_SOUNDS)
+    p = PR.build_propisi("р", "cluster_td", mode="syllable")
+    check("звуковая дорожка ТР/ДР: рамки ровно ТР и ДР",
+          sorted(p["meta"]["frames"]), ["др", "тр"])
+    p = PR.build_propisi("р", "cluster_td", mode="syllable", frame_pick="др")
+    check("выбор ДР не подменяется", p["meta"]["frame"], "др")
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failures = []

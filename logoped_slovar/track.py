@@ -67,7 +67,8 @@ class TrackError(Exception):
 # говорит это профилем на том же экране. Рамки стечений берутся из тех же слов
 # и тем же отбором, что у листа (`content.cluster_frames_for`), — то есть второй
 # согласный приходит из живого слова, прошедшего фильтр, а не из головы.
-TRACK_TYPES = ("direct", "reverse", "intervocal", "cluster_onset", "cluster_coda")
+TRACK_TYPES = ("direct", "reverse", "intervocal", "cluster_td", "cluster_onset",
+               "cluster_coda")
 
 COLS = 5           # кружков в ряду
 ROWS_DEFAULT = 6   # рядов на А4
@@ -158,7 +159,7 @@ def build_track(sound: str = "р",
     # Стечения: рамку («кр», «рт») даёт словарь, отфильтрованный профилем
     # ребёнка. Пусто — законных стечений у этого ребёнка нет, и молчать нельзя.
     frames: List[str] = []
-    if syl_type in ("cluster_onset", "cluster_coda"):
+    if syl_type in C.CLUSTER_TYPES:
         frames = C.cluster_frames_for(sound, syl_type, profile, n_rows=4, seed=seed)
         if not frames:
             raise TrackError(

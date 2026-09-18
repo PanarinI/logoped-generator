@@ -390,6 +390,9 @@ h1 { font-size: 28px; line-height: 1.25; font-weight: 650;
 .set > h2 { font-size: 13px; font-weight: 650; margin: 0 0 var(--s2); }
 .set > .hint { margin: 0 0 var(--s2); }
 .set > .hint.thin { margin: var(--s2) 0 0; color: var(--warn); }
+/* ТР/ДР — подраздел стечения: стоит под рядом слогов, а не в нём (09-18). */
+#td-btn { margin-top: var(--s2); }
+.set > #td-hint { margin: var(--s2) 0 0; }
 
 /* Ряд «как печатать»: самоочевидные переключатели, без заголовка и подписей.
    Отделён от смысловых настроек чертой — это и есть требуемое автором деление

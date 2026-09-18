@@ -37,6 +37,8 @@ CASES = [
      "стечение в начале, профиль {л, ш, ж}"),
     ("hard",   dict(sound="р", typ="reverse",       profile="л,ш,ж,с,з,ц",  sheet_no=4),
      "обратные слоги, профиль {л, ш, ж, с, з, ц}"),
+    ("td",     dict(sound="р", typ="cluster_td",    profile="л,ш,ж",        sheet_no=1),
+     "ступень ТР/ДР (09-18), профиль {л, ш, ж}"),
 ]
 
 TOKEN = re.compile(r"[а-яёА-ЯЁ]+")

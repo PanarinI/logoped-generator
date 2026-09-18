@@ -1281,7 +1281,7 @@ class Handler(BaseHTTPRequestHandler):
                 types: Dict[str, Any] = {}
                 for typ in C.SYL_TYPES:
                     reason = CAP.block_reason("track", sound, typ)
-                    if not reason and typ in ("cluster_onset", "cluster_coda"):
+                    if not reason and typ in C.CLUSTER_TYPES:
                         if not C.cluster_frames_for(sound, typ, prof):
                             reason = "no_clean_cluster"
                     types[typ] = {"ok": not reason,

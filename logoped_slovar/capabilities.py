@@ -58,8 +58,9 @@ REVERSE_LINE = "reverse_line"      # линия ведёт К гласной, а
 DEVOICED = "devoiced"              # звонкий в конце слова оглушается
 NO_ONSET = "no_onset"              # с таким стечением слог в русском не начинается
 NO_CODA = "no_coda"                # таким стечением слог в русском не кончается
+NOT_FOR_SOUND = "not_for_sound"    # ступень заведена не для этого звука (ТР/ДР — только [Р])
 
-CLUSTER_TYPES = ("cluster_onset", "cluster_coda")
+CLUSTER_TYPES = C.CLUSTER_TYPES
 
 
 def block_reason(material: str, sound: str, typ: str) -> str:
@@ -75,6 +76,11 @@ def block_reason(material: str, sound: str, typ: str) -> str:
         # гласная с обеих сторон линии, у второго линия пришлась бы ПОСЛЕ
         # гласной — а на всех найденных образцах она ведёт К ней (08-10).
         return REVERSE_LINE if typ == "reverse" else INTERVOCAL_LINE
+    # Ступень ТР/ДР — методическая, а не языковая: её заводят для звука,
+    # который ставят от опорного Т/Д. Сейчас это только [Р] (09-18); у
+    # остальных кнопки нет вовсе — закон 14, мёртвое на экран не выносим.
+    if typ == "cluster_td" and sound not in C.SUPPORT_TD_SOUNDS:
+        return NOT_FOR_SOUND
     # Язык, а не жанр: у звонких в конце слова оглушение обязательно, и
     # обратный слог печатал бы «аж», а ребёнок читал бы [аш]. Проверяем ровно
     # тем же способом, что и сами материалы, — одной функцией движка.
@@ -87,7 +93,7 @@ def block_reason(material: str, sound: str, typ: str) -> str:
     # «кРа» горела на всех звуках, потому что стечения брались просто по частоте
     # в картотеке — и лист печатал небывалый слог. Спрашиваем на ПУСТОМ профиле:
     # так отделяем предел ЯЗЫКА от нехватки слов у конкретного ребёнка.
-    if typ == "cluster_onset" and not C.cluster_frames_for(sound, typ, ()):
+    if typ in C.ONSET_TYPES and not C.cluster_frames_for(sound, typ, ()):
         return NO_ONSET
     # ⛔ 08-26, вечер. То же самое с ДРУГОГО конца слога, и это оказалось хуже:
     # у начала ворота стояли, у конца не было вовсе. Кнопка «аРт» горела на всех

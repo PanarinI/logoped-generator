@@ -253,6 +253,7 @@ function renderSounds() {
 /* Подписи движка длинны для кнопки; режем только повтор, канонный термин
    «стечение» остаётся — своих синонимов не выдумываем. */
 const SHORT_LABEL = {
+  cluster_td: 'стечение ТР, ДР',
   cluster_onset: 'стечение перед гласной',
   cluster_coda: 'стечение после гласной',
 };
@@ -362,6 +363,7 @@ function materialOk(tab, typ) {
    ряд разойдутся, и карточка спрячется там, где выбор есть. */
 function sylChoices() {
   return (S.cfg.syllables[S.sound] || []).filter((t) => {
+    if (SUB_TYP[t.typ]) return false;          // подраздел — не кнопка ряда
     const m = (t.materials || {})[S.tab];
     return m ? m.ok : t.available;
   });
@@ -379,6 +381,13 @@ function soundLabel() {
 }
 
 
+/* ТР/ДР — ПОДРАЗДЕЛ стечения, а не соседняя позиция (09-18, выбор автора).
+   Кнопкой «тРа» в ряду рядом с «кРа» ступень читалась как другая позиция и
+   терялась глазом: глифы почти одинаковые. Теперь в ряду её нет — ряд видит её
+   как то же стечение, а сужает стечение залипающая кнопка под рядом. */
+const SUB_TYP = { cluster_td: 'cluster_onset' };
+function rowTyp(typ) { return SUB_TYP[typ] || typ; }
+
 /* Кнопки типа слога — теперь настройка материала в панели, а не отдельный шаг
    (08-18). Логика прежняя: подпись «Ра · аР · аРа», ряд остальных гласных,
    предупреждение о бедном слоге и погашенная кнопка с причиной. */
@@ -394,22 +403,25 @@ function renderSylPick() {
   // дорожки живых типа два, и логопеду нужны они, а не рассказ про остальные.
   // Показываем ТОЛЬКО живые. Ложью это не станет: то, чего на экране нет,
   // ничего и не обещает.
-  const list = (S.cfg.syllables[S.sound] || []).filter((t) => {
+  const all = S.cfg.syllables[S.sound] || [];
+  const list = all.filter((t) => {
+    if (SUB_TYP[t.typ]) return false;          // подраздел живёт под рядом
     const mats = t.materials || {};
     const mine = mats[S.tab] || { ok: t.available, why: '' };
     return mine.ok;
   });
+  const onTyp = rowTyp(S.typ);
   list.forEach((t) => {
     const mats = t.materials || {};
     const mine = mats[S.tab] || { ok: t.available, why: '' };
-    const b = el('button', 'seg-btn' + (t.typ === S.typ ? ' is-on' : ''));
+    const b = el('button', 'seg-btn' + (t.typ === onTyp ? ' is-on' : ''));
     b.appendChild(syllableGlyph(t.syllable, soundLabel()));
     b.title = SHORT_LABEL[t.typ] || t.label;
     if (t.thin) {
       b.classList.add('is-thin');
     }
     b.onclick = () => {
-      if (!mine.ok || t.typ === S.typ) return;
+      if (!mine.ok || t.typ === onTyp) return;
       S.typ = t.typ;
       S.syllable = t.syllable;
       S.sheetNo = 1;
@@ -420,7 +432,8 @@ function renderSylPick() {
     };
     box.appendChild(b);
   });
-  const cur = list.find((x) => x.typ === S.typ) || {};
+  renderTdPick(all, onTyp);
+  const cur = all.find((x) => x.typ === S.typ) || {};
   const kind = SHORT_LABEL[cur.typ] || cur.label || '';
   const thin = cur.thin
     // Число канона приходит с сервера полем need: на стечениях канон 7, а не 12,
@@ -456,6 +469,36 @@ function soundLabel() {
   return s ? s.label : '';
 }
 
+/* «Только ТР и ДР» — видна, когда выбрано стечение и у звука на этом материале
+   есть ступень ТР/ДР (сейчас только [Р]). Подсказка говорит, какой лист выйдет:
+   молчащий дефолт не значит скрытый (закон 16). */
+function renderTdPick(all, onTyp) {
+  const btn = $('td-btn');
+  const hint = $('td-hint');
+  if (!btn) return;
+  const td = all.find((x) => x.typ === 'cluster_td');
+  const m = td && ((td.materials || {})[S.tab] || { ok: td.available });
+  const show = onTyp === 'cluster_onset' && !!(m && m.ok);
+  const on = show && S.typ === 'cluster_td';
+  btn.hidden = !show;
+  btn.classList.toggle('is-on', on);
+  if (hint) {
+    hint.textContent = on ? 'На листе Р только после Т и Д: тра, дра.' : '';
+    hint.hidden = !on;
+  }
+  btn.onclick = () => {
+    const next = S.typ === 'cluster_td' ? 'cluster_onset' : 'cluster_td';
+    const t = all.find((x) => x.typ === next) || {};
+    S.typ = next;
+    S.syllable = t.syllable;
+    S.sheetNo = 1;
+    S.games = null;
+    renderSylPick();
+    renderTabs();
+    load();
+  };
+}
+
 
 function show(step) {
   // Экран остался ОДИН — лист. Функция сохранена, чтобы не переписывать
@@ -481,6 +524,7 @@ function show(step) {
 function firstTypFor(tab) {
   const list = (S.cfg.syllables[S.sound] || []);
   const t = list.find((x) => {
+    if (SUB_TYP[x.typ]) return false;          // подраздел не бывает стартом
     const m = x.materials && x.materials[tab];
     return m ? m.ok : x.available;
   });

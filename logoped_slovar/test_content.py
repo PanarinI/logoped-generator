@@ -1083,5 +1083,112 @@ def test_counting_game_is_alive_and_tabled():
     check("«сук» в таблицу не включён", "сук" in C.GEN_PL_OVERRIDES, False)
 
 
+# ═══════════════════════════════════════════════════════════════════════
+#  СТУПЕНЬ ТР/ДР (09-18, просьба логопеда Ольги — ГОЛОСА.md)
+# ═══════════════════════════════════════════════════════════════════════
+
+TD_PROFILES = ({"л", "ш", "ж"}, set(), {"с", "з", "ш", "ж", "к", "г"},
+               {"с", "з", "ц", "ш", "ж", "щ", "ч"})
+
+
+def test_support_td_holds_in_every_block():
+    """Обещание ступени: КАЖДОЕ [р] во всём речевом материале — после Т/Д.
+
+    Слова приходят на лист разными дверями — отбор блока [4], формы игр,
+    глаголы, рифма чистоговорки. Проверяем готовый лист, а не намерения кода,
+    на всех трёх играх: «ведро → ведёрко» и «пять вёдер» уводят [р] с позиции.
+    """
+    for prof in TD_PROFILES:
+        for seed in range(3):
+            for game in C.GAME_KINDS:
+                c = C.build_content(sound="р", syl_type="cluster_td",
+                                    profile=prof, seed=seed, game_kind=game)
+                for block, text in C._material_texts(c):
+                    for tok in C._tokens(text):
+                        truthy(f"{sorted(prof)}/{seed}/{game} [{block}] «{tok}»: "
+                               f"[р] только после Т/Д",
+                               C.keeps_support_td(tok, "р"))
+
+
+def test_support_td_rows_are_tr_dr():
+    """Слоговой блок — сами тра/дра, четыре ряда, как у прямого слога."""
+    c = C.build_content(sound="р", syl_type="cluster_td", profile=set())
+    rows = c["syllables"]["rows"]
+    check("рядов четыре (скелет)", len(rows), 4)
+    for r in rows:
+        for u in r["units"]:
+            truthy(f"«{u}» начинается с тр/др", u[:2] in ("тр", "др"))
+    check("первые ряды — тра и дра", [r["units"][0] for r in rows[:2]],
+          ["тра", "дра"])
+
+
+def test_support_td_is_strict_about_second_r():
+    """«Трактор»: ТР в начале, но второе [р] в «-тор» — на ступень не идёт."""
+    for prof in TD_PROFILES:
+        c = C.build_content(sound="р", syl_type="cluster_td", profile=prof)
+        check(f"{sorted(prof)}: трактора нет", "трактор" in c["words"]["all"], False)
+    a = C._analyze("трактор", 1)
+    kinds = [C.occurrence_kind(o) for o in a.sound_occurrences
+             if o["phoneme"] == "р"]
+    truthy("у «трактора» первое [р] — после Т", "cluster_td" in kinds[0])
+    check("…а второе нет, и слово отсеяно целиком", C._all_after_td(a, "р"), False)
+    check("«трава» ступень держит", C.keeps_support_td("трава", "р", 2), True)
+
+
+def test_support_td_keeps_words_the_profile_workaround_lost():
+    """Ради чего ступень: обход «К Г П Б не поставлены» терял дракона и трубу.
+
+    Здесь К и Б отмечены НЕ профилем, а позицией: «дракон» остаётся, потому
+    что его К стоит далеко от Р.
+    """
+    c = C.build_content(sound="р", syl_type="cluster_td", profile=set())
+    for w in ("дракон", "труба"):
+        truthy(f"«{w}» на листе ТР/ДР", w in c["words"]["all"])
+    for w in ("краб", "груша", "врач", "брат"):
+        check(f"«{w}» на листе ТР/ДР", w in c["words"]["all"], False)
+
+
+def test_support_td_only_for_r():
+    """Ступень методическая: заведена для [Р], у остальных её нет."""
+    for sound in C.WORDS_BY_SOUND:
+        if sound in C.SUPPORT_TD_SOUNDS:
+            continue
+        try:
+            C.build_content(sound=sound, syl_type="cluster_td", profile=set())
+            check(f"[{sound}] ТР/ДР отказано", False, True)
+        except C.ContentError:
+            check(f"[{sound}] ТР/ДР отказано", True, True)
+        check(f"[{sound}] рамок ТР/ДР нет",
+              C.cluster_frames_for(sound, "cluster_td"), [])
+
+
+def test_verify_support_td_actually_raises():
+    c = C.build_content(sound="р", syl_type="cluster_td", profile=set())
+    c["words"]["groups"][0]["items"].append({"word": "краб"})
+    try:
+        C.verify_support_td(c)
+    except C.SupportTdViolation as exc:
+        truthy("сторож ТР/ДР падает на подложенном «краб»", "краб" in str(exc))
+    else:
+        check("сторож ТР/ДР падает на подложенном «краб»", False, True)
+
+
+def test_verb_once_per_sheet():
+    """Глагол — один раз на лист (09-18). Было: на 157 листах из 500
+    «Тут … порхает» повторялось до трёх раз подряд."""
+    for sound in C.WORDS_BY_SOUND:
+        for typ in C.SYL_TYPES:
+            for prof in (set(), {"с", "з", "ш", "ж", "к", "г"}):
+                try:
+                    c = C.build_content(sound=sound, syl_type=typ, profile=prof)
+                except C.ContentError:
+                    continue
+                verbs = set(c["vocabulary"]["verbs"])
+                seen = [t for s in c["sentences"]["items"]
+                        for t in C._tokens(s["text"]) if t in verbs]
+                check(f"[{sound}] {typ} {sorted(prof)}: глаголы не повторяются",
+                      len(seen), len(set(seen)))
+
+
 if __name__ == "__main__":
     sys.exit(main())
