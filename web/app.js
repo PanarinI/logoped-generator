@@ -483,8 +483,8 @@ function renderTdPick(all, onTyp) {
   btn.hidden = !show;
   btn.classList.toggle('is-on', on);
   if (hint) {
-    hint.textContent = on ? 'На листе Р только после Т и Д: тра, дра.' : '';
-    hint.hidden = !on;
+    hint.textContent = '';
+    hint.hidden = true;
   }
   btn.onclick = () => {
     const next = S.typ === 'cluster_td' ? 'cluster_onset' : 'cluster_td';
