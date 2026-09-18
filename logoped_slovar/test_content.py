@@ -112,6 +112,57 @@ def test_verify_purity_actually_raises():
         check("verify_purity падает на подложенном грязном слове", False, True)
 
 
+def test_sentence_numeral_passes_profile():
+    """«Тут один …»: числительное в предложении — тоже речевой материал (09-18).
+
+    Каркас проверялся с пустым местом вместо {one}, и «один/одна/одно» ([д'],
+    [д]) уходили на лист мимо профиля. Сторож отказывал честно, но логопед,
+    отметивший Д, получал ошибку вместо листа: 25 сборок из 495 (11 звуков ×
+    5 типов слога × профили Д · Т · ДТ × сиды 0–2), все 25 — на профиле Д.
+    """
+    ones = set(C.ONE_BY_GENDER.values())
+    one_tpls = [t for n in C.SENTENCE_TEMPLATES
+                for t, _f in C.SENTENCE_TEMPLATES[n] if "{one}" in t]
+    truthy("каркасы с {one} есть — проверять есть что", one_tpls)
+    for sound in C.WORDS_BY_SOUND:
+        svc_d = C._service_pool(sound, C.banned_phonemes(sound, {"д"}))
+        svc_0 = C._service_pool(sound, C.banned_phonemes(sound, set()))
+        check(f"[{sound}] Д не поставлен — каркасы с {{one}} закрыты",
+              [t for t in one_tpls if C._template_ok(t, svc_d)], [])
+        check(f"[{sound}] профиль пуст — каркасы с {{one}} открыты",
+              [t for t in one_tpls if C._template_ok(t, svc_0)], one_tpls)
+    failed, dirty = [], []
+    for sound in C.WORDS_BY_SOUND:
+        for typ in ("direct", "reverse", "intervocal", "cluster_onset",
+                    "cluster_coda"):
+            for seed in range(3):
+                try:
+                    c = C.build_content(sound=sound, syl_type=typ,
+                                        profile={"д"}, seed=seed)
+                except C.PurityViolation:
+                    failed.append(f"[{sound}] {typ} seed={seed}")
+                    continue
+                except C.ContentError:
+                    continue      # честный отказ «нет материала» — не этот баг
+                dirty += [s["text"] for s in c["sentences"]["items"]
+                          if ones & set(C._tokens(s["text"]))]
+    check("профиль Д: лист собирается, а не падает на чистоте", failed, [])
+    check("профиль Д: в предложениях нет «один/одна/одно»", dirty, [])
+    # И не пересушили: где Д в порядке, «Тут один шар» на листе бывает
+    seen = 0
+    for sound in C.WORDS_BY_SOUND:
+        for typ in ("direct", "reverse"):
+            for seed in range(4):
+                try:
+                    c = C.build_content(sound=sound, syl_type=typ,
+                                        profile=set(), seed=seed)
+                except C.ContentError:
+                    continue
+                seen += sum(1 for s in c["sentences"]["items"]
+                            if ones & set(C._tokens(s["text"])))
+    truthy(f"пустой профиль: «один» в предложениях остаётся ({seen} фраз)", seen)
+
+
 # ═══════════════════════════════════════════════════════════════════════
 #  B. СКВОЗНОЙ СЛОВАРЬ (правило 13)
 # ═══════════════════════════════════════════════════════════════════════
@@ -1160,6 +1211,21 @@ def test_support_td_only_for_r():
             check(f"[{sound}] ТР/ДР отказано", True, True)
         check(f"[{sound}] рамок ТР/ДР нет",
               C.cluster_frames_for(sound, "cluster_td"), [])
+
+
+def test_support_td_isolated_keeps_support():
+    """[2] на ступени ТР/ДР — «тр-р-р», как над линией звуковой дорожки.
+
+    Голое «р-р-р» ребёнок этой ступени может ещё не держать; дорожка той же
+    ступени печатает «др-р-р» (образцы Ольги). Лист и дорожка не спорят.
+    """
+    c = C.build_content(sound="р", syl_type="cluster_td", profile=set())
+    check("[2] ТР/ДР: тянут с опорой", c["isolated"]["line"].endswith(": тр-р-р."), True)
+    c = C.build_content(sound="р", syl_type="cluster_td", profile={"т"})
+    check("[2] Т не поставлен — опора Д", c["isolated"]["line"].endswith(": др-р-р."), True)
+    c = C.build_content(sound="р", syl_type="cluster_onset", profile=set())
+    check("[2] общее стечение — канонное «р-р-р»",
+          c["isolated"]["line"].endswith(": р-р-р."), True)
 
 
 def test_verify_support_td_actually_raises():

@@ -657,6 +657,29 @@ def isolated_block(sound: str, gym: Optional[Dict[str, Any]] = None
     block["verbatim"] = img.get("instruction_verbatim", "")
     return block, warns
 
+def _with_support(block: Dict[str, Any], groups: Sequence[Dict[str, Any]],
+                  syl_type: str) -> Dict[str, Any]:
+    """[2] на ступени ТР/ДР: звук тянут вместе с опорой — «тр-р-р», не «р-р-р».
+
+    Найдено 09-18 сверкой с просьбой Ольги: на ОДНОЙ ступени наши материалы
+    расходились. Звуковая дорожка печатает над линией «др-р-р» (propisi.py,
+    08-26 — так на её образцах: «Заведи мотор» с плашкой ТР, лев с ДР), а лист
+    велел петь голое «р-р-р» — ровно то, чего ребёнок, сидящий «какое-то время
+    на тра/дра», может ещё не держать. У практиков: «нельзя разрывать
+    звукосочетание «тр» или «др»… звуки «т» и «д» являются опорой» (Кудряшенко).
+    Рамка — та же, что у первого слогового ряда листа, и склеивается так же,
+    как на дорожке.
+    """
+    frames = _cluster_frames(groups, syl_type, 1)
+    line = str(block.get("line") or "")
+    if not frames or ":" not in line:
+        return block
+    head, _, tail = line.rpartition(":")
+    utt = tail.strip().rstrip(".")
+    rest = utt.split("-", 1)[1] if "-" in utt else utt
+    return dict(block, line=f"{head}: {onset_display(frames[0])}-{rest}.")
+
+
 # Глаголы, обращённые к ребёнку (тон канона). «Повтори» покрывает ~80 %.
 CHILD_VERBS: Tuple[str, ...] = (
     "Повтори", "Спой", "Произнеси", "Послушай", "Назови", "Перескажи", "Отгадай",
@@ -696,6 +719,10 @@ SERVICE_WORDS: Tuple[Tuple[str, int], ...] = (
     ("один", 2), ("одна", 2), ("одно", 2), ("два", 1), ("две", 1), ("пять", 1),
     ("много", 1),
 )
+
+# «Один» по роду существительного. Одна таблица и для печати, и для проверки:
+# игра «Посчитай 1-5» и каркас предложения «Тут {one} …» (см. _template_ok).
+ONE_BY_GENDER: Dict[str, str] = {"m": "один", "f": "одна", "n": "одно"}
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -2691,7 +2718,7 @@ def _game_count(items: Sequence[Dict[str, Any]], banned: FrozenSet[str],
             continue
         if keeps and not (keeps(gs) and keeps(gp)):   # «пять вёдер»: [р] в конце
             continue
-        one = {"m": "один", "f": "одна", "n": "одно"}[g]
+        one = ONE_BY_GENDER[g]
         two = "две" if g == "f" else "два"
         rows.append({
             "prompt": w,
@@ -3016,9 +3043,9 @@ def _build_sentences(groups: Sequence[Dict[str, Any]], sound: str,
         fill: Dict[str, str] = {f"n{i+1}": nouns[i]["word"] for i in range(need)}
         if "{one}" in tpl:
             g = nouns[0].get("gender")
-            if g not in ("m", "f", "n"):
+            if g not in ONE_BY_GENDER:
                 continue
-            fill["one"] = {"m": "один", "f": "одна", "n": "одно"}[g]
+            fill["one"] = ONE_BY_GENDER[g]
         text = tpl.format(**fill)
         n_tokens = len(text.split())
         if n_tokens != want:                       # самопроверка шкалы длины
@@ -3068,9 +3095,23 @@ def load_verbs(sound: str) -> Tuple[Dict[str, Any], ...]:
 
 
 def _template_ok(template: str, service: Dict[str, int]) -> bool:
-    """Все НЕслотовые слова шаблона обязаны быть в допущенном служебном пуле."""
+    """Все слова, которые шаблон кладёт на лист САМ, обязаны быть в допущенном
+    служебном пуле: и каркас, и числительное {one}.
+
+    {one} — не место для слова блока [4], а служебное слово: один/одна/одно по
+    роду (ONE_BY_GENDER). До 09-18 его вырезали вместе со слотами, и «Тут один
+    …» уходило на лист мимо профиля: в «один» звучит [д'], в «одна» — [д].
+    Сторож verify_purity честно отказывал, и логопед, отметивший Д, получал
+    ошибку вместо листа (25 сборок из 495). Шаблон закрыт, если грязна хоть
+    одна форма, — то же правило, что у игры «Посчитай 1-5». Выбор по роду
+    ничего бы не добавил: Д и Дь запрещаются только парой, и три формы у нас
+    чисты или грязны вместе (замер: 11 звуков × профили до двух звуков).
+    """
     skeleton = re.sub(r"\{[a-z0-9]+\}", " ", template)
-    for tok in _tokens(skeleton):
+    words = _tokens(skeleton)
+    if "{one}" in template:
+        words += ONE_BY_GENDER.values()
+    for tok in words:
         if tok not in service:
             return False
     return True
@@ -3808,6 +3849,8 @@ def build_content(sound: str = "р",
     gym = load_gymnastics()
     artic, w_artic = artic_block(sound, gym)
     isolated, w_iso = isolated_block(sound, gym)
+    if syl_type == "cluster_td":
+        isolated = _with_support(isolated, groups, syl_type)
     warnings.extend(w_artic)
     warnings.extend(w_iso)
     # Следим за ЧУЖИМИ звуками — это весь запрет, кроме мягкого близнеца самой

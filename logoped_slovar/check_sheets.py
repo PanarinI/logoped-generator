@@ -294,7 +294,10 @@ def run_case(tag: str, kw: Dict[str, Any]) -> Dict[str, Any]:
     # буква цели берётся из кейса, а не зашита «р»: иначе правило падает на
     # любом другом звуке (поймано при подключении словарей [с] и [ш])
     iso_txt = (fitted.get("isolated") or {}).get("text", "")
-    alien = set(iso_txt.lower()) - set("- ") - {kw["sound"]}
+    # На ступени ТР/ДР опорный Т/Д — часть самой ступени, а не чужой звук:
+    # «тр-р-р» тянут вместе с опорой, как на звуковой дорожке (09-18).
+    own = {kw["sound"]} | (set(C.SUPPORT_TD) if kw["typ"] == "cluster_td" else set())
+    alien = set(iso_txt.lower()) - set("- ") - own
     ok(22, f"изолированно только «{iso_txt}»; «дятел» (д-д-д) снят как чужой "
            f"звук") if not alien else bad(22, f"чужие буквы в [2]: {alien}")
 
