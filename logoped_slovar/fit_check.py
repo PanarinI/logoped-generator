@@ -27,6 +27,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -61,9 +62,50 @@ MEASURE_JS = """
 
 
 def _chrome(args, timeout=180):
-    return subprocess.run([CHROME, "--headless", "--disable-gpu", "--no-sandbox",
-                           "--virtual-time-budget=3000"] + args,
-                          capture_output=True, text=True, timeout=timeout)
+    """Chrome без окна. Результат забираем, как только он готов, и закрываем процесс сами.
+
+    09-18: Chrome 153 на машине автора пишет PDF и через раз не выходит — прогон
+    висел 180 с и падал по таймауту, хотя лист уже был напечатан. Ждём, пока
+    размер PDF перестанет меняться (для --dump-dom — конца документа в выводе),
+    и гасим процесс. Честность способа держит контроль «перегруз-БЕЗ-fit»:
+    недописанный PDF дал бы не две страницы. Профиль свой, временный, — чтобы
+    не цепляться за открытый Chrome автора. Бывает и обратное: Chrome выходит,
+    не записав файла (поймано на параллельном прогоне) — тогда одна повторная
+    попытка, дальше пусть падает честно.
+    """
+    pdf = next((a.split("=", 1)[1] for a in args if a.startswith("--print-to-pdf=")), None)
+    res = _chrome_once(args, pdf, timeout)
+    if pdf and not os.path.exists(pdf):
+        res = _chrome_once(args, pdf, timeout)
+    return res
+
+
+def _chrome_once(args, pdf, timeout):
+    cmd = [CHROME, "--headless", "--disable-gpu", "--no-sandbox",
+           "--virtual-time-budget=3000",
+           "--user-data-dir=" + os.path.join(TMP, "chrome-profile")] + args
+    if pdf and os.path.exists(pdf):
+        os.remove(pdf)
+    out = tempfile.TemporaryFile(mode="w+")
+    proc = subprocess.Popen(cmd, stdout=out, stderr=subprocess.DEVNULL, text=True)
+    start, last, stable = time.time(), -1, 0
+    while time.time() - start < timeout and proc.poll() is None:
+        if pdf:
+            size = os.path.getsize(pdf) if os.path.exists(pdf) else -1
+            stable = stable + 1 if size > 0 and size == last else 0
+            last = size
+            if stable >= 3:
+                break
+        else:
+            out.seek(0)
+            if "</html>" in out.read():
+                break
+        time.sleep(0.5)
+    if proc.poll() is None:
+        proc.kill()
+        proc.wait()
+    out.seek(0)
+    return subprocess.CompletedProcess(cmd, 0, out.read(), "")
 
 
 def pdf_pages(path: str) -> int:

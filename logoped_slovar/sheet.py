@@ -536,11 +536,44 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H,
     # много места, и снятое до него оказывается снятым зря. На листе [Л] при
     # кегле 20 это стоило блока предложений И трети слов, а внизу оставалось
     # 34 мм пустоты (поймано автором 08-11: «ничего не должен терять, у нас
-    # полно места»). Поэтому теперь после каждого крупного снятия работает
-    # ВОЗВРАТ: кладём назад в обратном порядке ценности, пока влезает.
+    # полно места»). Поэтому ВОЗВРАТ работает на КАЖДОМ выходе с лестницы:
+    # кладём назад в обратном порядке ценности, пока влезает.
+    # Сначала он стоял только после снятия целого блока, и 09-18 домашний лист
+    # [Р] ТР/ДР потерял три слова и два предложения при 9 мм пустоты внизу.
+    # Слова снимаются с конца, а место даёт только слово из САМОЙ ДЛИННОЙ
+    # колонки: два первых снятия не дали ничего. Предложения же срезаны шагом
+    # раньше и в журнал не писались вовсе.
     taken_words: List[Tuple[Dict[str, Any], Dict[str, Any]]] = []
+    taken_sents: List[Any] = []
     taken_hints: Optional[Any] = None
     taken_fill: Optional[Any] = None
+
+    # С чем лист пришёл. Потери называются по ИТОГУ, а не по шагу, на котором
+    # лист влез: после возврата «слов оставлено 13» было бы неправдой.
+    n0_words = len(_words_flat(c.get("words") or {}))
+    n0_sent = len((c.get("sentences") or {}).get("items", []))
+    n0_syl = len((c.get("syllables") or {}).get("rows", []))
+    had_fill = bool(c.get("fill_syllable"))
+    had_hints = bool((c.get("articulation") or {}).get("hints"))
+
+    # Предложение стоит на словах блока [4] (сквозной словарь, правило 13).
+    # Вернуть его без его слова — напечатать слово, которого в [4] нет; у
+    # такого слова пропадает и ударение («Вот тут петрушка», 09-18). Мерка та
+    # же, что у линтера: block4 и производные формы из словаря листа.
+    voc = c.get("vocabulary") or {}
+    to_base = {_strip_marks(str(x).lower()): _strip_marks(str(x).lower())
+               for x in voc.get("block4", [])}
+    to_base.update({_strip_marks(str(k).lower()): _strip_marks(str(v).lower())
+                    for k, v in (voc.get("derived") or {}).items()})
+
+    def _stands(item: Dict[str, Any]) -> bool:
+        """Все слова блока [4], на которых стоит предложение, сейчас на листе."""
+        need = {to_base[t] for t in (_strip_marks(x.lower())
+                                     for x in _TOKEN.findall(item.get("text", "")))
+                if t in to_base}
+        have = {_strip_marks(_word_text(i).lower())
+                for i in _words_flat(c.get("words") or {})}
+        return need <= have
 
     def _refill() -> None:
         """Вернуть снятое, пока есть место. Молча: это не потеря, а подгонка."""
@@ -560,6 +593,16 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H,
                     continue
                 taken_words.pop(idx)
                 moved = True
+        # Предложения — по одному, в прежнем порядке. Блок [6], снятый целиком,
+        # строк назад не получает: его снятие — отдельное решение лестницы.
+        # Первое, чьё слово в [4] не вернулось, останавливает возврат.
+        sent_blk = c.get("sentences")
+        while taken_sents and sent_blk is not None and _stands(taken_sents[-1]):
+            sent_blk.setdefault("items", []).append(taken_sents[-1])
+            if _h() > budget_mm:
+                sent_blk["items"].pop()
+                break
+            taken_sents.pop()
         if taken_hints is not None:
             art = c.get("articulation") or {}
             art["hints"] = taken_hints
@@ -573,6 +616,34 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H,
                 c.pop("fill_syllable", None)
             else:
                 taken_fill = None
+
+    def _finish() -> Tuple[Dict[str, Any], List[str]]:
+        """Выход с лестницы: вернуть то, что влезает, и назвать то, чего на листе нет."""
+        _refill()
+        # Пустые колонки убираем только ПОСЛЕ возврата. Слово возвращается в
+        # свою колонку, а колонку, выброшенную раньше, на листе уже не найти:
+        # возврат считался удачным, а слово пропадало молча.
+        _drop_empty(c.get("words") or {})
+        lost: List[str] = []
+        if had_fill and not c.get("fill_syllable"):
+            lost.append("не влезало: снят блок «вставь слог» — он надстройка "
+                        "над словами, а лестница ступеней важнее")
+        if had_hints and not (c.get("articulation") or {}).get("hints"):
+            lost.append("не влезало: в разминке оставлены только названия "
+                        "упражнений — подсказки «как делать» сняты")
+        if c.get("sentences") is not None:
+            n_sent = len(c["sentences"].get("items", []))
+            if n_sent < n0_sent:
+                lost.append(f"не влезало: предложений оставлено {n_sent} (канон 6-10)")
+        n_words = len(_words_flat(c.get("words") or {}))
+        if n_words < n0_words:
+            lost.append(f"не влезало: слов оставлено {n_words} из {n0_words} "
+                        f"(канон 12-24)")
+        syl_left = c.get("syllables") or {}
+        if len(syl_left.get("rows", [])) < n0_syl:
+            lost.append(f"не влезало: слоговых строк оставлено "
+                        f"{len(syl_left['rows'])} ({_syllable_units(syl_left)} единиц)")
+        return c, lost + warns
 
     # −0.6) подсказки «как делать» в разминке — теперь снимаются ПОЗЖЕ
     # «вставь слог», а не первыми. Пересмотрено 2026-08-10 после замера:
@@ -594,48 +665,35 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H,
     if c.get("fill_syllable"):
         taken_fill = c.pop("fill_syllable")
         if _h() <= budget_mm:
-            warns.append("не влезало: снят блок «вставь слог» — он надстройка "
-                         "над словами, а лестница ступеней важнее")
-            return c, warns
+            return _finish()
 
     if art_late.get("hints"):
         taken_hints = art_late.pop("hints")
         if _h() <= budget_mm:
-            warns.append("не влезало: в разминке оставлены только названия "
-                         "упражнений — подсказки «как делать» сняты")
-            return c, warns
+            return _finish()
 
     # 0) предложения — до канонного минимума 6
     sent = c.get("sentences") or {}
     while len(sent.get("items", [])) > MIN_SENTENCES:
-        sent["items"].pop()
+        taken_sents.append(sent["items"].pop())
         if _h() <= budget_mm:
-            warns.append(f"не влезало: предложений оставлено {len(sent['items'])} "
-                         f"(канон 6-10)")
-            return c, warns
+            return _finish()
 
     # 1) слова — до канонного минимума 12
     words = c.get("words") or {}
-    n0 = len(_words_flat(words))
     for tier in reversed(words.get("tiers", [])):
         for grp in reversed(tier.get("groups", [])):
             while grp.get("items") and len(_words_flat(words)) > MIN_WORDS:
                 taken_words.append((grp, grp["items"].pop()))
                 if _h() <= budget_mm:
-                    _drop_empty(words)
-                    warns.append(f"не влезало: слов оставлено "
-                                 f"{len(_words_flat(words))} из {n0} (канон 12-24)")
-                    return c, warns
-    _drop_empty(words)
+                    return _finish()
 
     # 2) слоговые строки — не ниже 16 единиц
     syl = c.get("syllables") or {}
     while len(syl.get("rows", [])) > 1 and _syllable_units(syl) > MIN_SYLLABLE_UNITS:
         syl["rows"].pop()
         if _h() <= budget_mm:
-            warns.append(f"не влезало: слоговых строк оставлено "
-                         f"{len(syl['rows'])} ({_syllable_units(syl)} единиц)")
-            return c, warns
+            return _finish()
 
     # 3) снять блок [6] предложения — это уже потеря ступени, а не объёма
     if c.get("sentences"):
@@ -644,22 +702,20 @@ def fit(content: Dict[str, Any], budget_mm: float = CONTENT_H,
                      "«слово → фраза». Уберите материал на входе "
                      "(меньше слоговых строк или короче подвал).")
         if _h() <= budget_mm:
-            _refill()          # место освободилось — вернуть слова и надстройки
-            return c, warns
+            return _finish()   # место освободилось — вернуть слова и надстройки
 
     # 4) снять блок [5] игра
     if c.get("game"):
         c.pop("game")
         warns.append("НЕ ВЛЕЗАЛО: снят блок [5] игра")
         if _h() <= budget_mm:
-            _refill()
-            return c, warns
+            return _finish()
 
     # 5) сдаться честно
     warns.append(f"НЕ ВЛЕЗАЕТ: не хватает {_h() - budget_mm:.0f} мм даже "
                  f"после всех сокращений. Кегль не уменьшаю (канон: ≥16/18 pt) — "
                  f"уберите материал на входе.")
-    return c, warns
+    return _finish()
 
 
 def _drop_empty(words: Dict[str, Any]) -> None:

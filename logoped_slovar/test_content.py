@@ -707,6 +707,92 @@ def test_render_preview_runs():
     check("блока [8] в предпросмотре нет", "[8]" in txt, False)
 
 
+def test_fit_returns_what_fits():
+    """Лестница ужатия возвращает на лист всё, что влезает (09-18).
+
+    Было: домашний лист [Р] ТР/ДР после пяти новых слов терял три слова и два
+    предложения при 9 мм пустоты внизу и из-за этого ломал правило 11. Слова
+    снимались с конца, а место давало только слово из самой длинной колонки;
+    возврат снятого стоял лишь после снятия целого блока, предложения в журнал
+    не писались. Проверяем сам закон, а не один лист: к ужатому листу нельзя
+    вернуть НИ ОДНО снятое слово, следующее снятое предложение, подсказки или
+    «вставь слог», не выйдя за А4.
+    """
+    import sheet as S
+
+    def _w(it):
+        return it.get("word") if isinstance(it, dict) else it
+
+    def _words_as(orig, keep):
+        """Блок слов исходника, в котором оставлены только слова из keep."""
+        w = json.loads(json.dumps(orig.get("words") or {}, ensure_ascii=False))
+        for t in w.get("tiers", []):
+            for g in t.get("groups", []):
+                g["items"] = [i for i in g.get("items", []) if _w(i) in keep]
+        return w
+
+    def _stands(orig, keep, text):
+        """Все слова блока [4], на которых стоит предложение, есть среди keep."""
+        low = lambda s: S._strip_marks(str(s).lower())
+        voc = orig.get("vocabulary") or {}
+        to_base = {low(x): low(x) for x in voc.get("block4", [])}
+        to_base.update({low(k): low(v) for k, v in (voc.get("derived") or {}).items()})
+        need = {to_base[low(t)] for t in S._TOKEN.findall(text) if low(t) in to_base}
+        return need <= {low(x) for x in keep}
+
+    for sound in C.WORDS_BY_SOUND:
+        for typ in C.SYL_TYPES:
+            for prof in ("", "с,з,ш,ж,к,г"):
+                for aud in ("home", "lesson"):
+                    try:
+                        raw, _ = S.compose(sound, typ, prof, sheet_no=1, seed=0)
+                    except (C.ContentError, SystemExit):
+                        continue
+                    orig = S.for_audience(raw, aud)
+                    f, _ = S.fit(orig, S.CONTENT_H, aud)
+                    if S.total_height(f, aud) > S.CONTENT_H:
+                        continue          # лестница сдалась — это другой разговор
+                    tag = f"[{sound}] {typ} {prof or 'пусто'} {aud}"
+                    full = lambda part: S.total_height(dict(f, **part), aud) > S.CONTENT_H
+
+                    kept = {_w(i) for i in S._words_flat(f.get("words") or {})}
+                    check(f"{tag}: слова, пересобранные из исходника, дают ту же высоту",
+                          round(S.total_height(dict(f, words=_words_as(orig, kept)), aud), 2),
+                          round(S.total_height(f, aud), 2))
+                    for it in S._words_flat(orig.get("words") or {}):
+                        if _w(it) not in kept:
+                            truthy(f"{tag}: снятое «{_w(it)}» назад не влезает",
+                                   full({"words": _words_as(orig, kept | {_w(it)})}))
+
+                    s0 = (orig.get("sentences") or {}).get("items", [])
+                    if f.get("sentences") is not None:
+                        s1 = f["sentences"].get("items", [])
+                        check(f"{tag}: предложения — начало исходного списка",
+                              s1 == s0[:len(s1)], True)
+                        if len(s1) < len(s0):
+                            nxt = s0[len(s1)]
+                            truthy(f"{tag}: следующее снятое предложение «{nxt['text']}» "
+                                   f"назад не влезает или стоит на слове, которого в [4] нет",
+                                   full({"sentences": dict(f["sentences"],
+                                                           items=s0[:len(s1) + 1])})
+                                   or not _stands(orig, kept, nxt.get("text", "")))
+
+                    art0 = orig.get("articulation") or {}
+                    art1 = f.get("articulation") or {}
+                    if art0.get("hints") and not art1.get("hints"):
+                        truthy(f"{tag}: подсказки назад не влезают",
+                               full({"articulation": dict(art1, hints=art0["hints"])}))
+                    if orig.get("fill_syllable") and not f.get("fill_syllable"):
+                        truthy(f"{tag}: «вставь слог» назад не влезает",
+                               full({"fill_syllable": orig["fill_syllable"]}))
+
+    # сам случай 09-18: без возврата на этом листе ломалось правило 11
+    raw, _ = S.compose("р", "cluster_td", "", sheet_no=1, seed=0)
+    f, _ = S.fit(raw, S.CONTENT_H, "home")
+    check("[р] ТР/ДР, пустой профиль, дома: правило 11 цело",
+          [x for x in S.lint(f, {"sound": "р", "sheet_no": 1}) if "правило 11" in x], [])
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failures = []
