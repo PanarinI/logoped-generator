@@ -175,6 +175,7 @@ ACCUSATIVE: Dict[str, str] = {
     "насос": "насос", "насосик": "насосик",
     "комарик": "комарика", "жук": "жука",
     "змея": "змею", "щётка": "щётку",
+    "тигр": "тигра",          # 09-20: печаталось «Проведи тигр по тропинке»
 }
 
 
@@ -205,6 +206,7 @@ def has_character(name: str) -> bool:
 #
 # Векторные CHARACTERS остались рядом ЗАПАСОМ: нет PNG — рисуем как раньше.
 _BANK_COLOUR = Path(__file__).resolve().parent.parent / "pictures" / "geroi"
+_BANK_DOR = Path(__file__).resolve().parent.parent / "pictures" / "dorozhka"
 _BANK_BW = Path(__file__).resolve().parent.parent / "pictures" / "geroi_bw"
 
 
@@ -215,8 +217,23 @@ _BANK_BW = Path(__file__).resolve().parent.parent / "pictures" / "geroi_bw"
 EMBED = False
 
 
-def _hero_src(name: str, colour: bool) -> Optional[str]:
-    """Адрес или data-URI рисунка героя; None — если файла нет."""
+def _hero_src(name: str, colour: bool, vid: str = "") -> Optional[str]:
+    """Адрес или data-URI рисунка героя; None — если файла нет.
+
+    `vid` — ВИД героя из банка звуковой дорожки (легковой, грузовик, гоночный…).
+    С 09-20 виды показывает не только звуковая дорожка: лист и слоговая тоже
+    крутят их кубиком, иначе у мотора на всех листах одна и та же машина
+    (замечание автора). Нет вида — берём общий рисунок героя, как раньше.
+    """
+    if vid:
+        for d, kind in (((_BANK_DOR / "colour"), "colour"),) if colour else \
+                       (((_BANK_DOR / "bw"), "bw"), ((_BANK_DOR / "colour"), "colour")):
+            f = d / f"{vid}.png"
+            if f.exists():
+                if EMBED:
+                    return ("data:image/png;base64,"
+                            + base64.b64encode(f.read_bytes()).decode("ascii"))
+                return f"/dorozhka/{kind}/{quote(vid)}.png"
     banks = ((_BANK_COLOUR, "colour"),) if colour else ((_BANK_BW, "bw"), (_BANK_COLOUR, "colour"))
     for bank, kind in banks:
         f = bank / f"{name}.png"
@@ -230,21 +247,25 @@ def _hero_src(name: str, colour: bool) -> Optional[str]:
 
 
 def character_svg(name: str, width_mm: float = 22.0,
-                  stroke: float = 2.2, colour: bool = False) -> Optional[str]:
+                  stroke: float = 2.2, colour: bool = False,
+                  vid: str = "", flip: bool = False) -> Optional[str]:
     """Готовый <svg> персонажа или None, если рисунка ещё нет.
 
     None — законный ответ: пока нарисован не весь реестр, лист обязан уметь
     обойтись без картинки и не притворяться, будто она есть."""
     key = _resolve(name)
     h = width_mm * 0.70
-    data = _hero_src(key, colour)
+    data = _hero_src(key, colour, vid)
     if data:
+        # Часть видов нарисована лицом влево, и зеркало — часть метода: герой
+        # смотрит туда, куда ребёнок ведёт палец (банк дорожки, поле flip).
+        tr = ' transform="translate(100,0) scale(-1,1)"' if flip else ""
         # рисунок 3:2, окно 10:7 — вписываем без искажения
         return (f'<svg class="chr" viewBox="0 0 100 70" width="{width_mm:.1f}mm" '
                 f'height="{h:.1f}mm" xmlns="http://www.w3.org/2000/svg" '
                 f'aria-hidden="true">'
                 f'<image href="{data}" x="0" y="0" width="100" height="70" '
-                f'preserveAspectRatio="xMidYMid meet"/></svg>')
+                f'preserveAspectRatio="xMidYMid meet"{tr}/></svg>')
     body = CHARACTERS.get(key)
     if not body:
         return None

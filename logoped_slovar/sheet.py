@@ -1200,7 +1200,9 @@ def _hero_for(meta: Dict[str, Any], opt: Dict[str, Any]) -> str:
         import characters as _CH
         variant = int((meta.get("seed") or 0))
         name = (_PR._image_for(sound, variant) or {}).get("name") or ""
-        return _CH.character_svg(name, HERO_MM, colour=bool(opt.get("colour"))) or ""
+        vid = _PR.hero_vid(name, variant)
+        return _CH.character_svg(name, HERO_MM, colour=bool(opt.get("colour")),
+                                 vid=vid, flip=_PR.hero_flip(name, vid)) or ""
     except Exception:
         return ""
 

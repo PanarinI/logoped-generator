@@ -544,6 +544,18 @@ def hero_vidy(hero: str) -> list:
     return (b.get(hero) or b.get(CH.SOFT_TWIN.get(hero, ""), {}) or {}).get("vidy", [])
 
 
+def hero_vid(hero: str, variant: int = 0) -> str:
+    """Вид героя для этого варианта: у мотора — легковой, грузовик, гоночный…
+
+    Один дом у видов — банк дорожки. С 09-20 их крутит не только звуковая
+    дорожка: лист и слоговая берут вид отсюда же, чтобы кубик менял картинку
+    везде одинаково, а не показывал на всех листах одну машину.
+    """
+    d = banka().get(hero) or {}
+    vidy = list(d.get("vidy") or [])
+    return vidy[int(variant) % len(vidy)] if vidy else ""
+
+
 def hero_flip(hero: str, vid: str) -> bool:
     """Надо ли отразить героя по горизонтали.
 

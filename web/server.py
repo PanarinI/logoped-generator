@@ -1311,6 +1311,19 @@ class Handler(BaseHTTPRequestHandler):
                     scene = str(scene)
                     if scene and scene not in SCN.SCENES:
                         scene = None
+                # Фон принадлежит ГЕРОЮ, а герой меняется кубиком. Прилетевший
+                # фон прежнего героя — не ошибка логопеда: он выбирал его, когда
+                # герой был другой. Берём умолчание нового героя и ГОВОРИМ об
+                # этом (закон 12: молчаливой подмены быть не должно).
+                scene_note = ""
+                if scene:
+                    _hero = (PR.image_for(sound,
+                                          as_int(data.get("seed"), 0)).get("name") or "").strip()
+                    if not SCN.fits(_hero, scene):
+                        scene_note = (f"Фон сменился: кубик сменил героя, "
+                                      f"а «{SCN.SCENE_LABELS.get(scene, scene)}» — "
+                                      f"из мира прежнего.")
+                        scene = None
                 # Профиль ребёнка доведён до дорожки 08-23: без него стечения
                 # были запрещены наглухо («второй согласный не проверить»), а с
                 # ним проверять есть по чему — тем же способом, что на листе.
@@ -1326,7 +1339,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({
                     "ok": True,
                     "html": T.render_track(t, colour=bool(data.get("colour"))),
-                    "warnings": {"blocking": [], "notes": []},
+                    "warnings": {"blocking": [],
+                                 "notes": [scene_note] if scene_note else []},
                     # Кнопки фона приезжают ВМЕСТЕ С ДОРОЖКОЙ, а не берутся из
                     # конфига по звуку. С 09-20 герой звука меняется кубиком
                     # (мотор ↔ тигр у [Р]), а фоны — это миры ГЕРОЯ: список из

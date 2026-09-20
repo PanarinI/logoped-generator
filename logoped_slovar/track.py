@@ -439,6 +439,12 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
     cells = track["cells"]
     e = lambda s: html.escape(str(s), quote=False)   # noqa: E731
     hero = m.get("hero") or m["sound_label"]
+    # Вид героя крутится тем же кубиком, что слова: иначе у мотора на всех
+    # дорожках одна и та же машина (замечание автора 09-20). Дом видов — банк
+    # звуковой дорожки, туда и обращаемся, а не заводим второй список.
+    import propisi as _PR
+    _hero_vid = _PR.hero_vid(hero, int(m.get("seed") or 0))
+    _hero_flip = _PR.hero_flip(hero, _hero_vid)
 
     rows, cols = m["rows"], m["cols"]
     height = _TOP + (rows - 1) * _ROW_H + _R + _AMP + 8.0
@@ -530,7 +536,8 @@ def render_track(track: Dict[str, Any], colour: bool = False) -> str:
   </div>
   <h1>{e(track['instruction'])}</h1>
   <div class="lead">
-    <div class="hero">{CH.character_svg(hero, 30.0, 2.4, colour=colour)
+    <div class="hero">{CH.character_svg(hero, 30.0, 2.4, colour=colour,
+                                        vid=_hero_vid, flip=_hero_flip)
       or f'<span>{e(hero)}</span>'}</div>
     <p class="hint">{e(track['lead'])}</p>
   </div>
