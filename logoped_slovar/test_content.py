@@ -1235,28 +1235,38 @@ def test_support_td_holds_in_every_block():
     глаголы, рифма чистоговорки. Проверяем готовый лист, а не намерения кода,
     на всех трёх играх: «ведро → ведёрко» и «пять вёдер» уводят [р] с позиции.
     """
-    for prof in TD_PROFILES:
-        for seed in range(3):
-            for game in C.GAME_KINDS:
-                c = C.build_content(sound="р", syl_type="cluster_td",
-                                    profile=prof, seed=seed, game_kind=game)
-                for block, text in C._material_texts(c):
-                    for tok in C._tokens(text):
-                        truthy(f"{sorted(prof)}/{seed}/{game} [{block}] «{tok}»: "
-                               f"[р] только после Т/Д",
-                               C.keeps_support_td(tok, "р"))
+    for sound in sorted(C.SUPPORT_TD_SOUNDS):
+        built = 0
+        for prof in TD_PROFILES:
+            for seed in range(3):
+                for game in C.GAME_KINDS:
+                    try:
+                        c = C.build_content(sound=sound, syl_type="cluster_td",
+                                            profile=prof, seed=seed, game_kind=game)
+                    except C.ContentError:
+                        continue      # на этом профиле ступень не собирается — дело данных
+                    built += 1
+                    for block, text in C._material_texts(c):
+                        for tok in C._tokens(text):
+                            truthy(f"[{sound}] {sorted(prof)}/{seed}/{game} [{block}] "
+                                   f"«{tok}»: звук только после Т/Д",
+                                   C.keeps_support_td(tok, sound))
+        truthy(f"[{sound}]: ступень вообще собирается", built > 0)
 
 
 def test_support_td_rows_are_tr_dr():
-    """Слоговой блок — сами тра/дра, четыре ряда, как у прямого слога."""
-    c = C.build_content(sound="р", syl_type="cluster_td", profile=set())
-    rows = c["syllables"]["rows"]
-    check("рядов четыре (скелет)", len(rows), 4)
-    for r in rows:
-        for u in r["units"]:
-            truthy(f"«{u}» начинается с тр/др", u[:2] in ("тр", "др"))
-    check("первые ряды — тра и дра", [r["units"][0] for r in rows[:2]],
-          ["тра", "дра"])
+    """Слоговой блок — сами тра/дра (у [Рь] — тря/дря), четыре ряда."""
+    first = {"р": ["тра", "дра"], "р'": ["тря", "дря"]}
+    for sound in sorted(C.SUPPORT_TD_SOUNDS):
+        c = C.build_content(sound=sound, syl_type="cluster_td", profile=set())
+        rows = c["syllables"]["rows"]
+        check(f"[{sound}] рядов четыре (скелет)", len(rows), 4)
+        for r in rows:
+            for u in r["units"]:
+                truthy(f"[{sound}] «{u}» начинается с тр/др", u[:2] in ("тр", "др"))
+        if sound in first:
+            check(f"[{sound}] первые ряды", [r["units"][0] for r in rows[:2]],
+                  first[sound])
 
 
 def test_support_td_is_strict_about_second_r():

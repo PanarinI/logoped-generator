@@ -1,224 +1,434 @@
 {
- "motor_legkovoy": {
-  "box": [
-   26,
-   20
+  "motor_legkovoy": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A small car seen from the side, driving to the right: a rounded body, two clear wheels, side windows and a door line. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "motor_gruzovik": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A lorry seen from the side, facing right: a boxy cab at the front and a long open cargo bed behind, four wheels. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "motor_gonochny": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A racing car seen from the side, facing right: a very low wide body, a small cockpit, a rear wing and two big wheels. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "plane_passazh": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A passenger aeroplane seen from the side, flying to the right: a long fuselage, a row of round windows, swept wing and tail fin. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "plane_vint": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A small propeller plane seen from the side, flying to the right: a stubby body, one straight wing, a nose propeller and a tail fin. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "plane_planer": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A glider seen from the side, flying to the right: a very slender body with long narrow wings and a small tail, no propeller. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "pump_nozhnoy": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A foot pump seen from the side: a flat base plate, a hinged foot pedal above it and a hose leaving from one side. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "pump_ruchnoy": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A hand pump seen from the side: an upright cylinder with a T-shaped handle on a rod at the top and a hose at the bottom. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "pump_velo": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A bicycle pump seen from the side, lying horizontally: a long slim tube with a handle at one end and a short hose at the other. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "komar_1": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A mosquito seen from the side, facing right: a slender body, two thin transparent wings, long thin legs and a long straight proboscis. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "komar_muha": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A fly seen from the side, facing right: a compact rounded body, two broad wings, big round eye and short legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "komar_strekoza": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A dragonfly seen from the side, facing right: a very long thin body and two pairs of long narrow wings held out. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zmeya_1": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A snake coiled in one flat loop, its head raised and facing right, tongue out, clear scale pattern along the body. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zmeya_polzet": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A snake crawling to the right, its body in two smooth waves flat on the ground, head low and forward. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zmeya_kobra": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A snake with its front third raised upright and head facing right, the rest of the body resting in a loop. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zhuk_1": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A beetle seen from the side, facing right: an oval domed back, six legs, two antennae and a clear head. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zhuk_bozhya": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A ladybird seen from above, facing right: a round domed body with a clear dividing line and several plain round spots, small head and short legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zhuk_usach": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A long-horned beetle seen from the side, facing right: a long narrow body and two very long curved antennae. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "shchetka_odezhda": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A clothes brush seen from the side: an oval wooden back with a handle and dense short bristles along the underside. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "shchetka_obuv": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A shoe brush seen from the side: a long flat wooden back and a thick band of bristles beneath it. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "shchetka_zubnaya": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A toothbrush seen from the side, lying horizontally: a long slim handle and a head of short upright bristles at one end. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "_odushevlenie_08_26": [
+    "ВСЕ ВИДЫ ГЕРОЯ ОДУШЕВЛЕНЫ с 2026-08-26. Повод — слово автора: «машинка-герой",
+    "на [Р] одушевлена, у неё глаза и рот, а машина на звуковой дорожке — просто",
+    "машина». В одном продукте стояли ДВА разных героя одного звука.",
+    "Приём не выдуман, а СНЯТ С НЫНЕШНИХ ГЕРОЕВ (`pictures/geroi/`), которые",
+    "рисовались до конвейера и словаря промптов не имеют: один крупный круглый глаз",
+    "с чёрным зрачком спереди по ходу движения плюс короткая улыбка дугой, той же",
+    "толстой чёрной линией; предмет сохраняет настоящую форму, лицо добавляется, а",
+    "не заменяет деталей (закон 11: узнаваемость решает отбор, а не манера).",
+    "Сама фраза лежит в `tools/gen_kartinki.py`: стиль — в коде, предмет — в",
+    "словаре. Прежние рисунки сохранены в `pictures/dorozhka/bezdushnye_2026-08-26/`."
   ],
-  "prompt": "A small car seen from the side, driving to the right: a rounded body, two clear wheels, side windows and a door line. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "motor_gruzovik": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A lorry seen from the side, facing right: a boxy cab at the front and a long open cargo bed behind, four wheels. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "motor_gonochny": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A racing car seen from the side, facing right: a very low wide body, a small cockpit, a rear wing and two big wheels. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "plane_passazh": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A passenger aeroplane seen from the side, flying to the right: a long fuselage, a row of round windows, swept wing and tail fin. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "plane_vint": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A small propeller plane seen from the side, flying to the right: a stubby body, one straight wing, a nose propeller and a tail fin. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "plane_planer": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A glider seen from the side, flying to the right: a very slender body with long narrow wings and a small tail, no propeller. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "pump_nozhnoy": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A foot pump seen from the side: a flat base plate, a hinged foot pedal above it and a hose leaving from one side. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "pump_ruchnoy": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A hand pump seen from the side: an upright cylinder with a T-shaped handle on a rod at the top and a hose at the bottom. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "pump_velo": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A bicycle pump seen from the side, lying horizontally: a long slim tube with a handle at one end and a short hose at the other. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "komar_1": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A mosquito seen from the side, facing right: a slender body, two thin transparent wings, long thin legs and a long straight proboscis. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "komar_muha": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A fly seen from the side, facing right: a compact rounded body, two broad wings, big round eye and short legs. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "komar_strekoza": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A dragonfly seen from the side, facing right: a very long thin body and two pairs of long narrow wings held out. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "zmeya_1": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A snake coiled in one flat loop, its head raised and facing right, tongue out, clear scale pattern along the body. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "zmeya_polzet": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A snake crawling to the right, its body in two smooth waves flat on the ground, head low and forward. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "zmeya_kobra": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A snake with its front third raised upright and head facing right, the rest of the body resting in a loop. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "zhuk_1": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A beetle seen from the side, facing right: an oval domed back, six legs, two antennae and a clear head. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "zhuk_bozhya": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A ladybird seen from above, facing right: a round domed body with a clear dividing line and several plain round spots, small head and short legs. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "zhuk_usach": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A long-horned beetle seen from the side, facing right: a long narrow body and two very long curved antennae. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "shchetka_odezhda": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A clothes brush seen from the side: an oval wooden back with a handle and dense short bristles along the underside. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "shchetka_obuv": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A shoe brush seen from the side: a long flat wooden back and a thick band of bristles beneath it. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "shchetka_zubnaya": {
-  "box": [
-   26,
-   20
-  ],
-  "prompt": "A toothbrush seen from the side, lying horizontally: a long slim handle and a head of short upright bristles at one end. The bottom of the drawing fades out unfinished.",
-  "faded": false,
-  "colour": true,
-  "alive": true
- },
- "_odushevlenie_08_26": [
-  "ВСЕ ВИДЫ ГЕРОЯ ОДУШЕВЛЕНЫ с 2026-08-26. Повод — слово автора: «машинка-герой",
-  "на [Р] одушевлена, у неё глаза и рот, а машина на звуковой дорожке — просто",
-  "машина». В одном продукте стояли ДВА разных героя одного звука.",
-  "Приём не выдуман, а СНЯТ С НЫНЕШНИХ ГЕРОЕВ (`pictures/geroi/`), которые",
-  "рисовались до конвейера и словаря промптов не имеют: один крупный круглый глаз",
-  "с чёрным зрачком спереди по ходу движения плюс короткая улыбка дугой, той же",
-  "толстой чёрной линией; предмет сохраняет настоящую форму, лицо добавляется, а",
-  "не заменяет деталей (закон 11: узнаваемость решает отбор, а не манера).",
-  "Сама фраза лежит в `tools/gen_kartinki.py`: стиль — в коде, предмет — в",
-  "словаре. Прежние рисунки сохранены в `pictures/dorozhka/bezdushnye_2026-08-26/`."
- ]
+  "motor_avtobus": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A city bus seen from the side, driving to the right: a long boxy body, a row of side windows, a double door line and four wheels. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "motor_traktor": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A farm tractor seen from the side, facing right: one big rear wheel, one small front wheel, a driver's cab and a short exhaust pipe standing up in front of it. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "motor_motocikl": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A motorcycle seen from the side, facing right, drawn very simply: two plain round wheels with one thick rim each and no spokes, a fuel tank, a seat and handlebars. Only the few shapes that make it a motorcycle - no engine parts, no chain, no springs, no exhaust pipe. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "plane_biplan": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A biplane seen from the side, flying to the right: two stacked wings joined by upright struts, a nose propeller and a small tail. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "plane_gidro": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A seaplane seen from the side, flying to the right: a nose propeller, a high straight wing and two long floats under the body instead of wheels. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "plane_gruzovoy": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A cargo aeroplane seen from the side, flying to the right: a wide deep fuselage without passenger windows, a high wing carrying two engines and a tall raised tail. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "pump_napolny": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A floor pump seen from the side: a tall upright cylinder on a wide flat foot plate, a T-handle on top, a round pressure gauge on the body and a hose leaving the bottom. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "pump_grusha": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A rubber bulb pump seen from the side: a pear-shaped rubber bulb with a short narrow nozzle pointing to the right. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "pump_kompressor": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A small car air compressor seen from the side: a low rectangular box with a round pressure gauge on top and a coiled hose leaving one side. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "komar_pchela": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A bee seen from the side, facing right: a striped oval body, two transparent wings, thin legs and short antennae. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "komar_osa": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A wasp seen from the side, facing right: a slender body with a very thin waist and bold stripes, two narrow wings and thin legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "komar_shmel": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A bumblebee seen from the side, facing right: a thick round striped body, two small wings and short legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zmeya_uzh": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A grass snake crawling to the right, drawn LARGE and filling the whole frame: a THICK heavy body in one smooth wave, a clearly rounded head at the right with the tongue out, and two light round spots just behind the head. The body is thick, never thin or wiry. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zmeya_udav": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A thick boa snake seen from the side, facing right, its body in one wide loop with large oval blotches along the back and a blunt head. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zmeya_klubok": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A snake coiled into a flat spiral of several rings, its head resting on the top ring and facing right. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zhuk_olen": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A stag beetle seen from above, facing right: a broad oval body and two large curved antler-like jaws at the front, six legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zhuk_mayskiy": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A cockchafer beetle seen from the side, facing right: a plump oval body, a small head with fan-shaped antennae and six legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "zhuk_nosorog": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A rhinoceros beetle seen from the side, facing right: a heavy domed body and one curved horn standing up from the head, six legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "shchetka_volosy": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A hairbrush seen from the side: an oval back with a straight handle pointing to the right and long bristles along the under side. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "shchetka_polovaya": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A floor brush seen from the side: a wide flat block of stiff bristles with a long straight handle rising to the right. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "shchetka_posuda": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A dish brush seen from the side: a round head of bristles and a straight handle pointing to the right. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  }
 }

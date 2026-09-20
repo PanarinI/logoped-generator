@@ -313,5 +313,23 @@
     "prompt": "A coat hook on a wall board seen from the side: a short vertical backing plate with two curved hooks projecting from it, one above the other. Taller than wide. The board fades out unfinished at the bottom.",
     "faded": false,
     "colour": true
+  },
+  "plate": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A single dinner plate seen from the side at a slight angle: a shallow round dish with a clear rim, markedly wider than it is tall. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "mirror": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A small table mirror seen from the front: an oval glass in a plain frame standing on a short foot. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
   }
 }

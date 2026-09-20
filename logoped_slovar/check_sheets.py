@@ -39,6 +39,8 @@ CASES = [
      "обратные слоги, профиль {л, ш, ж, с, з, ц}"),
     ("td",     dict(sound="р", typ="cluster_td",    profile="л,ш,ж",        sheet_no=1),
      "ступень ТР/ДР (09-18), профиль {л, ш, ж}"),
+    ("td-soft", dict(sound="р'", typ="cluster_td",   profile="",            sheet_no=1),
+     "ступень ТР/ДР у [Рь] (09-20), пустой профиль"),
 ]
 
 TOKEN = re.compile(r"[а-яёА-ЯЁ]+")
@@ -296,7 +298,11 @@ def run_case(tag: str, kw: Dict[str, Any]) -> Dict[str, Any]:
     iso_txt = (fitted.get("isolated") or {}).get("text", "")
     # На ступени ТР/ДР опорный Т/Д — часть самой ступени, а не чужой звук:
     # «тр-р-р» тянут вместе с опорой, как на звуковой дорожке (09-18).
-    own = {kw["sound"]} | (set(C.SUPPORT_TD) if kw["typ"] == "cluster_td" else set())
+    # Мягкий звук на письме — ДВЕ буквы: «рь». Ключ движка («р'») буквой не
+    # является, и правило считало собственные «р» и «ь» чужими на первом же
+    # мягком листе (09-20, ступень ТР/ДР у [Рь]).
+    own = set(kw["sound"].replace("'", "ь")) | (
+        set(C.SUPPORT_TD) if kw["typ"] == "cluster_td" else set())
     alien = set(iso_txt.lower()) - set("- ") - own
     ok(22, f"изолированно только «{iso_txt}»; «дятел» (д-д-д) снят как чужой "
            f"звук") if not alien else bad(22, f"чужие буквы в [2]: {alien}")

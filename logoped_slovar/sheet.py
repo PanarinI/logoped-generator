@@ -1411,7 +1411,15 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
 #  место, где они знают друг о друге.
 
 def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
-    """Наполнение из content.build_content() -> схема render_sheet()."""
+    """Наполнение из content.build_content() -> схема render_sheet().
+
+    Вместе с материалом едет `meta` — в первую очередь ТИП СЛОГА. Канон-линтер
+    спрашивает у листа его норму блока [4] (`canon_min_words`: у стечений 7, у
+    прочих 12), а раньше не находил `meta` и мерил все листы общей нормой 12.
+    На [Р] это не всплывало — там слов 15-16; на ступени ТР/ДР у [Рь] их 10, и
+    лист с канонными десятью словами получал «слов мало, возьмите другой слог»
+    (09-20, закон 7: признак мало завести — надо довезти).
+    """
     stress = {it["word"]: it.get("stress_syllable")
               for g in (c.get("words") or {}).get("groups", [])
               for it in g.get("items", [])}
@@ -1525,6 +1533,8 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
     out["notes"] = list(c.get("warnings") or [])
     if c.get("vocabulary"):
         out["vocabulary"] = c["vocabulary"]        # линтеру — для строгого правила 13
+    if c.get("meta"):
+        out["meta"] = dict(c["meta"])              # линтеру — норма блока [4] по типу слога
     return out
 
 
