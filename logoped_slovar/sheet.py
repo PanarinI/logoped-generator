@@ -1198,7 +1198,8 @@ def _hero_for(meta: Dict[str, Any], opt: Dict[str, Any]) -> str:
     try:
         import propisi as _PR
         import characters as _CH
-        name = (_PR._image_for(sound) or {}).get("name") or ""
+        variant = int((meta.get("seed") or 0))
+        name = (_PR._image_for(sound, variant) or {}).get("name") or ""
         return _CH.character_svg(name, HERO_MM, colour=bool(opt.get("colour"))) or ""
     except Exception:
         return ""
@@ -1356,7 +1357,12 @@ def render_sheet_ex(content: Dict[str, Any], meta: Dict[str, Any], *,
         parts.append(_b1_articulation(c["articulation"],
                                       with_hints=(audience == "home")))
     if c.get("isolated"):
-        parts.append(_b2_isolated(c["isolated"], _hero_for(meta, opt)))
+        # Номер варианта живёт в мете САМОГО ЛИСТА (её кладёт движок), а не в
+        # мете печати: кубик крутит героя, и картинка обязана совпасть со
+        # строкой блока [2]. 09-20: строка говорила «как рычит тигр», а
+        # печатался мотор — вариант до картинки не доезжал.
+        parts.append(_b2_isolated(c["isolated"],
+                                  _hero_for(dict(meta, **(c.get("meta") or {})), opt)))
     if c.get("syllables"):
         parts.append(_b3_syllables(c["syllables"], sp))
     lk = _stress_lookup(c)

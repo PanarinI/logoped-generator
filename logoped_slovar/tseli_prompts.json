@@ -331,5 +331,68 @@
     "prompt": "A small table mirror seen from the front: an oval glass in a plain frame standing on a short foot. The bottom of the drawing fades out unfinished.",
     "faded": false,
     "colour": true
+  },
+  "stable": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A small stable seen from the side: a simple wooden building with a wide doorway and a gable roof, markedly wider than it is tall. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "hay": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A round bale of hay seen from the side: a thick roll of dry grass with clear straw lines along it. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "fence": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A short piece of wooden fence seen from the side: three upright posts joined by two horizontal rails. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "bucket": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A metal bucket seen from the side: a round tapering body with a rim and a curved handle over the top. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "apple": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A single apple seen from the side: a round fruit with a short stalk and one leaf at the top. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "cave": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A cave entrance seen from the side: a dark rounded opening in a rock, markedly wider than it is tall. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
+  },
+  "tree": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A single leafy tree seen from the side: a straight trunk with a few branches and a rounded crown of leaves. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true
   }
 }

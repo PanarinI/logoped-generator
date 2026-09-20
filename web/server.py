@@ -412,6 +412,15 @@ def syllable_buttons() -> Dict[str, List[Dict[str, str]]]:
     return out
 
 
+def scene_buttons_for(hero: str) -> List[Dict[str, Any]]:
+    """Кнопки фона для ОДНОГО героя: «без фона» плюс его миры."""
+    items = [{"key": "", "label": SCN.SCENE_LABELS[""], "hero": hero}]
+    for key in SCN.worlds_for(hero):
+        items.append({"key": key, "label": SCN.SCENE_LABELS.get(key, key),
+                      "hero": hero})
+    return items
+
+
 def scene_buttons() -> Dict[str, List[Dict[str, Any]]]:
     """Фоны слоговой дорожки — по звуку, через его героя.
 
@@ -421,13 +430,10 @@ def scene_buttons() -> Dict[str, List[Dict[str, Any]]]:
     """
     out: Dict[str, List[Dict[str, Any]]] = {}
     for snd in C.WORDS_BY_SOUND:
-        hero = (PR.image_for(snd).get("name") or "").strip()
-        items = [{"key": "", "label": SCN.SCENE_LABELS[""], "hero": hero}]
-        for key in SCN.worlds_for(hero):
-            items.append({"key": key,
-                          "label": SCN.SCENE_LABELS.get(key, key),
-                          "hero": hero})
-        out[snd] = items
+        # Конфиг считается один раз и на первом варианте: это НАЧАЛЬНЫЙ список.
+        # Дальше он приезжает с самой дорожкой (`scenes` в ответе /api/track),
+        # потому что герой меняется кубиком.
+        out[snd] = scene_buttons_for((PR.image_for(snd).get("name") or "").strip())
     return out
 
 
@@ -1321,6 +1327,14 @@ class Handler(BaseHTTPRequestHandler):
                     "ok": True,
                     "html": T.render_track(t, colour=bool(data.get("colour"))),
                     "warnings": {"blocking": [], "notes": []},
+                    # Кнопки фона приезжают ВМЕСТЕ С ДОРОЖКОЙ, а не берутся из
+                    # конфига по звуку. С 09-20 герой звука меняется кубиком
+                    # (мотор ↔ тигр у [Р]), а фоны — это миры ГЕРОЯ: список из
+                    # конфига предложил бы логопеду дорогу и город тигру, и
+                    # дорожка ответила бы отказом «фон не из мира этого героя».
+                    # Тот же приём, что у тем рассказа: список идёт с листом.
+                    "scenes": scene_buttons_for(
+                        (t["meta"].get("hero") or "").strip()),
                     "stats": {"kind": "track",
                               "scene": t["meta"].get("scene", ""),
                               "cells": t["meta"]["n_cells"],

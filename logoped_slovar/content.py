@@ -613,12 +613,18 @@ def _short_ref(gym: Dict[str, Any], src_id: str) -> str:
     return ""
 
 
-def isolated_block(sound: str, gym: Optional[Dict[str, Any]] = None
-                   ) -> Tuple[Dict[str, Any], List[str]]:
+def isolated_block(sound: str, gym: Optional[Dict[str, Any]] = None,
+                   variant: int = 0) -> Tuple[Dict[str, Any], List[str]]:
     """[2] Изолированный звук — РОВНО ОДНА строка, РОВНО ОДИН игровой образ.
 
     Берётся образ с `recommended: true` и `stage: "автоматизация"`. Постановочные
     («заведи мотор», «дятел») отсекаются по полю stage — не по нашему вкусу.
+
+    Рекомендованных может быть НЕСКОЛЬКО: у [Р] это мотор (Спивак) и тигр
+    (Фомичёва). Какой встанет на лист, решает `variant` — номер варианта,
+    который крутит кубик логопеда (09-20). Имя образа для картинки берёт
+    `propisi._image_for` тем же правилом, поэтому лист и дорожки показывают
+    одно существо.
     """
     gym = gym if gym is not None else load_gymnastics()
     warns: List[str] = []
@@ -642,10 +648,21 @@ def isolated_block(sound: str, gym: Optional[Dict[str, Any]] = None
                      f"автоматизации для [{key}] — образ из аварийной таблицы")
         return block, warns
 
-    img = cands[0]
+    img = cands[int(variant) % len(cands)]
     # На листе — короткая строка (правило 2: ровно одна строка). Дословная
     # формулировка источника длиннее строки А4 при 18 pt, поэтому её «длительная»
     # часть уходит в мелкую пометку взрослому, а не выбрасывается.
+    # У образа может быть ГОТОВАЯ детская строка: так бывает, когда дословная
+    # формулировка источника обращена к воспитателю, а не к ребёнку (тигр,
+    # 09-20). Тогда берём её, а не собираем из описания.
+    if img.get("child_line"):
+        block["line"] = str(img["child_line"])
+        block["image"] = img["image"]
+        block["stage"] = img["stage"]
+        block["adult"] = "тянуть длительно, на одном выдохе"
+        block["source"] = ", ".join(img.get("sources", [])) or None
+        block["verbatim"] = img.get("instruction_verbatim", "")
+        return block, warns
     verbatim = str(img.get("instruction_verbatim", ""))
     # Имя образа берём из дословной формулировки — там оно уже в нужном падеже
     # («песенку мотора»), а поле `image` хранит именительный.
@@ -3853,7 +3870,7 @@ def build_content(sound: str = "р",
     # [1] и [2] — из разобранного источника, а не из головы
     gym = load_gymnastics()
     artic, w_artic = artic_block(sound, gym)
-    isolated, w_iso = isolated_block(sound, gym)
+    isolated, w_iso = isolated_block(sound, gym, variant=seed)
     if syl_type == "cluster_td":
         isolated = _with_support(isolated, groups, syl_type)
     warnings.extend(w_artic)

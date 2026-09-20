@@ -430,5 +430,125 @@
     "faded": false,
     "colour": true,
     "alive": true
+  },
+  "loshad_idet": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A horse seen from the side, walking to the right: a clear mane, a long tail, four legs in a walking step. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "loshad_skachet": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A horse seen from the side, galloping to the right: front legs stretched forward, back legs pushing off, mane and tail flying. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "loshad_zherebenok": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A foal seen from the side, facing right: a small horse with long thin legs, a short brush of a mane and a short tail. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "loshad_pony": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A pony seen from the side, facing right: a short stocky horse with short legs, a thick shaggy mane and a thick tail. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "loshad_sedlo": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A saddled horse seen from the side, facing right: a saddle on its back and a bridle on its head, mane and tail clear. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "loshad_est": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A horse seen from the side, facing right with its head lowered to graze: neck bent down, mane hanging, long tail behind. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "tigr_idet": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A tiger seen from the side, walking to the right: a striped body, a long tail held low, four legs in a walking step. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "tigr_rychit": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A tiger seen from the side, facing right with its mouth open as if roaring: a striped body, a long tail, four legs. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "tigr_tigryonok": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A tiger cub seen from the side, facing right: a small round striped body, short legs, a short tail and a big head. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "tigr_kradetsya": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A tiger seen from the side, creeping to the right with its body low to the ground: a striped body, head forward and low, a long straight tail behind. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "tigr_sidit": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A tiger seen from the side, sitting, facing right: a striped body upright on its haunches, front legs straight, the long tail curled around the paws. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "tigr_pryzhok": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A tiger seen from the side, leaping to the right: a striped body stretched in the air, front legs reaching forward, back legs extended behind, tail out straight. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
   }
 }

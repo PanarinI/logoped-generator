@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "ГЕРОЙ ЗВУКА ДЛЯ БЛОКА [2] ЛИСТА (печатается шириной 18 мм, HERO_MM).",
+    "Дом заведён 2026-09-20: у семи нынешних героев промптов не сохранилось —",
+    "их рисовали до того, как конвейер стал воспроизводимым (та же беда, что с",
+    "корпусом 979). Новые герои заказываются отсюда:",
+    "  python3 tools/gen_kartinki.py --slovar logoped_slovar/geroi_lista_prompts.json \\",
+    "                                --out pictures/probes/<дата> --only <имя>",
+    "Дальше: снятие фона (tools/prozrachny_fon.py), ч/б снимается с цвета",
+    "(imgbw.strip_colour), файл кладётся в pictures/geroi/<имя>.png и geroi_bw/.",
+    "Имя файла — ИМЕНИТЕЛЬНЫЙ падеж образа из gymnastics.json (propisi._image_for)."
+  ],
+  "лошадка": {
+    "box": [
+      18,
+      13
+    ],
+    "prompt": "A horse seen from the side, facing right, standing calmly: a clear mane, a long tail, four legs and hooves, a simple friendly head. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  },
+  "тигр": {
+    "box": [
+      18,
+      13
+    ],
+    "prompt": "A tiger seen from the side, facing right, standing: a striped body, a long tail, four legs with paws and a friendly open mouth as if roaring. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true
+  }
+}

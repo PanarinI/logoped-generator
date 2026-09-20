@@ -117,7 +117,7 @@ def build_track(sound: str = "р",
     # Персонаж нужен уже здесь: фон — это КОНТЕКСТ ГЕРОЯ, и годность сцены
     # проверяется по нему, а не по общему списку (решение автора 08-10).
     import propisi as _PR
-    hero = (_PR.image_for(sound).get("name") or "").strip()
+    hero = (_PR.image_for(sound, seed).get("name") or "").strip()
     if scene is not None and scene and not SC.fits(hero, scene):
         worlds = SC.worlds_for(hero)
         raise TrackError(

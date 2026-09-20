@@ -33,6 +33,7 @@ const S = {
   games: null,     // какие игры живы на ТЕКУЩЕМ листе — приходит с листом
   scene: null,     // null = умолчание по персонажу, '' = логопед выбрал «без фона»
   sceneUsed: null, // какой фон реально встал на лист — приходит с материалом
+  sceneOptions: null, // миры ГЕРОЯ этой дорожки — тоже приходят с материалом
   // Умолчание — «только звук»: это ПЕРВАЯ ступень приёма, изолированный звук
   // отрабатывается ДО слога (решение автора 08-24; порядок канонический).
   propisiMode: 'isolated',
@@ -898,7 +899,10 @@ function renderGamePick() {
    дорога и город (08-10). Поэтому кнопки перестраиваются при смене звука, а
    выбранный фон чужого героя сбрасывается — он относился к прошлому герою. */
 function sceneList() {
-  return (S.cfg.scenes_by_sound && S.cfg.scenes_by_sound[S.sound])
+  // Список приходит С ДОРОЖКОЙ: герой звука меняется кубиком, а фоны — это
+  // миры героя. Конфиг остаётся началом, пока дорожка ещё не собрана.
+  return S.sceneOptions
+    || (S.cfg.scenes_by_sound && S.cfg.scenes_by_sound[S.sound])
     || S.cfg.scenes || [];
 }
 
@@ -1209,7 +1213,10 @@ async function load() {
     S.games = res.games || null;
     if (res.games && res.games.printed) S.game = res.games.printed;
   }
-  if (S.tab === 'track' && res.stats) S.sceneUsed = res.stats.scene;
+  if (S.tab === 'track' && res.stats) {
+    S.sceneUsed = res.stats.scene;
+    if (res.scenes) { S.sceneOptions = res.scenes; renderScenePick(); }
+  }
   if (S.tab === 'propisi' && res.stats) {
     S.vowelOptions = res.stats.vowels || [];
     S.vowelSyl = res.stats.vowels_syl || [];
