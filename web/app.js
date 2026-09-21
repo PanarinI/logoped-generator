@@ -1342,6 +1342,8 @@ function showError(res) {
   $('theme-card').hidden = true;
   $('frame').style.visibility = 'hidden';
   $('frame').srcdoc = '';
+  SHEET_HTML = '';
+  editBar();
   if ($('save')) $('save').disabled = true;
   $('warn').hidden = true;
   $('warn').innerHTML = '';
@@ -1363,9 +1365,37 @@ function writeFrame(html) {
   // только необходимое, а кубик и есть «собрать заново» — логопед нажал его сам.
   S.edited = false;
   LAST_RANGE = null;
-  f.onload = () => { makeEditable(f); editHint(f.contentDocument);
-                     fitFrame(); setTimeout(fitFrame, 120); };
+  // Исходный лист держим под рукой: «Вернуть как было» ставит ЕГО же, а не
+  // собирает новый. Кубик собирает другой лист (другие слова, другого героя),
+  // и до 09-21 он был единственным путём назад — неудачная правка стоила листа.
+  SHEET_HTML = html;
+  editBar();
+  f.onload = () => { makeEditable(f); fitFrame(); setTimeout(fitFrame, 120); };
   f.srcdoc = html;
+}
+
+let SHEET_HTML = '';
+
+/* Строка правки над листом (09-21, слово автора: «совершенно неясно, что перед
+   экспортом лист можно отредактировать»). Прежде был один намёк — плашка внутри
+   листа, один раз за сессию и до первого касания; её почти не замечали. Строка
+   стоит всегда, пока на экране лист, и меняется после первой правки: «правки
+   есть — уйдут в PDF» и путь назад. Режима правки нет и не нужно: печать берёт
+   этот же документ, правка идёт в файл сама (закон 4 — лишняя сущность). */
+function editBar() {
+  const bar = $('edit-bar');
+  if (!bar) return;
+  bar.hidden = !SHEET_HTML;
+  bar.classList.toggle('is-edited', S.edited);
+  $('edit-say').textContent = S.edited
+    ? 'Правки есть — они уйдут в PDF и в печать.'
+    : 'Текст листа можно править: щёлкните по слову.';
+  $('edit-undo').hidden = !S.edited;
+}
+
+function undoEdits() {
+  if (!SHEET_HTML) return;
+  writeFrame(SHEET_HTML);
 }
 
 /* Лист правится ПРЯМО НА МЕСТЕ, без кнопки «режим правки».
@@ -1387,7 +1417,12 @@ function makeEditable(f) {
   style.textContent = `
     body { caret-color: #2F6B4F; }
     [contenteditable] :focus { outline: 1px dashed #2F6B4F; outline-offset: 2px; }
-    @media print { [contenteditable] :focus { outline: none !important; } }
+    /* 09-21: лист показывает, что он живой, — строка под мышью обводится
+       пунктиром. Берётся самый вложенный элемент под курсором, чтобы не
+       обводить блок целиком вместе со всеми строками. */
+    body :hover:not(:has(:hover)):not(body):not(html) {
+      outline: 1px dashed rgba(47,107,79,.45); outline-offset: 2px; cursor: text; }
+    @media print { [contenteditable] :focus, body :hover { outline: none !important; } }
   `;
   d.head.appendChild(style);
   d.addEventListener('input', () => { markEdited(d); }, { once: false });
@@ -1432,46 +1467,6 @@ function makeEditable(f) {
    место раньше: «логичнее было бы где-то внутри листа рядом с курсором», и
    опасение «навязчиво висеть» снимается тем, что кнопки нет, пока нет курсора.
    Печати она не мешает: `@media print` её убирает. */
-/* Намёк, что лист правится — ОДИН раз за сессию и без единого слова на экране
-   настроек. Слово автора: «можно как-то бы намекнуть впервые пользователю, что
-   можно редактировать — но ненавязчиво». Поэтому плашка живёт внутри листа.
-
-   ⚠ Правка 08-25 по слову автора: «появляется и почти сразу пропадает — уверен,
-   остаётся незаметной». Было: низ справа, показ 6 секунд, потом само уходит.
-   Стало: ВЕРХ справа — там пусто и туда смотрят, когда лист только появился, —
-   и никакого таймера: плашка ждёт, пока человек не тронет лист. Уходит от
-   первого прикосновения и больше не возвращается: узнал — забыли.
-   В печать не идёт (`@media print`). */
-let HINT_SHOWN = false;
-
-function editHint(d) {
-  if (HINT_SHOWN) return;
-  HINT_SHOWN = true;
-  const st = d.createElement('style');
-  st.textContent = `
-    #edit-hint { position: fixed; right: 12px; top: 12px; z-index: 8;
-      font: 500 12px/1 -apple-system, system-ui, sans-serif;
-      padding: 8px 12px; border-radius: 999px;
-      background: rgba(35,35,31,.86); color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,.18);
-      opacity: 0; transition: opacity .5s; pointer-events: none; }
-    #edit-hint.on { opacity: 1; }
-    @media print { #edit-hint { display: none !important; } }
-  `;
-  d.head.appendChild(st);
-  const h = d.createElement('div');
-  h.id = 'edit-hint';
-  h.textContent = 'Текст на листе можно править';
-  d.body.appendChild(h);
-  const gone = () => { h.classList.remove('on'); setTimeout(() => h.remove(), 600); };
-  setTimeout(() => h.classList.add('on'), 400);
-  // Таймера нет намеренно: плашка снимается ДЕЙСТВИЕМ, а не временем. Считается
-  // любое прикосновение к листу — мышью, пальцем или клавишей.
-  d.addEventListener('mousedown', gone, { once: true });
-  d.addEventListener('touchstart', gone, { once: true });
-  d.addEventListener('keydown', gone, { once: true });
-}
-
 function accentChip(d) {
   let c = d.getElementById('acc-chip');
   if (c) return c;
@@ -1533,6 +1528,7 @@ let LAST_RANGE = null;
 function markEdited(d) {
   if (S.edited) return;
   S.edited = true;
+  editBar();
   const foot = d.querySelector('.foot');
   if (!foot) return;
   const note = d.createElement('div');
@@ -1615,41 +1611,17 @@ function fitFrame() {
   if (!h) return;
   f.style.height = h + 'px';
 
-  // ЛИСТ ЦЕЛИКОМ, БЕЗ ПРОКРУТКИ — решение автора 08-22: «не хочу, чтобы лист
-  // уходил под скролл; по умолчанию лист должен занимать центральное и
-  // максимально оптимизированное пространство, и относительно него строится
-  // весь интерфейс».
-  //
-  // Поэтому масштаб считается по ДВУМ пределам сразу, а не по одной ширине:
-  //   · сколько высоты осталось до низа окна;
-  //   · сколько ширины мы согласны отдать листу (остальное — панели).
-  // Раньше k считался только из ширины колонки, и лист высотой A4 неизбежно
-  // уходил вниз за экран.
-  //
-  // Ширину листу считаем от ОКНА, а не от его собственной колонки: колонка
-  // теперь подстраивается под лист, и брать её ширину значило бы гоняться за
-  // собственным хвостом.
-  const top = stage.getBoundingClientRect().top;
-  // Высоту берём до самого низа окна: верхней полосы больше нет, отступы сняты,
-  // и каждый оставшийся пиксель — это размер листа.
-  // ⚠ 08-26, поймал автор: «„как это устроено“ есть только на горизонтальных
-  // ЗВУК и СЛОГ». Причина не в материале, а в высоте: подпись стоит ПОД листом,
-  // а лист занимал всю оставшуюся высоту окна — на книжных листах подпись
-  // уезжала за нижний край и её просто не было видно. Вычитаем её высоту из
-  // того, что отдаём бумаге: место под подписью резервируется всегда.
-  // ⚠ 08-26, второй заход. Резерв был заведён утром и НЕ РАБОТАЛ: подписей под
-  // листом две — скрытая «Вышла новая версия» и видимая «Как это устроено», —
-  // а `querySelector` берёт ПЕРВУЮ, то есть скрытую, высотой ноль. Лист забирал
-  // высоту целиком, и подпись уезжала ровно на одну строку (слово автора: «на
-  // маке кнопка скрыта, буквально одну полосу нужно прокрутить»).
-  // Считаем ВСЕ видимые подписи: когда появится «новая версия», место под неё
-  // тоже зарезервируется само.
-  const feet = [...document.querySelectorAll('.paper-foot')]
-    .filter((e) => !e.hidden && e.offsetParent !== null);
-  const footH = feet.reduce(
-    (sum, e) => sum + Math.ceil(e.getBoundingClientRect().height), 0)
-    + (feet.length ? 4 : 0);
-  const availH = window.innerHeight - top - 4 - padY - footH;
+  // ЛИСТ ПО ШИРИНЕ, НИЗ — ПРОКРУТКОЙ (09-21, автор пересмотрел своё 08-22).
+  // С 08-22 масштаб считался по двум пределам — ширине колонки и высоте до
+  // низа окна, — чтобы лист был виден целиком («не хочу, чтобы лист уходил под
+  // скролл»). Цена была названа тогда же: «текст читается, но мелко». На
+  // ноутбуке 1366×768 она вышла такой: лист 346 px в колонке 735 px, слова
+  // 10,5 px на экране, пояснения 6 px. Автор 09-21: «логопедам может быть
+  // слишком мелко» — и выбрал ширину: на том же ноутбуке слова 21,5 px.
+  // На экране логопед ЧИТАЕТ (слова под ребёнка, ударения, правка); вид листа
+  // целиком даёт PDF, а влезет ли лист в страницу, проверяет движок.
+  // Предел по высоте снят целиком, и с ним — резерв под подписи под листом:
+  // подписей там больше нет, они в панели (иначе ушли бы за прокрутку).
   // Ширину даёт САМА колонка: она средняя из трёх и уже посчитана раскладкой
   // (закладки слева фиксированы, панель справа ограничена сверху). Гоняться за
   // собственным хвостом больше не приходится.
@@ -1662,11 +1634,15 @@ function fitFrame() {
   if (wrap) {
     const cols = getComputedStyle(wrap).gridTemplateColumns.split(' ').map(parseFloat);
     if (cols.length >= 2 && cols[1] > 0) availW = cols[1] - pad;
+    // Телефон: колонка одна. Прежде здесь оставалась ширина ОКНА, а колонка
+    // уже окна на поля страницы — лист вылезал на 16 px, и телефон отдалял
+    // страницу (см. `.result` в узком `@media` app.css, 09-21).
+    else if (cols.length === 1 && cols[0] > 0) availW = cols[0] - pad;
   }
 
-  if (availH <= 0 || availW <= 0) return;
+  if (availW <= 0) return;
 
-  const k = Math.min(1, availW / pageW, availH / h);
+  const k = Math.min(1, availW / pageW);
 
   const sc = $('scaler');
   sc.style.transformOrigin = 'top left';
@@ -2770,6 +2746,7 @@ function bindActions() {
     });
     window.addEventListener('resize', () => { if (!menu.hidden) place(); });
   }
+  $('edit-undo').onclick = undoEdits;
   $('reroll').onclick = () => {
     S.sheetNo += 1;
     // Кубик меняет и ГЕРОЯ (09-20), а фон — это мир героя. Выбранная «трава»

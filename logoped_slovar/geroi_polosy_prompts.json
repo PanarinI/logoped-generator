@@ -291,7 +291,7 @@
     "colour": true,
     "alive": true
   },
-  "pump_grusha": {
+  "_otkloneno_09_21_pump_grusha": {
     "box": [
       26,
       20
@@ -299,7 +299,8 @@
     "prompt": "A rubber bulb pump seen from the side: a pear-shaped rubber bulb with a short narrow nozzle pointing to the right. The bottom of the drawing fades out unfinished.",
     "faded": false,
     "colour": true,
-    "alive": true
+    "alive": true,
+    "_почему": "09-21 снят по слову автора: «это не насос»"
   },
   "pump_kompressor": {
     "box": [
