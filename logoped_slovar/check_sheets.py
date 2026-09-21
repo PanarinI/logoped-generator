@@ -288,7 +288,13 @@ def run_case(tag: str, kw: Dict[str, Any]) -> Dict[str, Any]:
            "при пустом пересечении (проверен на «hard»)")
 
     # ── 21. игровой образ ровно ОДИН на лист ────────────────────────────
-    imgs = re.findall(r"«([^»]+)»", (fitted.get("isolated") or {}).get("instruction", ""))
+    # Считаем по ДАННЫМ листа (поле `image` блока [2]), а не по кавычкам в
+    # строке. Кавычки — привычка формулировок Спивак («песенку мотора»); у
+    # тигра строка идёт от Фомичёвой и кавычек не несёт вовсе («Произнеси, как
+    # рычит тигр»), и правило считало ноль образов на исправном листе (09-20).
+    iso_block = fitted.get("isolated") or {}
+    imgs = ([str(iso_block["image"])] if iso_block.get("image")
+            else re.findall(r"«([^»]+)»", iso_block.get("instruction", "")))
     ok(21, f"образов на листе: {len(imgs)} — {imgs}") if len(imgs) == 1 \
         else bad(21, f"образов {len(imgs)}: {imgs}")
 

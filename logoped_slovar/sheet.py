@@ -1198,7 +1198,8 @@ def _hero_for(meta: Dict[str, Any], opt: Dict[str, Any]) -> str:
     try:
         import propisi as _PR
         import characters as _CH
-        variant = int((meta.get("seed") or 0))
+        variant = int(meta.get("variant")
+                      or ((int(meta.get("sheet_no") or 1) - 1) or (meta.get("seed") or 0)))
         name = (_PR._image_for(sound, variant) or {}).get("name") or ""
         vid = _PR.hero_vid(name, variant)
         return _CH.character_svg(name, HERO_MM, colour=bool(opt.get("colour")),
@@ -1467,6 +1468,11 @@ def from_content(c: Dict[str, Any]) -> Dict[str, Any]:
                            if head else {"instruction": "", "text": iso["line"]})
         if iso.get("adult"):
             out["isolated"]["adult"] = iso["adult"]
+        # Имя образа едет с листом: канон-линтер спрашивает «ровно один образ»
+        # у ДАННЫХ, а не у кавычек в строке — у тигра строка идёт от Фомичёвой
+        # и кавычек не несёт (09-20).
+        if iso.get("image"):
+            out["isolated"]["image"] = iso["image"]
 
     syl = c.get("syllables") or {}
     if syl.get("rows"):
