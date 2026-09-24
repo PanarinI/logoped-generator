@@ -793,6 +793,45 @@ def test_fit_returns_what_fits():
           [x for x in S.lint(f, {"sound": "р", "sheet_no": 1}) if "правило 11" in x], [])
 
 
+
+def test_artic_rotates_one_exercise_per_roll():
+    """09-21: кубик двигает разминку — но по канону: «Из выполняемых двух-трех
+    упражнений новым может быть только одно» (Фомичёва 1989). За бросок
+    меняется ровно одно упражнение; постановочные, снятые с листа и
+    «Приклей конфетку» не выходят никогда; реквизит — в очереди последним."""
+    gym = C.load_gymnastics()
+    by = {e["id"]: e for e in gym["exercises"]}
+    name_of = {e["name"]: e for e in gym["exercises"]}
+    first = C.build_content("р", "direct", sheet_no=1)
+    check("[р] бросок 1 — прежняя четвёрка", first["artic"]["items"],
+          ["Лошадка", "Грибок", "Маляр", "Почистим верхние зубы"])
+    for snd in ("р", "р'", "л", "л'", "с", "с'", "з", "з'", "ш", "ж", "щ"):
+        key = snd.rstrip("'").upper() + ("ь" if snd.endswith("'") else "")
+        comp = gym["complexes"][key]
+        seq = [C.artic_block(snd, gym, variant=v)[0]["items"] for v in range(12)]
+        news = [len(set(seq[i + 1]) - set(seq[i])) for i in range(len(seq) - 1)]
+        check(f"[{snd}] за бросок новое — ровно одно", set(news), {1})
+        seen = [x for s in seq for x in s]
+        banned = [x for x in seen
+                  if (name_of.get(x, {}).get("sounds") or {}).get(key) == "постановка"
+                  or name_of.get(x, {}).get("id") in comp.get("excluded_from_sheet", [])]
+        check(f"[{snd}] ни постановочных, ни снятых с листа", banned, [])
+        check(f"[{snd}] «Приклей конфетку» не выходит", "Приклей конфетку" in seen, False)
+        # реквизит — последним: пока в запасе есть упражнение без реквизита,
+        # упражнение с реквизитом на лист не выходит
+        order = []
+        for s_ in seq:
+            for x in s_:
+                if x not in order:
+                    order.append(x)
+        props = [i for i, x in enumerate(order) if name_of.get(x, {}).get("rekvizit")
+                 and name_of[x]["id"] not in comp["sheet_4"]]
+        plain = [i for i, x in enumerate(order) if not name_of.get(x, {}).get("rekvizit")
+                 and name_of.get(x, {}).get("id") not in comp["sheet_4"]]
+        if props and plain:
+            truthy(f"[{snd}] запас с реквизитом идёт после запаса без него",
+                   min(props) > max(plain))
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failures = []

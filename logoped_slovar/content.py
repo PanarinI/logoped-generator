@@ -406,9 +406,42 @@ def load_gymnastics(path: str = "") -> Optional[Dict[str, Any]]:
         return None
 
 
-def artic_block(sound: str, gym: Optional[Dict[str, Any]] = None
-                ) -> Tuple[Dict[str, Any], List[str]]:
+def _artic_window(comp: Dict[str, Any], by_id: Dict[str, Dict[str, Any]],
+                  key: str, variant: int) -> List[str]:
+    """Четвёрка разминки для этого броска кубика.
+
+    ⚡ 09-21, слово автора: «при кубике набор не меняется — это канонический набор
+    или можно добавить для вариативности?». Запас в комплексах был всегда
+    (`alternates`), кубик его не трогал. Менять четвёрку целиком НЕЛЬЗЯ — канон
+    прямо против: «Из выполняемых двух-трех упражнений новым может быть только
+    одно, второе и третье даются для повторения и закрепления» (Фомичёва 1989).
+    Поэтому окно из четырёх идёт по кругу «четвёрка листа + запас» и за бросок
+    сдвигается на одно: одно упражнение уходит, одно новое приходит, остальные
+    повторяются — та же механика, что у слов.
+
+    В очередь не попадают постановочные и снятые с листа (`excluded_from_sheet`);
+    упражнения с реквизитом (`rekvizit`) стоят в запасе последними — домашний
+    лист до сих пор обходился без него. Бросок 0 — ровно прежняя четвёрка.
+    """
+    base = [i for i in comp.get("sheet_4", []) if i in by_id]
+    skip = set(comp.get("excluded_from_sheet", [])) | set(base)
+    reserve = [i for i in comp.get("alternates", [])
+               if i in by_id and i not in skip
+               and (by_id[i].get("sounds") or {}).get(key) != "постановка"]
+    reserve.sort(key=lambda i: bool(by_id[i].get("rekvizit")))   # сортировка устойчивая
+    pool = base + reserve
+    if not variant or len(pool) <= len(base):
+        return base
+    start = int(variant) % len(pool)
+    return [pool[(start + j) % len(pool)] for j in range(len(base))]
+
+
+def artic_block(sound: str, gym: Optional[Dict[str, Any]] = None,
+                variant: int = 0) -> Tuple[Dict[str, Any], List[str]]:
     """[1] Разминка: 4 названия из комплекса источника + провенанс.
+
+    variant — кубик логопеда: сдвигает четвёрку на одно упражнение (см.
+    `_artic_window`). Без него — прежняя четвёрка `sheet_4`.
 
     Ни одно упражнение стадии «постановка» на лист автоматизации не попадает —
     это гарантирует сам файл (`complexes[звук].sheet_4` строится из разогревочных),
@@ -446,7 +479,12 @@ def artic_block(sound: str, gym: Optional[Dict[str, Any]] = None
     # упражнения не знает: «Лошадка» без подсказки для него пустое слово.
     # Данные уже собраны и выверены — `sheet_hint` и `dosage` лежат в реестре
     # у каждого упражнения; до 08-06 лист их просто выбрасывал.
-    names, hints, ids = [], [], list(comp.get("sheet_4", []))
+    names, hints = [], []
+    ids = _artic_window(comp, by_id, key, variant)
+    # Имя из `sheet_4_names`, если оно там задано (у четвёрки бывает своя
+    # редакция имени), иначе из реестра — по id, а не по номеру в списке:
+    # окно сдвигается, и номер перестал совпадать с местом в четвёрке.
+    own_name = dict(zip(comp.get("sheet_4", []), comp.get("sheet_4_names", [])))
     for i, ex_id in enumerate(ids):
         ex = by_id.get(ex_id)
         if not ex:
@@ -457,8 +495,7 @@ def artic_block(sound: str, gym: Optional[Dict[str, Any]] = None
             warns.append(f"«{ex['name']}» для [{key}] — стадия ПОСТАНОВКИ, "
                          f"на лист автоматизации не ставится (снято)")
             continue
-        names.append(comp.get("sheet_4_names", [])[i]
-                     if i < len(comp.get("sheet_4_names", [])) else ex["name"])
+        names.append(own_name.get(ex_id) or ex["name"])
         # На листе — только «как делать», одной строкой. Дозировку («10-15
         # щелчков») сюда не тащим: она удваивает высоту блока, а на листе уже
         # стоит канонная доза приёма («за один приём — 2-3 из 4»). Полное
@@ -3907,12 +3944,13 @@ def build_content(sound: str = "р",
 
     # [1] и [2] — из разобранного источника, а не из головы
     gym = load_gymnastics()
-    artic, w_artic = artic_block(sound, gym)
     # Номер варианта — это «кубик» логопеда. У листа он приходит НОМЕРОМ ЛИСТА
     # (экран шлёт `sheet_no`, а `seed` не шлёт вовсе), у дорожек — сидом. Пока
     # герой брался только из сида, на листе всегда стояла первая машина, сколько
-    # кубик ни крути (поймал автор 09-20 на живом).
+    # кубик ни крути (поймал автор 09-20 на живом). С 09-21 кубик двигает и
+    # разминку — по одному упражнению за бросок (см. `_artic_window`).
     variant = (int(sheet_no) - 1) or int(seed)
+    artic, w_artic = artic_block(sound, gym, variant=variant)
     isolated, w_iso = isolated_block(sound, gym, variant=variant)
     if syl_type == "cluster_td":
         isolated = _with_support(isolated, groups, syl_type)
