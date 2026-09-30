@@ -134,6 +134,11 @@ def analytics(in_frame_guard: bool = False) -> str:
     code = "".join(js)
     if in_frame_guard:
         code = "if(window.top===window.self){" + code + "}"
+    if METRIKA_ID.isdigit():
+        # Номер виден экрану и В РАМКЕ тоже (09-30): лист получают внутри
+        # виджета, и цель «лист получен» уходит в счётчик страницы-хозяйки —
+        # экрану нужно знать, в какой. Сам счётчик в рамке по-прежнему молчит.
+        code = f"window.METRIKA_ID={METRIKA_ID};" + code
 
     out = ""
     if GA_ID:

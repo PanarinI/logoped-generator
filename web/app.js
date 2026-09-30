@@ -2010,8 +2010,8 @@ function sheetHtml() {
    Теперь файл лежит на сервере под одноразовым ключом и отдаётся с заголовком
    «это вложение». Вложение скачивают ВСЕ браузеры и со страницы при этом не
    уводят — лист остаётся на экране. */
-function takeFile(url) {
-  gotSheet();
+function takeFile(url, format) {
+  gotSheet(format);
   const a = document.createElement('a');
   a.href = url;                 // без `download`: сохранять велит сам сервер
   document.body.appendChild(a);
@@ -2033,7 +2033,7 @@ async function fileFrom(url, payload, fallbackMsg) {
     showError({ kind: 'network', message: (j && j.message) || fallbackMsg });
     return false;
   }
-  takeFile(j.url);
+  takeFile(j.url, url.endsWith('/pdf') ? 'PDF' : 'Word');
   return true;
 }
 
@@ -2319,16 +2319,18 @@ async function saveDoc() {
 
 /* Имя файла — по-человечески: «занятие-Р», «слоговая-дорожка-Рь». Логопед
    складывает листы в папку, и «list(3).pdf» ему там не поможет. */
+const MAT_NAME = { sheet: 'занятие', propisi: 'звуковая дорожка',
+                   track: 'слоговая дорожка', phrases: 'словосочетания',
+                   maze: 'лабиринт', story: 'рассказ' };
+
 function saveName() {
-  const mat = { sheet: 'занятие', propisi: 'звуковая-дорожка',
-                track: 'слоговая-дорожка', phrases: 'словосочетания',
-                maze: 'лабиринт', story: 'рассказ' }[S.tab] || 'лист';
+  const mat = (MAT_NAME[S.tab] || 'лист').replace(/ /g, '-');
   const snd = (soundLabel() || '').replace(/\s+/g, '');
   return snd ? mat + '-' + snd : mat;
 }
 
 function doPrint() {
-  gotSheet();
+  gotSheet('печать');
   const f = $('frame');
   f.contentWindow.focus();
   f.contentWindow.print();
@@ -2392,9 +2394,33 @@ async function sendOtzyv(body) {
   }
 }
 
+/* ── СЧЁТ ЛИСТОВ (09-30) ──────────────────────────────────────────────
+   Вопрос автора: «сколько скачали, на каком звуке». Метрика считала только
+   заходы, а лист получают внутри виджета, где счётчик молчит нарочно (в рамке
+   он выключен, иначе заход считался бы дважды). Поэтому цель уходит в счётчик
+   СТРАНИЦЫ, в которую виджет вставлен: рамка и страница — один адрес, окно
+   родителя доступно. На прямом заходе на /app/ счётчик свой.
+   В Метрике: цель — JavaScript-событие `list`; разрез по материалу и звуку —
+   отчёт «Параметры визитов», ветка «лист получен» → материал → звук → формат.
+   Себя автор исключает сегментом «страна ≠ Грузия» — туда же уходят и
+   локальные пробы. Нет счётчика (блокировщик, чужой домен) — молчим: счёт не
+   имеет права ломать выгрузку. */
+function countSheet(format) {
+  try {
+    const w = window.top === window.self ? window : window.parent;
+    const id = Number(w.METRIKA_ID || window.METRIKA_ID);
+    if (!id || typeof w.ym !== 'function') return;
+    const mat = MAT_NAME[S.tab] || 'лист';
+    const snd = soundLabel() || 'без звука';
+    w.ym(id, 'reachGoal', 'list',
+         { 'лист получен': { [mat]: { [snd]: format || 'лист' } } });
+  } catch (e) { /* молчим */ }
+}
+
 /* Лист получен — скачан или отправлен на печать. Для человека это одно
    событие: у него на руках материал. */
-function gotSheet() {
+function gotSheet(format) {
+  countSheet(format);
   sheetsGot = (parseInt(lsGet(OTZYV_KEY), 10) || 0) + 1;
   lsSet(OTZYV_KEY, String(sheetsGot));
   if (sheetsGot >= 2 && !lsGet(OTZYV_ASKED)) {
