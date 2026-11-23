@@ -623,14 +623,13 @@ def test_dictionary_rows_are_analyzable():
 # ═══════════════════════════════════════════════════════════════════════
 
 def test_unknown_sound_fails_loudly():
-    # Звук, словаря которого нет. Тест переезжал дважды: «ш» → «л», оба раза
-    # потому, что словарь появлялся. Теперь взят [ч] — аффриката, намеренно
-    # оставленная вне формата листа (её нельзя тянуть в блоке [2], и порядок
-    # слогов у неё перевёрнут). Если словарь [ч] однажды появится, значит
-    # построен отдельный лист для аффрикат — тогда взять звук, которого нет.
-    assert "ч" not in C.WORDS_BY_SOUND, "тест устарел: словарь [ч] появился, возьмите другой звук"
+    # Звук, словаря которого нет. Тест переезжал трижды: «ш» → «л» → «ч», каждый
+    # раз потому, что словарь появлялся. [Ч] получил словарь 11-23 (аффрикаты
+    # оказались тем же листом, а не другим — см. WORDS_BY_SOUND). Теперь взят
+    # [т]: смычные вне формата, их источники не сверялись.
+    assert "т" not in C.WORDS_BY_SOUND, "тест устарел: словарь [т] появился, возьмите другой звук"
     try:
-        C.build_content(sound="ч", profile={"р"})
+        C.build_content(sound="т", profile={"р"})
     except C.ContentError as exc:
         truthy("нет словаря — говорим прямо", "словаря нет" in str(exc))
     else:
@@ -1389,6 +1388,77 @@ def test_verb_once_per_sheet():
                         for t in C._tokens(s["text"]) if t in verbs]
                 check(f"[{sound}] {typ} {sorted(prof)}: глаголы не повторяются",
                       len(seen), len(set(seen)))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  АФФРИКАТЫ [Ч] И [Ц] (11-23) — research/afrikaty_ch_ts_2026-11-23.md
+# ═══════════════════════════════════════════════════════════════════════
+
+def test_affricates_open_with_reverse():
+    """Спивак и Фомичёва: у Ч и Ц автоматизацию начинают с обратного слога."""
+    import capabilities as CAP
+    for snd in ("ч", "ц"):
+        check(f"[{snd}] первая ступень — обратный слог", C.syl_types_for(snd)[0], "reverse")
+        check(f"[{snd}] лист открывается с обратного", CAP.first_available("sheet", snd), "reverse")
+        check(f"[{snd}] порядок — перестановка тех же типов",
+              sorted(C.syl_types_for(snd)), sorted(C.SYL_TYPES))
+    check("[р] порядок прежний", C.syl_types_for("р"), C.SYL_TYPES)
+
+
+def test_affricate_isolated_is_repeated_not_stretched():
+    """Аффрикату не тянут: пометка взрослому — из данных образа, не общая."""
+    for snd, want in (("ч", "несколько раз"), ("ц", "отрывисто")):
+        c = C.build_content(sound=snd, profile=set())
+        adult = c["isolated"]["adult"]
+        truthy(f"[{snd}] блок [2]: «{want}»", want in adult)
+        truthy(f"[{snd}] блок [2]: не «тянуть»", "тянуть" not in adult)
+    c = C.build_content(sound="р", profile=set())
+    truthy("[р] блок [2]: по-прежнему «тянуть длительно»", "тянуть" in c["isolated"]["adult"])
+
+
+def test_affricate_print_spelling():
+    """«чо», как у Спивак и Комаровой; «Це:», а не «Цэ:»; «цы» законно."""
+    check("ч + о печатается «чо»", C.ortho("чо"), "чо")
+    check("щ + о по-прежнему «щё»", C.ortho("що"), "щё")
+    check("ц + э печатается «це»", C.ortho("цэ"), "це")
+    check("ц + ы остаётся «цы»", C.ortho("цы"), "цы")
+    check("колонка «Це:»", C._group_header("ц", "э", "direct"), "Це:")
+
+
+def test_ts_reverse_sheet_builds():
+    """У [ц] почти все конечные — «-ец»: ряд обратного слога из картотеки."""
+    c = C.build_content(sound="ц", syl_type="reverse", profile=set())
+    rows = c["syllables"]["rows"]
+    truthy("[ц] обратный: слоговой блок не пуст", bool(rows))
+    units = {u for r in rows for u in r["units"]}
+    truthy("[ц] обратный: в ряду есть «эц» или «иц»", bool(units & {"эц", "иц"}))
+
+
+def test_affricate_propisi_only_sound():
+    """Звуковая дорожка Ч и Ц — только звук: слог держится на «тянуть»."""
+    import capabilities as CAP
+    import propisi as PR
+    for snd in ("ч", "ц"):
+        check(f"[{snd}] дорожка со слогом закрыта", CAP.block_reason("propisi", snd, "direct"),
+              CAP.AFFRICATE)
+        try:
+            PR.build_propisi(snd, mode="syllable")
+        except PR.PropisiError:
+            truthy(f"[{snd}] сторож дорожки со слогом падает", True)
+        else:
+            check(f"[{snd}] сторож дорожки со слогом падает", False, True)
+        html = PR.render_propisi(PR.build_propisi(snd, mode="isolated"))
+        truthy(f"[{snd}] задание «произноси отчётливо»", "произноси" in html and "отчётливо" in html)
+        truthy(f"[{snd}] слова «тяни» на листе нет", "тяни" not in html.lower())
+
+
+def test_affricate_dictionaries_have_no_dead_words():
+    """В картотеке Ч и Ц только слова, которые лист пустит хотя бы при пустом профиле."""
+    for snd in ("ч", "ц"):
+        banned = C.banned_phonemes(snd, ())
+        rows = C.load_words(C._words_path(snd, None))
+        dead = [r["word"] for r in rows if not C.is_clean(r["word"], banned, r["stress_syllable"])]
+        check(f"[{snd}] мёртвых слов в картотеке нет", dead, [])
 
 
 if __name__ == "__main__":

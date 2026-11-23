@@ -38,6 +38,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import content as C          # noqa: E402
+import phonetics as P        # noqa: E402
 import propisi as PR         # noqa: E402
 import track as T            # noqa: E402
 
@@ -59,6 +60,7 @@ DEVOICED = "devoiced"              # звонкий в конце слова о�
 NO_ONSET = "no_onset"              # с таким стечением слог в русском не начинается
 NO_CODA = "no_coda"                # таким стечением слог в русском не кончается
 NOT_FOR_SOUND = "not_for_sound"    # ступень заведена не для этого звука (ТР/ДР — только [Р])
+AFFRICATE = "affricate"            # аффрикату не тянут: на звуковой дорожке только звук
 
 CLUSTER_TYPES = C.CLUSTER_TYPES
 
@@ -68,7 +70,12 @@ def block_reason(material: str, sound: str, typ: str) -> str:
     allowed = SYLLABLE_MATERIALS.get(material)
     if allowed is None:
         return ""
-    typ = C.SYL_TYPES[0] if not typ else typ
+    typ = C.syl_types_for(sound)[0] if not typ else typ
+    # Жанр, а не язык (11-23): звуковая дорожка со слогом держится на том, что
+    # согласный ТЯНУТ до гласной («с-са»). Аффрикату не тянут — у Комаровой её
+    # дорожки только на звук. Слоговой ступени у [Ч] и [Ц] здесь нет вовсе.
+    if material == "propisi" and sound in P.AFFRICATES:
+        return AFFRICATE
     if typ not in allowed:
         if typ in CLUSTER_TYPES:
             return CLUSTER
@@ -142,9 +149,10 @@ def probe_syllable(sound: str, typ: str) -> str:
 
 
 def syllable_options(material: str, sound: str) -> List[Dict[str, Any]]:
-    """Все типы слога для материала: [{typ, ok, reason}] в канонном порядке."""
+    """Все типы слога для материала: [{typ, ok, reason}] в порядке ступеней звука
+    (у аффрикат — с обратного слога, `content.SYL_ORDER_BY_SOUND`)."""
     out: List[Dict[str, Any]] = []
-    for typ in C.SYL_TYPES:
+    for typ in C.syl_types_for(sound):
         why = block_reason(material, sound, typ)
         out.append({"typ": typ, "ok": not why, "reason": why})
     return out

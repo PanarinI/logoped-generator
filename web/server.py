@@ -88,7 +88,7 @@ import otzyv as OT           # noqa: E402  — канал обратной св�
 SOUND_LABEL = {
     "р": "Р", "р'": "Рь", "л": "Л", "л'": "Ль",
     "с": "С", "с'": "Сь", "з": "З", "з'": "Зь",
-    "ш": "Ш", "щ": "Щ", "ж": "Ж",
+    "ш": "Ш", "щ": "Щ", "ж": "Ж", "ч": "Ч", "ц": "Ц",
 }
 
 # Мягкие пары движок добавляет сам (нарушенный [л] почти всегда значит и [л']),
@@ -358,7 +358,7 @@ def syllable_buttons() -> Dict[str, List[Dict[str, str]]]:
     out: Dict[str, List[Dict[str, Any]]] = {}
     for snd in C.WORDS_BY_SOUND:
         items: List[Dict[str, Any]] = []
-        for typ in C.SYL_TYPES:
+        for typ in C.syl_types_for(snd):   # у аффрикат — с обратного слога
             row: List[str] = []
             n_words = 0
             try:
@@ -458,6 +458,24 @@ def position_buttons() -> Dict[str, List[Dict[str, Any]]]:
                           "ok": not reason,
                           "why": human.why_position(reason, pos)})
         out[snd] = items
+    return out
+
+
+def phrases_by_sound() -> Dict[str, bool]:
+    """Собираются ли словосочетания на этом звуке вообще — на пустом профиле.
+
+    ⚡ 11-23. У [Ц] нет ни одного прилагательного со звуком в таблице
+    сочетаемости, и лист отказывал бы на любом профиле. Закон 14: нельзя —
+    вкладку не показываем, а не ведём логопеда в отказ. Нехватка у конкретного
+    ребёнка — другое дело: её объясняет сама сборка, как и раньше.
+    """
+    out: Dict[str, bool] = {}
+    for snd in C.WORDS_BY_SOUND:
+        try:
+            PH.build_phrases_sheet(sound=snd, profile="")
+            out[snd] = True
+        except BaseException:
+            out[snd] = False
     return out
 
 
@@ -716,6 +734,8 @@ def config() -> Dict[str, Any]:
             # горела у [З], [Ж], [Щ], а лабиринт на ней отказывался: у звонких
             # такого слова нет в языке, у [Сь] и [Щ] не хватает картинок.
             "positions_by_sound": position_buttons(),
+            # Словосочетания на звуке собираются вообще? У [Ц] — нет (11-23).
+            "phrases_by_sound": phrases_by_sound(),
             # Фоны слоговой дорожки — строка запроса Ольги «менять фон».
             # Список НЕ общий: фон это контекст героя, и у каждого героя свои
             # миры (08-10). Общий список остаётся для совместимости ответа,
@@ -1285,7 +1305,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 prof = S._expand_profile(",".join(data.get("profile") or []))
                 types: Dict[str, Any] = {}
-                for typ in C.SYL_TYPES:
+                for typ in C.syl_types_for(sound):
                     reason = CAP.block_reason("track", sound, typ)
                     if not reason and typ in C.CLUSTER_TYPES:
                         if not C.cluster_frames_for(sound, typ, prof):

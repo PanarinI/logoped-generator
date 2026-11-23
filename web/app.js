@@ -244,7 +244,13 @@ function renderSounds() {
     b.title = `${s.stats.dict_total} ${plural(s.stats.dict_total, 'слово', 'слова', 'слов')} в картотеке`;
     b.classList.toggle('is-on', s.key === S.sound);
     // Смена звука пересобирает материал целиком — той же дверью, что вкладка.
-    b.onclick = () => { S.sound = s.key; pickMaterial({ tab: S.tab }); };
+    // Материала на новом звуке может не быть вовсе (словосочетаний у [Ц]) —
+    // тогда открываем лист занятия, а не отказ.
+    b.onclick = () => {
+      S.sound = s.key;
+      const tab = (S.tab === 'phrases' && !materialOk('phrases')) ? 'sheet' : S.tab;
+      pickMaterial({ tab });
+    };
     rail.appendChild(b);
   });
 }
@@ -350,10 +356,21 @@ const LAST_IN_STAGE = { slog: 'track' };
 
 /* Умеет ли материал ТЕКУЩИЙ слог. Правду про это знает движок
    (logoped_slovar/capabilities.py) и присылает её вместе с конфигом. */
-function materialOk(tab, typ) {
+function materialOk(tab, typ, mode) {
+  // Словосочетания на звуке не собираются вовсе — у [Ц] нет прилагательных со
+  // звуком в таблице сочетаемости (11-23). Вкладки нет, а не отказ после нажатия.
+  if (tab === 'phrases') {
+    const ph = (S.cfg.phrases_by_sound || {})[S.sound];
+    return ph !== false;
+  }
   if (tab !== 'track' && tab !== 'propisi') return true;
   // На ступени «только звук» слога на бумаге нет вовсе — запрет ни при чём.
-  if (tab === 'propisi' && S.propisiMode === 'isolated') return true;
+  // ⚠ 11-23. Режим берётся у СТУПЕНИ, о которой спрашивают, а не у того, что
+  // сейчас открыто. Иначе на «Слоге» звуковая дорожка считалась живой, если
+  // логопед пришёл со «Звука», — и у [Ч] и [Ц], где слога на дорожке нет вовсе
+  // (аффрикату не тянут), кнопка вела бы в отказ. Закон 14: нельзя — не показываем.
+  const md = mode || S.propisiMode;
+  if (tab === 'propisi' && md === 'isolated') return true;
   const t = (S.cfg.syllables[S.sound] || []).find((x) => x.typ === typ);
   const m = t && t.materials && t.materials[tab];
   return !m || m.ok;
@@ -664,7 +681,7 @@ function renderTabs() {
     // погашенная вкладка заставляет разбираться там, где разбираться не в чем.
     // ⚡ 08-26: этап живёт, пока жив ХОТЬ ОДИН его жанр. Иначе «Слог» исчезал
     // бы целиком из-за одной недоступной дорожки.
-    const alive = mats.filter((m) => materialOk(m, S.typ));
+    const alive = mats.filter((m) => materialOk(splitGenre(m).tab, S.typ, modeForStage(st)));
     b.hidden = !alive.length;
   });
   renderGenrePick();
@@ -803,7 +820,7 @@ function renderGenrePick() {
   if (!card) return;
   const st = stageNow();
   const mats = (STAGE_MATERIALS[st] || [])
-    .filter((k) => materialOk(splitGenre(k).tab, S.typ));
+    .filter((k) => materialOk(splitGenre(k).tab, S.typ, modeForStage(st)));
   const keyNow = genreKeyNow();
   // ⚠ 08-26, второй заход. Плашка стояла только там, где жанров больше одного.
   // Слово автора: «где есть выбор — там выбор, где выбора нет — просто
@@ -2796,7 +2813,7 @@ function bindActions() {
     b.onclick = () => {
       const st = b.dataset.stage || '';
       const mats = (STAGE_MATERIALS[st] || [b.dataset.tab])
-        .filter((k) => materialOk(splitGenre(k).tab, S.typ));
+        .filter((k) => materialOk(splitGenre(k).tab, S.typ, modeForStage(st)));
       // Возвращаемся туда, откуда ушли: этап помнит последний жанр.
       const want = mats.includes(LAST_IN_STAGE[st]) ? LAST_IN_STAGE[st] : mats[0];
       const g = splitGenre(want || b.dataset.tab);
