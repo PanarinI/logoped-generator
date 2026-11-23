@@ -68,8 +68,14 @@ SITE_URL = os.environ.get("SITE_URL", "http://localhost:8784").rstrip("/")
 #   ⚠ Хвост: группа называется «AI помощник логопеда — группа тестирования» —
 #   это имя ДРУГОГО продукта автора. Для подвала Логозвука её стоит либо
 #   переименовать, либо завести канал проекта.
+# Подпись подвала (2026-11-23, канон Site Builders 2.0, ШАГ 4 — «футер с названием
+# компании»): полным именем, без страны и ИП — так автор подписал funclass.games
+# (23.11, его слово «Полным именем»). Компанию не выдумываем: в подвале и на
+# служебных страницах назван тот, кто правда отвечает за сайт.
 PROJECT: Dict[str, str] = {
     "name": "Логозвук",
+    "owner": "Игорь Панарин",
+    "since": "2026",
     "domain": "logozvuk.com",
     "email": "igor@fanarlabs.com",
     "address": "",
@@ -364,6 +370,42 @@ PAGES: Tuple[Page, ...] = (
         "widget": None,
         "draft": False,
     },
+    # ── СЛУЖЕБНЫЕ СТРАНИЦЫ (канон Site Builders 2.0, ШАГ 4; 2026-11-23) ──────
+    # «Privacy Policy, Terms of Use, Refund Policy: честно описать, что вы
+    # собираете». Пишется только проверенное по коду — новый счётчик, сервис или
+    # оплата на любой странице = сначала правка этих страниц.
+    {
+        "slug": "politika-konfidencialnosti",
+        "file": "politika.html",
+        "h1": "Политика конфиденциальности",
+        "title": "Политика конфиденциальности — Логозвук",
+        "description": "Что сайт узнаёт о посетителях: счётчик Яндекс.Метрики, отзывы, "
+                       "которые вы пишете сами, журнал сервера. Регистрации нет.",
+        "parent": None,
+        "widget": None,
+        "draft": False,
+    },
+    {
+        "slug": "usloviya-ispolzovaniya",
+        "file": "usloviya.html",
+        "h1": "Условия использования",
+        "title": "Условия использования — Логозвук",
+        "description": "Логозвук бесплатный и работает без регистрации. Что можно делать "
+                       "с листами и кто решает, давать ли лист ребёнку.",
+        "parent": None,
+        "widget": None,
+        "draft": False,
+    },
+    {
+        "slug": "vozvrat-deneg",
+        "file": "vozvrat.html",
+        "h1": "Возврат денег",
+        "title": "Возврат денег — Логозвук",
+        "description": "Логозвук бесплатный: оплаты на сайте нет, возвращать нечего.",
+        "parent": None,
+        "widget": None,
+        "draft": False,
+    },
 )
 
 BY_SLUG: Dict[str, Page] = {p["slug"]: p for p in PAGES}
@@ -489,7 +531,10 @@ def _jsonld(page: Page) -> str:
 def _footer(page: Page) -> str:
     """Подвал — сквозной, из одного словаря `PROJECT`."""
     e = html.escape
-    bits: List[str] = [f'<span class="f-name">{e(PROJECT["name"])}</span>']
+    bits: List[str] = [
+        f'<span class="f-name">© {e(PROJECT["since"])} {e(PROJECT["name"])}</span>']
+    if PROJECT["owner"]:
+        bits.append(f'<span class="f-owner">{e(PROJECT["owner"])}</span>')
     if PROJECT["address"]:
         bits.append(f'<span class="f-addr">{e(PROJECT["address"])}</span>')
     if PROJECT["email"]:
@@ -497,7 +542,11 @@ def _footer(page: Page) -> str:
     if PROJECT["social"]:
         bits.append(f'<a href="{e(PROJECT["social"])}" rel="me">{e(PROJECT["social"])}</a>')
 
-    links = [p for p in live_pages() if p["slug"] in ("kontakty", "o-proekte", "docs")]
+    # Порядок задан здесь, а не реестром: служебные страницы идут подряд.
+    order = ("o-proekte", "kontakty", "politika-konfidencialnosti",
+             "usloviya-ispolzovaniya", "vozvrat-deneg", "docs")
+    live = {p["slug"]: p for p in live_pages()}
+    links = [live[s] for s in order if s in live]
     nav = " · ".join(
         f'<a href="{url_of(p["slug"])}">{e(p["h1"])}</a>' for p in links
     )
