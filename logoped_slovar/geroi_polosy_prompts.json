@@ -551,5 +551,137 @@
     "faded": false,
     "colour": true,
     "alive": true
+  },
+  "parovoz_1": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A small old-fashioned steam locomotive seen from the side, moving to the right: a round boiler, a tall chimney with a puff of steam, a driver's cab, big round wheels joined by a rod. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "green boiler, red wheels, white steam"
+  },
+  "parovoz_vagon": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A small steam locomotive seen from the side, moving to the right and pulling one small open wagon behind it. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "blue locomotive, yellow wagon, red wheels"
+  },
+  "parovoz_teplovoz": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A diesel locomotive seen from the side, moving to the right: a long boxy body, a cab with windows at the front, six wheels. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "red body with a white stripe, black wheels"
+  },
+  "parovoz_elektrichka": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A suburban electric train carriage seen from the side, moving to the right: a long body with a row of windows and a pantograph on the roof. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "green carriage with a red stripe, grey pantograph"
+  },
+  "parovoz_igrushka": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A wooden toy train engine seen from the side, facing right: a simple block body, a round chimney and four big round wheels. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "red body, yellow wheels, blue chimney"
+  },
+  "parovoz_tender": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A steam locomotive seen from the side, moving to the right, with a coal tender coupled behind it. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "black locomotive with red wheels, dark grey tender"
+  },
+  "devochka_1": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A little girl standing, seen from the side, facing right, full length: she holds her index finger to her lips in a gentle 'hush' gesture. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": false,
+    "colour_hint": "yellow dress, light brown hair, red bow"
+  },
+  "devochka_tsypochki": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A little girl walking on tiptoe to the right, seen from the side, full length, holding her index finger to her lips in a 'hush' gesture. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": false,
+    "colour_hint": "blue dress, dark hair in two pigtails"
+  },
+  "devochka_kukla": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A little girl seen from the side, facing right, full length, hugging a doll with one arm and holding her index finger to her lips in a 'hush' gesture. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": false,
+    "colour_hint": "pink dress, blond hair; the doll in a red dress"
+  },
+  "devochka_mishka": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A little girl seen from the side, facing right, full length, holding a teddy bear in one arm and her index finger to her lips in a 'hush' gesture. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": false,
+    "colour_hint": "green dress, red hair; brown teddy bear"
+  },
+  "devochka_podushka": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A little girl in pyjamas seen from the side, facing right, full length, carrying a small pillow under one arm and holding her index finger to her lips in a 'hush' gesture. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": false,
+    "colour_hint": "light blue pyjamas, brown hair, white pillow"
+  },
+  "devochka_bant": {
+    "box": [
+      26,
+      20
+    ],
+    "prompt": "A little girl with a big bow on her head, seen from the side, facing right, full length, holding her index finger to her lips in a 'hush' gesture. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": false,
+    "colour_hint": "orange dress, dark hair, big white bow"
   }
 }

@@ -36,11 +36,19 @@ import base64
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Tuple
 
 KEY_PATH = os.path.expanduser("~/.config/logoped/openai.key")
+
+# МОДЕЛЬ. Весь банк (979 предметов, герои, виды, цели) нарисован `gpt-image-1`.
+# ⚠ 2026-11-23 OpenAI её убрала: «The model 'gpt-image-1' does not exist» (HTTP 400),
+# и заказ Ч и Ц упал целиком. Ближайший наследник — `gpt-image-1.5`; что он держит
+# стиль банка, проверено пробой глазами до большого заказа (закон 6). Модель —
+# параметром `--model`, чтобы следующая такая смена не требовала правки кода.
+MODEL = "gpt-image-1.5"
 API = "https://api.openai.com/v1/images/generations"
 
 # Толщина печатной линии сцены. Ровно та, какой рисует нынешний вектор
@@ -206,9 +214,10 @@ def build(item: Dict[str, Any]) -> Tuple[str, str]:
             size_for(float(box[0]), float(box[1])))
 
 
-def draw(name: str, item: Dict[str, Any], out_dir: str, key: str) -> str:
+def draw(name: str, item: Dict[str, Any], out_dir: str, key: str,
+         model: str = MODEL) -> str:
     prompt, size = build(item)
-    body = json.dumps({"model": "gpt-image-1", "prompt": prompt, "n": 1,
+    body = json.dumps({"model": model, "prompt": prompt, "n": 1,
                        "size": size, "quality": "low",
                        "output_format": "png"}).encode("utf-8")
     req = urllib.request.Request(API, data=body, headers={
@@ -216,12 +225,23 @@ def draw(name: str, item: Dict[str, Any], out_dir: str, key: str) -> str:
     try:
         with urllib.request.urlopen(req, timeout=300) as r:
             data = json.load(r)
+    except urllib.error.HTTPError as e:
+        # ⚠ 11-23: печаталось голое «HTTP Error 400: Bad Request» на все 58 —
+        # причину («модели нет», «нет денег») приходилось добывать отдельным
+        # запросом. Текст ошибки сервиса — сюда, в строку отчёта.
+        try:
+            msg = json.loads(e.read().decode("utf-8")).get("error", {}).get("message", "")
+        except Exception:
+            msg = ""
+        return f"✗ {name}: HTTP {e.code}: {msg or e.reason}"
     except Exception as e:                       # один упавший предмет не роняет заказ
         return f"✗ {name}: {type(e).__name__}: {e}"
     path = os.path.join(out_dir, f"{name}.png")
     with open(path, "wb") as fh:
         fh.write(base64.b64decode(data["data"][0]["b64_json"]))
-    return f"✓ {name}  {size}  {os.path.getsize(path) // 1024} КБ"
+    usage = data.get("usage") or {}
+    return (f"✓ {name}  {size}  {os.path.getsize(path) // 1024} КБ"
+            f"  токенов: {usage.get('input_tokens', '?')} вход / {usage.get('output_tokens', '?')} выход")
 
 
 def main(argv: List[str] | None = None) -> int:
@@ -231,6 +251,7 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("--only", default="", help="список имён через запятую")
     ap.add_argument("--dry", action="store_true", help="показать промпты, не тратить")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--model", default=MODEL, help=f"модель генератора (по умолчанию {MODEL})")
     args = ap.parse_args(argv)
 
     with open(args.slovar, encoding="utf-8") as fh:
@@ -266,7 +287,7 @@ def main(argv: List[str] | None = None) -> int:
 
     os.makedirs(args.out, exist_ok=True)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        for line in pool.map(lambda kv: draw(kv[0], kv[1], args.out, key),
+        for line in pool.map(lambda kv: draw(kv[0], kv[1], args.out, key, args.model),
                              slovar.items()):
             print(line, flush=True)
 

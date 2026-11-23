@@ -282,5 +282,56 @@
     "решает номер варианта (кубик логопеда), см. propisi._image_for.",
     "Цели взяты из его мира: пещера и дерево нарисованы, камень, кустик и пень",
     "уже были в природном наборе. Спиралей нет — линию чертит код."
+  ],
+  "паровозик": {
+    "vidy": [
+      "parovoz_1",
+      "parovoz_vagon",
+      "parovoz_teplovoz",
+      "parovoz_elektrichka",
+      "parovoz_igrushka",
+      "parovoz_tender"
+    ],
+    "tseli": [
+      "station",
+      "semaphore",
+      "tunnel",
+      "depot",
+      "bridge"
+    ],
+    "spirali": [],
+    "flip": [
+      "parovoz_1",
+      "parovoz_vagon",
+      "parovoz_elektrichka",
+      "parovoz_tender"
+    ]
+  },
+  "девочка": {
+    "vidy": [
+      "devochka_1",
+      "devochka_tsypochki",
+      "devochka_kukla",
+      "devochka_mishka",
+      "devochka_podushka",
+      "devochka_bant"
+    ],
+    "tseli": [
+      "crib",
+      "kitten_basket",
+      "doll_bed",
+      "puppy_cushion",
+      "granny_armchair"
+    ],
+    "spirali": [],
+    "flip": []
+  },
+  "_ch_ts_11_23": [
+    "ГЕРОИ [Ч] И [Ц] (11-23). Образы из источников: паровозик (Спивак, Фомичёва, Комарова), девочка, которая",
+    "просит не шуметь (Спивак; у Фомичёвой и Комаровой тот же образ). Нарисованы `gpt-image-1.5` — `gpt-image-1`",
+    "OpenAI убрала; промпты в geroi_polosy_prompts.json и tseli_prompts.json, раскладка — tools/v_bank.py.",
+    "Четыре паровозика пришли лицом влево — зеркалим данными (flip), как биплан и жука-оленя 09-20.",
+    "Цели паровозика — его мир: вокзал, семафор, тоннель, депо и готовый мост; цели девочки — тот, кто спит",
+    "(«не шуми — малыш спит»): кроватка, котёнок, кукла, щенок, бабушка в кресле. Смотрены глазами 11-23."
   ]
 }

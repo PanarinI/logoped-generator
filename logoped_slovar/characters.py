@@ -192,7 +192,11 @@ def _resolve(name: str) -> str:
 
 
 def has_character(name: str) -> bool:
-    return _resolve(name) in CHARACTERS
+    """Есть ли у героя рисунок — файлом (с 08-21 это основной вид) или запасным
+    вектором. ⚠ 11-23: смотрела только вектор, и новые герои [Ч] и [Ц], у
+    которых есть только файл, считались ненарисованными."""
+    key = _resolve(name)
+    return key in CHARACTERS or _hero_src(key, colour=False) is not None
 
 
 # ── РИСОВАННЫЕ ГЕРОИ (08-21) ─────────────────────────────────────────

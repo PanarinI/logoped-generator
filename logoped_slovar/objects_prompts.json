@@ -214,5 +214,357 @@
  "щи": "a bowl of cabbage soup, three-quarter view, spoon in it, shredded cabbage strips drawn as separate lines",
  "щука": "a pike fish, side view, long body, flat pointed jaw, fins near the tail",
  "янтарь": "a polished amber stone, three-quarter view, rounded lump with an insect inside",
- "ящерка": "a small lizard on a stone, seen from above, four splayed legs, long tapering tail"
+ "ящерка": "a small lizard on a stone, seen from above, four splayed legs, long tapering tail",
+ "чайник": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A kettle seen from the side, spout pointing right: a round body, a lid with a small knob, an arched handle over the top. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "red body, black handle and knob"
+ },
+ "чайка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A seagull standing, seen from the side, facing right: a white body, grey folded wings, a hooked yellow beak, webbed feet. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "white body, light grey wings, yellow beak and legs"
+ },
+ "чемодан": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A travel suitcase standing upright, seen from the front: a rectangular case with a carrying handle on top and two straps across it. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "brown case, dark brown straps and handle"
+ },
+ "червяк": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "An earthworm seen from the side: a long body made of ring segments, curved in a big S shape. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "pink"
+ },
+ "червячок": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A tiny earthworm curled into a loose ring, made of ring segments, with a small friendly face. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "pink"
+ },
+ "туча": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A big dark rain cloud with several drops of rain falling from it. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "dark grey cloud, blue drops",
+  "_why": "11-23: проба без капель вышла светлой и читается как «облако»; тёмная туча с дождём — то, что ребёнок зовёт «туча». В банке — этот вариант."
+ },
+ "кабачок": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A large zucchini (vegetable marrow) lying on its side: a long smooth fat body without bumps, thicker at one end, with a thick short stalk. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "pale yellowish-green skin, light green stalk",
+  "_why": "11-23: первая проба тёмно-зелёная в полоску — назовут «огурец», а в нём [ц], запрещённый на листе [ч]; бледный цвет различает (закон 11)"
+ },
+ "мячик": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A small rubber ball with a five-pointed star on it. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "yellow ball, red star"
+ },
+ "точилка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A pencil sharpener: a small rectangular block with one round hole in the side and a metal blade on top. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "blue plastic, silver blade"
+ },
+ "бочонок": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A small wooden keg standing upright: bulging wooden staves, two metal hoops and a flat lid. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "light brown wood, dark grey hoops"
+ },
+ "почтальон": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A postman walking to the right, wearing a cap, with a big bag full of letters over his shoulder. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "blue uniform and cap, brown bag, white letters"
+ },
+ "кочерга": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A fireplace poker: a long iron rod with a hooked bent end and a ring handle. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "black iron"
+ },
+ "бочка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A large wooden barrel standing upright: wooden staves with a bulging middle and three metal hoops. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "brown wood, dark grey hoops"
+ },
+ "печка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A traditional Russian stove: a big white stove with an arched opening of the firebox and a chimney on top. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "white stove, black opening"
+ },
+ "бабочка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A butterfly seen from above with its wings spread: two pairs of rounded wings with spots, a slim body and two antennae. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "orange wings with black spots, black body"
+ },
+ "удочка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A fishing rod: a long thin rod with a reel near the handle and a line hanging down with a float and a hook. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "brown rod, red and white float"
+ },
+ "очки": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A pair of eyeglasses seen from the front: two round lenses joined by a bridge, with the arms folded behind. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "black frame, light blue lenses"
+ },
+ "тапочки": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A pair of soft house slippers side by side, seen from above at an angle, toes pointing forward. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "red slippers with white fluffy trim"
+ },
+ "девочка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A little girl standing, facing the viewer, smiling: two pigtails with bows, a dress and shoes. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "yellow dress, brown hair, red bows"
+ },
+ "тумбочка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A bedside cabinet: a small box-shaped cabinet with one drawer on top, a door below and four short legs. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "light wood"
+ },
+ "мальчик": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A little boy standing, facing the viewer, smiling: short hair, a T-shirt, shorts and sneakers. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "blue T-shirt, brown shorts, brown hair"
+ },
+ "пончик": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A round doughnut with a hole in the middle, covered with glaze and sprinkles. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "golden dough, pink glaze, colourful sprinkles"
+ },
+ "блинчик": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A single thin pancake folded into a triangle. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "golden yellow with light brown spots"
+ },
+ "одуванчик": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A dandelion on its stem with two jagged leaves: a round fluffy flower head. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "bright yellow flower, green stem and leaves"
+ },
+ "овчарка": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A German shepherd dog standing, seen from the side, facing right: tall pointed ears, a long muzzle, a bushy tail. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "black back, tan legs and face"
+ },
+ "мяч": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A big round ball divided into wide coloured stripes. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "red and blue stripes"
+ },
+ "кирпич": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A single brick seen at an angle: a rectangular block. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "red brick"
+ },
+ "цветок": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A single flower with five round petals on a straight stem with two leaves. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "red petals, yellow centre, green stem and leaves"
+ },
+ "пуговица": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A round sewing button with four holes in the middle. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "blue button"
+ },
+ "пицца": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A whole round pizza seen from above with slices of tomato, melted cheese and herbs. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "golden crust, red tomato, yellow cheese, green herbs"
+ },
+ "рыцарь": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A knight in armour standing, facing right: a helmet with a closed visor, a round shield in one hand, no weapon. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "silver armour, red shield"
+ },
+ "овца": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A sheep standing, seen from the side, facing right: a fluffy woolly body, a dark face and dark legs. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "white wool, black face and legs"
+ },
+ "яйцо": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A single egg standing upright. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "light brown shell"
+ },
+ "ленивец": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A sloth hanging from a horizontal branch by its long claws, seen from the side, with a calm friendly face. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "light brown fur, dark brown eye patches"
+ },
+ "циркуль": {
+  "box": [
+   25,
+   25
+  ],
+  "prompt": "A drawing compass for school geometry: two hinged metal legs, one ending in a needle point and one holding a pencil lead, a small knob on top. The bottom of the drawing fades out unfinished.",
+  "faded": false,
+  "colour": true,
+  "colour_hint": "silver metal, yellow pencil end"
+ }
 }

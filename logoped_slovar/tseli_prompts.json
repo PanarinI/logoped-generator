@@ -394,5 +394,95 @@
     "prompt": "A single leafy tree seen from the side: a straight trunk with a few branches and a rounded crown of leaves. The bottom of the drawing fades out unfinished.",
     "faded": false,
     "colour": true
+  },
+  "station": {
+    "box": [
+      24,
+      18
+    ],
+    "prompt": "A small railway station building seen from the front: a single-storey house with a pitched roof, a big round clock without numbers above the door, a short platform in front. Markedly wider than it is tall. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "yellow walls, red roof, white clock"
+  },
+  "semaphore": {
+    "box": [
+      12,
+      24
+    ],
+    "prompt": "A railway signal post: a tall thin pole with a round signal light at the top and a short arm sticking out to the side. The bottom of the post fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "black and white striped pole, green light"
+  },
+  "tunnel": {
+    "box": [
+      24,
+      18
+    ],
+    "prompt": "A railway tunnel entrance in a grassy hill seen from the front: a dark arched opening with stone edging and two rails running into it. Markedly wider than it is tall. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "green hill, grey stones, black opening"
+  },
+  "depot": {
+    "box": [
+      24,
+      18
+    ],
+    "prompt": "A small engine shed seen from the front: a long building with a wide arched gateway and a pitched roof. Markedly wider than it is tall. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "red brick walls, dark grey roof"
+  },
+  "crib": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A baby sleeping in a crib seen from the side: a crib with bars, a small baby lying under a blanket with closed eyes. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light wood crib, blue blanket"
+  },
+  "kitten_basket": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A kitten curled up asleep in a round wicker basket, eyes closed. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "grey kitten, light brown basket"
+  },
+  "doll_bed": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A doll asleep in a small toy bed, lying under a little blanket with closed eyes. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "pink blanket, white pillow, light wood bed"
+  },
+  "puppy_cushion": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "A puppy curled up asleep on a round cushion, eyes closed. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light brown puppy, red cushion"
+  },
+  "granny_armchair": {
+    "box": [
+      22,
+      18
+    ],
+    "prompt": "An old woman dozing in an armchair seen from the side, her eyes closed, a knitted shawl on her shoulders. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "green armchair, purple shawl, grey hair"
   }
 }

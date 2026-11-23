@@ -29,5 +29,26 @@
     "faded": false,
     "colour": true,
     "alive": true
+  },
+  "паровозик": {
+    "box": [
+      18,
+      13
+    ],
+    "prompt": "A small old-fashioned steam locomotive seen from the side, facing right and moving to the right: a round boiler with a tall chimney puffing one small round cloud of steam, a driver's cab at the back, big round wheels joined by a rod. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "alive": true,
+    "colour_hint": "green boiler, red wheels, black chimney, white steam"
+  },
+  "девочка": {
+    "box": [
+      18,
+      13
+    ],
+    "prompt": "A little girl seen from the side, facing right, from head to waist: she holds her index finger to her lips in a gentle 'hush' gesture, her eyes are kind, her hair is tied in a ponytail with a bow. The bottom of the drawing fades out unfinished.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "yellow dress, light brown hair, red bow"
   }
 }
