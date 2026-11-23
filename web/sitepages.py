@@ -69,12 +69,12 @@ SITE_URL = os.environ.get("SITE_URL", "http://localhost:8784").rstrip("/")
 #   это имя ДРУГОГО продукта автора. Для подвала Логозвука её стоит либо
 #   переименовать, либо завести канал проекта.
 # Подпись подвала (2026-11-23, канон Site Builders 2.0, ШАГ 4 — «футер с названием
-# компании»): полным именем, без страны и ИП — так автор подписал funclass.games
-# (23.11, его слово «Полным именем»). Компанию не выдумываем: в подвале и на
-# служебных страницах назван тот, кто правда отвечает за сайт.
+# компании»): Fanar Labs — бренд автора (fanarlabs.com, почта igor@fanarlabs.com).
+# Слово автора 23.11: «будем здесь от имени Fanar Labs выступать, не от моего
+# частного имени. Мы Fanar Labs». Без страны и ИП. Служебные страницы говорят «мы».
 PROJECT: Dict[str, str] = {
     "name": "Логозвук",
-    "owner": "Игорь Панарин",
+    "owner": "Fanar Labs",
     "since": "2026",
     "domain": "logozvuk.com",
     "email": "igor@fanarlabs.com",
@@ -334,6 +334,22 @@ PAGES: Tuple[Page, ...] = (
         "widget": "?sound=r&material=list&audience=doma&embed=1",
         "draft": True,
     },
+    # ── КЛАСТЕРЫ — страницы со СВОИМ виджетом (канон Site Builders 2.0) ──
+    # Первая пачка (решение автора 23.11): гимнастика · чистоговорки · слоговая
+    # структура · дифференциация. H1 — ровно запрос кластера, title — запрос и
+    # имя сайта (`03-vstrecha-03.md` §6.2). Замер — research/site/zadachi_logopeda_2026-11-23.md.
+    {
+        "slug": "artikulyacionnaya-gimnastika",
+        "file": "gimnastika.html",
+        "h1": "Артикуляционная гимнастика",
+        "title": "Артикуляционная гимнастика — Логозвук",
+        "description": "Комплекс артикуляционной гимнастики под звук: упражнения по "
+                       "Фомичёвой и картотекам логопедов, дозировка, счёт для занятия "
+                       "и лист домой на неделю.",
+        "parent": None,
+        "widget": "gimnastika",
+        "draft": False,
+    },
     # ── ОСЬ «КОНКУРЕНТЫ» (канон ШАГ 4) ─────────────────────────────────
     # Сквозная, как profil-rebenka: родителя нет, сошлются и звуковые страницы,
     # и «для кого». Здесь живёт ров — единственное, чего бумага не умеет.
@@ -542,8 +558,10 @@ def _footer(page: Page) -> str:
     if PROJECT["social"]:
         bits.append(f'<a href="{e(PROJECT["social"])}" rel="me">{e(PROJECT["social"])}</a>')
 
-    # Порядок задан здесь, а не реестром: служебные страницы идут подряд.
-    order = ("o-proekte", "kontakty", "politika-konfidencialnosti",
+    # Порядок задан здесь, а не реестром: сначала функции сайта (канон: «в подвале —
+    # все функции»), потом служебные страницы подряд.
+    order = ("", "artikulyacionnaya-gimnastika",
+             "o-proekte", "kontakty", "politika-konfidencialnosti",
              "usloviya-ispolzovaniya", "vozvrat-deneg", "docs")
     live = {p["slug"]: p for p in live_pages()}
     links = [live[s] for s in order if s in live]
@@ -578,6 +596,11 @@ def _widget(page: Page) -> str:
     """
     if not page.get("widget"):
         return ""
+    # Страница-кластер со СВОИМ виджетом (канон 2.0: «при смене кластера меняется
+    # сам виджет»). Встраивается в страницу, а не рамкой — его текст видит поиск.
+    if page["widget"] == "gimnastika":
+        import gimnastika  # web/gimnastika.py
+        return gimnastika.widget_html()
     return (
         '<div class="widget-box">\n'
         f'  <iframe class="widget" src="/app/{page["widget"]}" '
