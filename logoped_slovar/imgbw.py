@@ -129,20 +129,30 @@ def write_png_gray(path: Path, w: int, h: int, rows: list[bytes]) -> None:
         + chunk(b"IEND", b""))
 
 
-def strip_colour(src: Path, dst: Path, *, sat: int = 28, dark: int = 128) -> dict:
+def strip_colour(src: Path, dst: Path, *, sat: int = 28, dark: int = 128,
+                 temny_kontur: int | None = None) -> dict:
     """Снять заливки, оставив чёрную линию. → счётчик, что куда ушло.
 
     sat  — от какой насыщенности (max-min канала) пиксель считается ЗАЛИВКОЙ;
-    dark — ниже какой яркости ахроматический пиксель считается ЛИНИЕЙ.
+    dark — ниже какой яркости ахроматический пиксель считается ЛИНИЕЙ;
+    temny_kontur — если задан: цветной пиксель темнее этой яркости (0–255) тоже
+           ЛИНИЯ. ⚠ 11-23: генератор обвёл блинчик, пиццу, тумбочку и ленивца
+           коричневым, пуговицу синим — вопреки «контур чёрный» в промпте, — и
+           ч/б вышел пустой бумагой. Порог 70 вернул контур и не зачернил заливки
+           (проба глазами: 70 / 85 / 100). По умолчанию выключен: прежний банк
+           снимался без него.
     """
     w, h, rows = read_png(src)
     out, stat = [], {"line": 0, "fill": 0, "paper": 0}
+    lum_max = None if temny_kontur is None else temny_kontur * 1000
     for row in rows:
         line = bytearray(w)
         for x in range(w):
             r, g, b = row[x * 3], row[x * 3 + 1], row[x * 3 + 2]
             hi, lo = max(r, g, b), min(r, g, b)
-            if hi - lo >= sat:                 # цветное — это заливка, убираем
+            if hi - lo >= sat and lum_max is not None and r * 299 + g * 587 + b * 114 < lum_max:
+                line[x] = 0; stat["line"] += 1     # тёмный цветной контур — тоже линия
+            elif hi - lo >= sat:               # цветное — это заливка, убираем
                 line[x] = 255; stat["fill"] += 1
             elif lo < dark:                    # серо-чёрное и тёмное — это линия
                 line[x] = 0; stat["line"] += 1

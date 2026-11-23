@@ -26,11 +26,17 @@
     08-26: «спрайт своим белым фоном заслоняет дорожку») — и у цвета, и у ч/б;
   · существующий файл банка не перезаписывается без `--force`: перезаказ кладётся
     рядом в пробах, а в банк — по слову того, кто смотрел глазами.
+  · ⚠ ч/б смотреть глазами отдельно от цвета. 11-23 пять предметов пришли с цветным
+    контуром (коричневым, синим), и их ч/б вышел почти пустой бумагой — в цвете этого
+    не видно. Скрипт предупреждает, если чернил в ч/б меньше 2 %, но это подсказка, а
+    не проверка: бледный штрих ленивца (4 %) она пропускает. Лечится `--temny-kontur 70`
+    (цветной пиксель темнее порога — тоже линия), см. `imgbw.strip_colour`.
 
 Запуск:
     python3 tools/v_bank.py predmety pictures/probes/<дата>/objects чайник мяч
     python3 tools/v_bank.py geroi    pictures/probes/<дата>/geroi паровозик
     python3 tools/v_bank.py dorozhka pictures/probes/<дата>/vidy parovoz_1 parovoz_vagon
+    python3 tools/v_bank.py predmety pictures/probes/<дата>/objects пицца --force --temny-kontur 70
 """
 from __future__ import annotations
 
@@ -84,7 +90,16 @@ def _guard(dst: Path, force: bool) -> bool:
     return True
 
 
-def predmety(src_dir: Path, names, force: bool) -> None:
+def _strip(col: Path, bw: Path, kontur) -> None:
+    """Снять ч/б с цвета и сказать вслух, если линии почти не осталось."""
+    st = imgbw.strip_colour(col, bw, temny_kontur=kontur)
+    ink = st["line"] / max(1, sum(st.values()))
+    if ink < 0.02:
+        print(f"  ⚠ {bw.relative_to(ROOT)}: чернил в ч/б {ink:.1%} — контур цветной? "
+              "Смотреть глазами; лечится --temny-kontur 70")
+
+
+def predmety(src_dir: Path, names, force: bool, kontur=None) -> None:
     for n in names:
         src = src_dir / f"{n}.png"
         col, bw = PIC / "objects_colour" / f"{n}.png", PIC / "objects" / f"{n}.png"
@@ -92,20 +107,21 @@ def predmety(src_dir: Path, names, force: bool) -> None:
             continue
         _resize(src, col, OBJ_SIZE)
         _flatten_rgb(col)
-        imgbw.strip_colour(col, bw)
+        _strip(col, bw, kontur)
         _resize(col, PIC / "objects_colour" / "small" / f"{n}.png", OBJ_SMALL)
         _resize(bw, PIC / "objects" / "small" / f"{n}.png", OBJ_SMALL)
         print(f"  ✓ {n}: цвет и ч/б 512 + клетка 295")
 
 
-def _two_banks(src_dir: Path, names, col_dir: Path, bw_dir: Path, force: bool) -> None:
+def _two_banks(src_dir: Path, names, col_dir: Path, bw_dir: Path, force: bool,
+               kontur=None) -> None:
     for n in names:
         src = src_dir / f"{n}.png"
         col, bw = col_dir / f"{n}.png", bw_dir / f"{n}.png"
         if not _guard(col, force) or not _guard(bw, force):
             continue
         shutil.copyfile(src, col)
-        imgbw.strip_colour(col, bw)            # ч/б — с цвета, пока фон ещё белый
+        _strip(col, bw, kontur)                # ч/б — с цвета, пока фон ещё белый
         for f in (col, bw):
             print("  " + prozrachny_fon.strip_paper(f))
 
@@ -116,18 +132,21 @@ def main(argv=None) -> int:
     ap.add_argument("src", help="папка проб с <имя>.png")
     ap.add_argument("names", nargs="+")
     ap.add_argument("--force", action="store_true", help="перезаписать файл банка")
+    ap.add_argument("--temny-kontur", type=int, default=None, metavar="ЯРКОСТЬ",
+                    help="цветной пиксель темнее порога — тоже линия (11-23: 70)")
     a = ap.parse_args(argv)
     src = Path(a.src)
     missing = [n for n in a.names if not (src / f"{n}.png").exists()]
     if missing:
         print("нет в пробах:", ", ".join(missing), file=sys.stderr)
         return 1
+    k = a.temny_kontur
     if a.kind == "predmety":
-        predmety(src, a.names, a.force)
+        predmety(src, a.names, a.force, k)
     elif a.kind == "geroi":
-        _two_banks(src, a.names, PIC / "geroi", PIC / "geroi_bw", a.force)
+        _two_banks(src, a.names, PIC / "geroi", PIC / "geroi_bw", a.force, k)
     else:
-        _two_banks(src, a.names, PIC / "dorozhka" / "colour", PIC / "dorozhka" / "bw", a.force)
+        _two_banks(src, a.names, PIC / "dorozhka" / "colour", PIC / "dorozhka" / "bw", a.force, k)
     return 0
 
 
