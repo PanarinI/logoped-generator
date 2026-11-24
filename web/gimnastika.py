@@ -7,36 +7,31 @@
 кластера свой виджет первым экраном (`03-vstrecha-03.md` §6.1). Встроен прямо в
 страницу, а не рамкой: содержимое iframe поисковик не индексирует.
 
-ДЛЯ КОГО И ЗАЧЕМ. Логопед или родитель ведёт гимнастику с ребёнком 4–7 лет. Ребёнку надо
-увидеть, ЧТО делать языком и губами, и делать это в нужном темпе и нужное число раз. У
-логопеда образец — его лицо (Фомичёва 1989: упражнения «перед зеркалом педагог выполняет
-вместе с ребенком»). На экране образец — СХЕМА РТА (`web/rot.py`): она показывает позу и
-движение в такт счёту — так ребёнок видит, когда что делать. Зеркало настоящее и стоит
-рядом: в нём ребёнок проверяет себя. Картинка-образ (лошадка, качели) — чтобы узнать
-упражнение.
+ЧТО ДЕЛАЕТ — то же, что весь Логозвук: собирает материал под звук и даёт его напечатать.
+Звук → восемь упражнений его комплекса (все на виду) → отмечают 2–3 → два материала:
+  · КАРТОЧКИ НА ЗАНЯТИЕ — лицом картинка-образ и название (ребёнку), оборотом «как делать»
+    и «сколько» (взрослому). Фомичёва 1989: «картинка-образ дается ребенку…, а подробная
+    запись — для родителей». Так же устроены карточки, которые логопеды покупают (Мерсибо).
+    Режут по пунктиру, складывают пополам. ТЕМЫ меняют вид лицевой стороны — одни и те же
+    упражнения в новом наряде: за такое переодевание платят (`ГОЛОСА.md`, logosha_pro: семь
+    тематических картотек одной механики). Мотивы темы рисует код (линия + заливка), в ч/б
+    остаётся линия.
+  · ЛИСТ ДОМОЙ — для родителя: картинки, как делать, сколько, таблица отметок на неделю.
+Оба сначала на экране, правка прямо на листе, потом печать или PDF (лист домой — ещё Word).
 
-ЗВУКА НЕТ. Голос синтеза автор запретил 24.11: «чисто совершенно искусственный,
-ненатуральный голос. Такой вообще невозможно допускать»; «нужен звук только тот, который
-помогает». Звук упражнения («бл-бл», «ы-ы-ы») — подписью у рта.
+⚠ 24.11 здесь было «занятие на экране» со счётом и схемой рта. Автор: «смысл виджета, если
+нет звука, я не понимаю… он реально должен сидеть перед зеркалом», «рот очень отвратительно
+выглядит», голос синтеза — «невозможно допускать». На занятии образец — лицо взрослого,
+контроль — зеркало, счёт — голос взрослого (Фомичёва, Буденная); экран этого не заменил.
+Код занятия и рта — в истории git (коммит 21ff809).
 
-ЯЗЫК — для не-специалиста: на карточке «сколько» простыми словами (`schet.korotko`), в счёте
-названа единица («3 из 10 щелчков»). Настройки «Только начинаем» больше нет — автор её не
-понял; совет Фомичёвой «сначала до 5, потом до 10» стоит на обороте карточки. Темп меняется
-кнопкой прямо в занятии, где его видно: «обычный · медленный».
-
-ЗАНЯТИЕ: ввод в задание (рот показывает, как надо, медленно) → «приготовились: 3, 2, 1» →
-счёт до числа из таблицы и стоп → отдых → следующее. Сначала медленно, потом быстрее
-(Буденная). Счёт и позы — таблицей у каждого упражнения (`gymnastics.json` → `schet`, формат —
-`schet_format`): дозировки разные, по названию не угадать (закон 7).
-
-ЛИСТ ДОМОЙ — сначала на экране (автор: «мы должны это видеть, перед тем как печатать или
-сохранять в PDF или Word»): А4 в рамке, правка прямо на листе, ч/б или цвет, таблица
-отметок; Печать · Word · PDF через ручки главного генератора (`/api/word`, `/api/pdf` —
-картинки вшиваются, иначе служба печати их не видит).
+ЯЗЫК — для не-специалиста: «сколько» простыми словами (`schet.korotko`). Карточки Word не
+отдают: таблица Word не держит вырезную раскладку с мотивами — честнее не предлагать.
 
 Данные — только `gymnastics.json`; упражнения постановки (`excluded_from_sheet`) сюда не
 попадают. Ч и Ц: источник называет комплексы по группе — «для свистящих звуков с, з, ц»,
-«для шипящих звуков ш, ж, ч, щ». Практика — `research/site/gimnastika_praktika_2026-11-24.md`.
+«для шипящих звуков ш, ж, ч, щ». Практика — `research/site/gimnastika_praktika_2026-11-24.md`,
+вид — `dizajn/KONCEPCIYA.md`.
 """
 from __future__ import annotations
 
@@ -45,8 +40,6 @@ import json
 import os
 import re
 from typing import Any, Dict, List
-
-import rot  # web/rot.py — схема рта
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GYM_PATH = os.path.join(HERE, "..", "logoped_slovar", "gymnastics.json")
@@ -63,6 +56,10 @@ SOURCE_LABEL = {
     "spivak_2007_sonornye": "Спивак, 2007",
 }
 KARTOTEKA = "картотеки логопедов"
+
+# Темы карточек: имя для экрана и мотив лицевой стороны. Мотивы — линия + заливка,
+# цвета задаёт CSS листа (в ч/б заливка белая, линия чёрная).
+TEMY = [("bez", "без темы"), ("osen", "осень"), ("zima", "зима"), ("kosmos", "космос"), ("more", "море")]
 
 
 def _quote(text: str) -> str:
@@ -107,8 +104,6 @@ def data() -> Dict[str, Any]:
             "obraz": pic(eid, "obraz"),
             "obraz_bw": pic(eid, "obraz-bw"),
             "litso": pic(eid, "litso"),
-            # Нет таблицы счёта — нет и занятия для этого упражнения: счёт не
-            # придумывается из названия (закон 7).
             "fazy": schet.get("fazy", []),
             "korotko": schet.get("korotko", ""),
         }
@@ -147,13 +142,12 @@ def data() -> Dict[str, Any]:
         for i in ids:
             cards.setdefault(i, card(i))
         sounds.append({"key": s, "note": note, "ids": ids})
-    return {"sounds": sounds, "ex": cards, "rot": rot.all_mouths(), "lico": rot.FACE, "vb": rot.VIEWBOX}
+    return {"sounds": sounds, "ex": cards, "temy": TEMY}
 
 
 CSS = r"""
 .gim{--g-paper:#f7f5f1;--g-card:#fff;--g-ink:#16191d;--g-muted:#565d66;--g-line:#e6e2da;--g-edge:#d5d0c6;
-  --g-brand:#2f6b4f;--g-brand-edge:#1f4e39;--g-tongue:#e8806e;--g-tongue-edge:#c9624f;--g-bead:#d9604c;
-  --g-stage:#f3f7f7;--g-frame:#dcc49c;--g-frame-edge:#c3a676;--g-shelf:#e6d3b0;--g-chip:#f1ede4;
+  --g-brand:#2f6b4f;--g-brand-edge:#1f4e39;--g-tongue:#e8806e;--g-tongue-edge:#c9624f;--g-chip:#f1ede4;
   --g-round:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,sans-serif;
   background:var(--g-paper);padding:var(--s4) var(--s4) var(--s5);color:var(--g-ink)}
 .gim-in{max-width:60rem;margin:0 auto}
@@ -209,13 +203,13 @@ CSS = r"""
   cursor:pointer;color:var(--g-ink);box-shadow:0 3px 0 var(--g-edge);transition:transform .06s,box-shadow .06s}
 .gim-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--g-edge)}
 .gim-btn[disabled]{opacity:.6;cursor:default}
+.gim-btn[hidden]{display:none}
 .gim-go{background:var(--g-tongue);border-color:var(--g-tongue);color:var(--g-ink);font-weight:600;
   box-shadow:0 3px 0 var(--g-tongue-edge)}
 .gim-go:active{box-shadow:0 1px 0 var(--g-tongue-edge)}
-.gim-go svg{width:14px;height:14px;fill:currentColor;vertical-align:-1px;margin-right:4px}
 .gim-sm{font-size:.9rem;padding:8px 14px}
-.gim-seg{display:inline-flex;border:1px solid var(--g-edge);border-radius:999px;overflow:hidden;background:#fff}
-.gim-seg button{font:inherit;font-size:.88rem;padding:7px 13px;border:0;background:none;cursor:pointer;color:var(--g-ink)}
+.gim-seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--g-edge);border-radius:18px;overflow:hidden;background:#fff}
+.gim-seg button{font:inherit;font-size:.86rem;padding:5px 12px;border:0;background:none;cursor:pointer;color:var(--g-ink)}
 .gim-seg button[aria-pressed="true"]{background:var(--g-brand);color:#fff}
 @media (max-width:760px){
   .gim{padding:var(--s3) var(--s3) var(--s4)}
@@ -231,76 +225,51 @@ CSS = r"""
   .gim-hint{display:none}
   .gim-shelf-row .gim-btn{flex:1 1 auto}
 }
-/* ── занятие на экране: рот слева, что делать и счёт справа ─────────── */
-.gim-run{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:12px;padding:2.5vh 2vw;background:var(--g-paper)}
-.gim-run[hidden],.gim-sheet[hidden]{display:none}
-.gim-run:focus{outline:none}
-.gim-frame{width:min(96vw,1120px);height:min(80vh,760px);padding:clamp(10px,1.6vw,22px);border-radius:30px;
-  background:var(--g-frame);box-shadow:inset 0 0 0 2px var(--g-frame-edge),0 14px 34px rgba(60,40,10,.12)}
-.gim-stage{position:relative;width:100%;height:100%;border-radius:20px;background:var(--g-stage);overflow:hidden;
-  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:center;gap:2vw;padding:2vh 3vw}
-.gim-rot{position:relative;width:min(54vh,100%);aspect-ratio:1;justify-self:center}
-.gim-rot .lay{position:absolute;inset:0;opacity:0;transition:opacity .16s linear}
-.gim-rot .lay.on{opacity:1}
-.gim-rot svg{width:100%;height:100%;display:block;border-radius:22px;box-shadow:0 2px 0 rgba(60,40,10,.08)}
-.gim-info{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
-.gim-s-step{margin:0;font-size:clamp(.9rem,1.9vh,1.05rem);color:var(--g-muted)}
-.gim-s-title{display:flex;align-items:center;justify-content:center;gap:12px;margin:.8vh 0 0}
-.gim-s-title img{width:clamp(48px,9vh,84px);height:clamp(48px,9vh,84px);object-fit:contain;mix-blend-mode:multiply}
-.gim-s-title img:not([src]),.gim-s-title img[src=""]{display:none}
-.gim-s-name{margin:0;font-family:var(--g-round);font-weight:700;font-size:clamp(1.6rem,4.6vh,2.7rem);line-height:1.1}
-.gim-s-line{margin:.8vh 0 0;font-size:clamp(1.05rem,2.6vh,1.4rem);line-height:1.35}
-.gim-s-plan{margin:1vh 0 0;padding:4px 12px;border-radius:10px;background:#fff;font-size:clamp(.95rem,2.2vh,1.15rem);
-  color:var(--g-muted)}
-.gim-s-name:empty,.gim-s-plan:empty,.gim-s-line:empty,.gim-s-label:empty,.gim-s-unit:empty,.gim-s-big:empty,
-.gim-s-step:empty{display:none}
-.gim-s-label{margin:1.6vh 0 0;font-family:var(--g-round);font-weight:700;font-size:clamp(1.2rem,3.4vh,1.9rem);
-  color:#1f4a5a}
-.gim-s-big{margin:.4vh 0 0;font-family:var(--g-round);font-weight:800;font-size:clamp(3rem,11vh,6.5rem);line-height:1;
-  color:var(--g-ink);font-variant-numeric:tabular-nums}
-.gim-s-unit{margin:.6vh 0 0;font-size:clamp(1rem,2.5vh,1.3rem);color:var(--g-muted)}
-.gim-tempo{display:inline-block;margin-left:6px;padding:0 8px;border-radius:8px;background:#fff;color:var(--g-ink)}
-.gim-beads{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(5px,.9vh,9px);margin:1.4vh 0 0;max-width:95%}
-.gim-beads:empty{display:none}
-.gim-bead{width:clamp(12px,2.1vh,20px);height:clamp(12px,2.1vh,20px);border-radius:50%;background:#fff;
-  box-shadow:inset 0 0 0 2px rgba(31,74,90,.18)}
-.gim-bead.f{background:var(--g-bead);box-shadow:none}
-.gim-bar{width:min(80%,360px);height:10px;border-radius:6px;background:#fff;margin:1.2vh auto 0;overflow:hidden;
-  box-shadow:inset 0 0 0 1px rgba(31,74,90,.15)}
-.gim-bar[hidden]{display:none}
-.gim-bar i{display:block;height:100%;width:0;background:var(--g-bead);border-radius:6px}
-.gim-run .gim-shelf{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;
-  width:min(96vw,1120px);padding:8px 12px;border-radius:14px;background:var(--g-shelf);
-  box-shadow:inset 0 -3px 0 var(--g-frame-edge)}
-.gim-run .gim-tlabel{font-size:.88rem;color:#6b5634}
-.gim-run .gim-keys{margin:0 0 0 8px;font-size:.82rem;color:#6b5634}
-@media (hover:none){.gim-run .gim-keys{display:none}}
-@media (max-aspect-ratio:1/1){
-  .gim-frame{height:min(80vh,900px)}
-  .gim-stage{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;align-content:center;gap:1vh}
-  .gim-rot{width:min(34vh,76vw)}
-}
-@media (prefers-reduced-motion:reduce){
-  .gim-card-in,.gim-rot .lay{transition:none}
-}
 html.gim-lock,html.gim-lock body{overflow:hidden}
-/* ── лист домой: сначала на экране ─────────────────────────────────── */
+/* ── материал на экране: лист домой или карточки ───────────────────── */
 .gim-sheet{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:#e9e6df}
+.gim-sheet[hidden]{display:none}
 .gim-sheet-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 16px;background:var(--g-paper);
   border-bottom:1px solid var(--g-line)}
 .gim-sheet-bar h2{margin:0 auto 0 4px;font-size:1.05rem;font-weight:600}
-.gim-opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 16px;background:var(--g-paper);
+.gim-opts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 16px;background:var(--g-paper);
   border-bottom:1px solid var(--g-line);font-size:.88rem;color:var(--g-muted)}
+.gim-opt{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px}
+.gim-opt[hidden]{display:none}
 .gim-chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--g-ink)}
 .gim-err{margin:0;padding:6px 16px;background:#fdf5ea;color:#8a5a00;font-size:.88rem}
 .gim-sheet iframe{flex:1;width:100%;border:0;background:#e9e6df}
 @media (max-width:760px){.gim-sheet-bar h2{flex-basis:100%;margin:0}}
 """
 
+# Мотивы тем — SVG в координатах 0..100 (угол карточки). Класс .f — заливка цветом темы,
+# .s — линия. Одна и та же линия печатается в ч/б.
+MOTIF = {
+    "osen": ('<g class="m m-osen"><path class="f a1" d="M18 8C30 14 33 30 20 44C7 30 8 14 18 8Z"/>'
+             '<path class="s" d="M19 11L20 46"/>'
+             '<path class="f a2" d="M46 6C55 13 56 26 45 36C35 26 36 13 46 6Z" transform="rotate(28 46 22)"/>'
+             '<path class="s" d="M46 9L45 38" transform="rotate(28 46 22)"/>'
+             '<path class="f a3" d="M10 50C20 55 22 67 12 77C2 67 2 56 10 50Z" transform="rotate(-24 12 64)"/></g>'),
+    "zima": ('<g class="m m-zima">' + "".join(
+        f'<g transform="translate({x} {y}) scale({k})">'
+        + "".join(f'<g transform="rotate({a})"><path class="s" d="M0 -14V14"/><path class="s" d="M0 -9L-4 -13M0 -9L4 -13"/>'
+                  f'<path class="s" d="M0 9L-4 13M0 9L4 13"/></g>' for a in (0, 60, 120))
+        + '</g>' for x, y, k in ((20, 20, 1.1), (50, 12, .7), (14, 52, .65))) + '</g>'),
+    "kosmos": ('<g class="m m-kosmos"><circle class="f a1" cx="26" cy="26" r="12"/>'
+               '<ellipse class="s" cx="26" cy="26" rx="21" ry="6" transform="rotate(-18 26 26)"/>'
+               + "".join(f'<path class="f a2" d="M{x} {y - 7}L{x + 2.1} {y - 2.2}L{x + 7} {y - 2.2}L{x + 3} {y + 1}'
+                         f'L{x + 4.4} {y + 6}L{x} {y + 3}L{x - 4.4} {y + 6}L{x - 3} {y + 1}L{x - 7} {y - 2.2}'
+                         f'L{x - 2.1} {y - 2.2}Z"/>' for x, y in ((58, 12), (12, 58), (50, 44))) + '</g>'),
+    "more": ('<g class="m m-more"><path class="f a1" d="M8 30C14 20 34 20 40 30C34 40 14 40 8 30Z"/>'
+             '<path class="f a3" d="M40 30L52 22L50 30L52 38Z"/><circle class="s" cx="16" cy="28" r="1.6"/>'
+             '<circle class="s" cx="30" cy="12" r="3"/><circle class="s" cx="40" cy="6" r="2"/>'
+             '<circle class="s" cx="14" cy="54" r="2.6"/></g>'),
+}
+
 JS = r"""
 (function () {
   var D = JSON.parse(document.getElementById('gim-data').textContent);
+  var MOTIF = JSON.parse(document.getElementById('gim-motif').textContent);
   D.sounds.forEach(function (s) { s.ex = s.ids.map(function (id) { return D.ex[id]; }); });
   var root = document.getElementById('gim');
   var $ = function (id) { return document.getElementById(id); };
@@ -323,7 +292,11 @@ JS = r"""
     var f = c.fazy.filter(function (x) { return x.vid !== 'povtor'; })[0] || {};
     return (c.korotko || '').replace('{do}', f['do'] || 10).replace('{derzhat}', f.derzhat || 3);
   }
+  // Первая БУКВА заглавная, даже если строка начинается с кавычки («покрась» → «Покрась»).
+  function cap(t) { return String(t || '').replace(/[a-zа-яё]/i, function (ch) { return ch.toUpperCase(); }); }
   var holds = function (c) { return c.fazy.some(function (f) { return f.vid === 'derzhim' && f['do'] >= 10; }); };
+  // Фомичёва: удерживание «под счет взрослого от 1 до 5 с постепенным увеличением его до 10».
+  var HOLD_TIP = 'Трудно держать до 10 — начните с 5 и постепенно доводите до 10 (Фомичёва).';
 
   // ── стол: картотека ──────────────────────────────────────────────────
   function cardHtml(c, j) {
@@ -346,8 +319,7 @@ JS = r"""
       (c.child ? '<p class="gim-child">' + esc(c.child) + '</p>' : '') +
       '<p>' + esc(c.how) + '</p>' +
       '<p><b>Сколько:</b> ' + esc(plan(c)) + (c.props ? '. <b>Понадобится:</b> ' + esc(c.props) : '') + '</p>' +
-      // Фомичёва: удерживание «под счет взрослого от 1 до 5 с постепенным увеличением его до 10».
-      (holds(c) ? '<p class="gim-small">Трудно держать до 10 — начните с 5 и постепенно доводите до 10 (Фомичёва).</p>' : '') +
+      (holds(c) ? '<p class="gim-small">' + HOLD_TIP + '</p>' : '') +
       (c.why ? '<p class="gim-small">Зачем: ' + esc(c.why) + '</p>' : '') +
       '<p class="gim-small" title="' + esc(c.src_full) + '">Источник: ' + esc(c.src) + '</p></div>' +
       '<button type="button" class="gim-flip" data-f="' + j + '" title="Назад к картинке" aria-label="Назад к картинке"' +
@@ -361,7 +333,7 @@ JS = r"""
     });
     $('gim-note').textContent = s.note || '';
     $('gim-for').textContent = '[' + s.key + ']';
-    $('gim-nsel').textContent = 'в занятии ' + S.sel.length + ' из ' + s.ex.length;
+    $('gim-nsel').textContent = 'отмечено ' + S.sel.length + ' из ' + s.ex.length;
     $('gim-grid').innerHTML = s.ex.map(cardHtml).join('');
   }
 
@@ -380,11 +352,11 @@ JS = r"""
     if (!b) return;
     var j = +b.dataset.j, k = S.sel.indexOf(j);
     if (k >= 0) {
-      if (S.sel.length <= 1) { warn('Одно упражнение в занятии остаётся всегда.'); return; }
+      if (S.sel.length <= 1) { warn('Одно упражнение остаётся отмеченным всегда.'); return; }
       S.sel.splice(k, 1);
     } else {
       if (S.sel.length >= MAX) {
-        warn('В занятии не больше трёх: у Фомичёвой «не более двух-трёх упражнений» за раз. ' +
+        warn('Не больше трёх за раз: у Фомичёвой «не более двух-трёх упражнений». ' +
              'Сначала уберите одно — щелчком по нему.');
         return;
       }
@@ -395,214 +367,30 @@ JS = r"""
     if (again) again.focus();
   });
 
-  // ── схема рта: две подложки, поза меняется плавно ───────────────────
-  var M = { cur: '', on: 0 };
-  function pose(p) {
-    if (!p || p === M.cur || !D.rot[p]) return;
-    var lays = $('gim-rot').children, next = lays[1 - M.on];
-    next.innerHTML = '<svg viewBox="' + D.vb + '" aria-hidden="true">' + D.lico + '<g>' + D.rot[p] + '</g></svg>';
-    next.classList.add('on'); lays[M.on].classList.remove('on');
-    M.on = 1 - M.on; M.cur = p;
-  }
-
-  // ── занятие: показать → приготовиться → считать → отдыхать ───────────
-  // Темп: «медленный» растягивает каждый счёт в полтора раза. Сначала медленно,
-  // потом быстрее (Буденная): первая треть повторов — медленнее.
-  var T = { slow: false };
-  function k() { return T.slow ? 1.5 : 1; }
-  function steps(c) {
-    var out = [];
-    c.fazy.forEach(function (f) {
-      var pz = f.pozy || [], takt = f.takt || 'derzh';
-      if (f.vid === 'derzhim') {
-        for (var q = 1; q <= f['do']; q++) out.push({ kind: 'hold', n: q, of: f['do'], dur: 1, label: f.slovo || 'Держим',
-          poz: pz, takt: 'derzh' });
-      } else if (f.vid === 'povtor') {
-        var arr = Array.isArray(f.temp), base = arr ? f.temp[0] : f.temp, long = base >= 3;
-        var t0 = arr ? f.temp[0] : f.temp * 1.5, t1 = arr ? f.temp[1] : f.temp, third = Math.ceil(f.raz / 3);
-        for (var r = 1; r <= f.raz; r++) {
-          var dur, tempo = '';
-          if (long) dur = f.temp;
-          else if (arr) { dur = t0 + (t1 - t0) * (f.raz > 1 ? (r - 1) / (f.raz - 1) : 0); tempo = r <= third ? 'медленно' : 'быстрее'; }
-          else { dur = r <= third ? t0 : t1; tempo = r <= third ? 'медленно' : 'быстрее'; }
-          out.push({ kind: 'rep', n: r, of: f.raz, dur: dur, label: f.slovo || 'Повторяем', ed: f.ed || 'раз',
-                     tempo: tempo, long: long, poz: pz, takt: takt, dolya: f.dolya || .55 });
-        }
-      } else if (f.vid === 'polozheniya') {
-        for (var kr = 0; kr < f.krugov; kr++) {
-          f.pozicii.forEach(function (name, pi) {
-            for (var q2 = 1; q2 <= f.derzhat; q2++) out.push({ kind: 'pos', n: q2, of: f.derzhat, dur: 1, label: name,
-              turn: kr * f.pozicii.length + pi + 1, turns: f.krugov * f.pozicii.length, poz: [pz[pi]], takt: 'derzh' });
-          });
-        }
-      }
-    });
-    return out;
-  }
-  var R = { list: [], k: -1, st: [], j: 0, t: null, sub: [], due: 0, left: 0, fn: null, paused: false, mode: '', lock: null };
-  var run = $('gim-run');
-  function clearSub() { R.sub.forEach(function (x) { clearTimeout(x); clearInterval(x); }); R.sub = []; }
-  function clear() { clearTimeout(R.t); R.t = null; clearSub(); }
-  function later(sec, fn) { clear(); R.due = Date.now() + sec * 1000; R.fn = fn; R.t = setTimeout(fn, sec * 1000); }
-  function info(o) {
-    $('gim-s-step').textContent = o.step || '';
-    var im = $('gim-s-img'); if (o.img !== undefined) { if (o.img) im.setAttribute('src', o.img); else im.removeAttribute('src'); }
-    $('gim-s-name').textContent = o.name || '';
-    $('gim-s-line').textContent = o.line || '';
-    $('gim-s-plan').textContent = o.plan || '';
-    $('gim-s-label').textContent = o.label || '';
-    $('gim-s-big').textContent = o.big || '';
-    $('gim-s-unit').innerHTML = o.unit || '';
-    $('gim-beads').innerHTML = o.beads || '';
-    $('gim-bar').hidden = true;
-  }
-  function firstPose(c) { var f = c.fazy[0] || {}; return (f.pozy || [])[0]; }
-  // Показ: рот медленно делает движение упражнения — «смотри, как надо».
-  function demo(c) {
-    var seq = [];
-    c.fazy.forEach(function (f) { (f.pozy || []).forEach(function (p) { if (seq.indexOf(p) < 0) seq.push(p); }); });
-    if (!seq.length) return;
-    var i = 0; pose(seq[0]);
-    if (seq.length > 1) R.sub.push(setInterval(function () { i = (i + 1) % seq.length; pose(seq[i]); }, 1100 * k()));
-  }
-  function welcome() {
-    R.mode = 'welcome'; clear();
-    $('gim-next').textContent = 'Дальше →'; $('gim-pause').hidden = false;
-    pose('zakryt');
-    info({ step: 'Начинаем гимнастику', img: '', name: 'Садимся ровно',
-           line: 'Рядом зеркало. На экране рот показывает, что делать, — ребёнок повторяет и смотрит в зеркало, получается ли.',
-           plan: 'Упражнений: ' + R.list.length });
-    later(5, function () { intro(0); });
-  }
-  function intro(n) {
-    R.k = n; R.mode = 'intro'; var c = R.list[n]; clear();
-    $('gim-next').textContent = 'Дальше →';
-    info({ step: 'Упражнение ' + (n + 1) + ' из ' + R.list.length + ' · смотри, как надо', img: c.obraz || '',
-           name: c.name, line: c.child ? c.child.charAt(0).toUpperCase() + c.child.slice(1) : '',
-           plan: 'Сколько: ' + plan(c) });
-    demo(c);
-    R.due = Date.now() + 6000 * k(); R.fn = function () { ready(3); }; R.t = setTimeout(R.fn, 6000 * k());
-  }
-  function ready(n) {
-    R.mode = 'ready'; var c = R.list[R.k]; clearSub();
-    pose(firstPose(c));
-    info({ step: 'Упражнение ' + (R.k + 1) + ' из ' + R.list.length, img: c.obraz || '', name: c.name,
-           label: 'Приготовились', big: String(n) });
-    later(1, function () { if (n > 1) ready(n - 1); else count(); });
-  }
-  function count() { R.st = steps(R.list[R.k]); R.j = 0; R.mode = 'count'; beat(); }
-  function beat() {
-    var s = R.st[R.j];
-    if (!s) { rest(); return; }
-    var c = R.list[R.k], unit = '', beads = '', b, dur = s.dur * k();
-    if (s.kind === 'hold') unit = 'держим, пока считаем до ' + s.of;
-    else if (s.kind === 'pos') unit = 'считаем до ' + s.of + ' · смена ' + s.turn + ' из ' + s.turns;
-    else unit = 'из ' + s.of + ' ' + s.ed + (s.long ? ' · каждый ' + Math.round(dur) + ' секунд' : '');
-    unit = esc(unit) + (s.tempo ? '<span class="gim-tempo">' + s.tempo + '</span>' : '');
-    if (!s.long) for (b = 1; b <= s.of; b++) beads += '<span class="gim-bead' + (b <= s.n ? ' f' : '') + '"></span>';
-    info({ step: 'Упражнение ' + (R.k + 1) + ' из ' + R.list.length, img: c.obraz || '', name: c.name,
-           label: s.label, big: String(s.n), unit: unit, beads: beads });
-    clearSub();
-    // Что делает рот на этом счёте — по такту фазы (gymnastics.json → schet_format.pozy).
-    var pz = s.poz || [];
-    if (s.takt === 'cheredom') pose(pz[(s.n - 1) % pz.length]);
-    else if (s.takt === 'dva') {
-      pose(pz[0]);
-      if (pz[1]) R.sub.push(setTimeout(function () { pose(pz[1]); }, dur * s.dolya * 1000));
-    } else if (s.takt === 'drozh') {
-      var t = 0; pose(pz[0]);
-      R.sub.push(setInterval(function () { t = 1 - t; pose(pz[t]); }, 220));
-    } else pose(pz[0]);
-    if (s.long) {  // «5 секунд» — полоса времени, чтобы было видно, сколько ещё
-      var bar = $('gim-bar'), fill = bar.firstChild; bar.hidden = false;
-      fill.style.transition = 'none'; fill.style.width = '0';
-      void fill.offsetWidth; fill.style.transition = 'width ' + dur + 's linear'; fill.style.width = '100%';
-    }
-    R.j += 1;
-    R.due = Date.now() + dur * 1000; R.fn = beat; R.t = setTimeout(beat, dur * 1000);
-  }
-  function rest() {
-    var last = R.k + 1 >= R.list.length; clear();
-    pose('zakryt');
-    if (last) {
-      R.mode = 'end';
-      info({ step: 'Гимнастика окончена', img: '', name: 'Готово', line: 'Можно начать ещё раз или закрыть занятие.' });
-      $('gim-next').textContent = 'Ещё раз';
-      $('gim-pause').hidden = true;  // ставить на паузу нечего (закон 14)
-      return;
-    }
-    R.mode = 'rest'; var nx = R.list[R.k + 1];
-    info({ step: 'Упражнение ' + (R.k + 1) + ' из ' + R.list.length + ' — готово', img: '', name: 'Отдыхаем',
-           line: 'Дальше — «' + nx.name + '»' });
-    later(3, function () { intro(R.k + 1); });
-  }
-  function openRun() {
-    R.list = S.sel.map(at).filter(function (c) { return c.fazy && c.fazy.length; });
-    if (!R.list.length) return;
-    R.paused = false; $('gim-pause').textContent = 'Пауза';
-    run.hidden = false; document.documentElement.classList.add('gim-lock');
-    // Экран не гаснет, пока идёт занятие (планшет на столе). Не разрешили — не беда.
-    try {
-      if (navigator.wakeLock) navigator.wakeLock.request('screen')
-        .then(function (l) { R.lock = l; }, function () { R.lock = null; });
-    } catch (e) { /* молчим */ }
-    welcome(); run.focus();
-  }
-  function stopRun() {
-    clear(); run.hidden = true; document.documentElement.classList.remove('gim-lock');
-    try { if (R.lock) R.lock.release(); } catch (e) {} R.lock = null;
-    $('gim-start').focus();
-  }
-  function pause() {
-    if (R.mode === 'end') return;
-    if (!R.paused) {
-      R.left = Math.max(0, R.due - Date.now()); clear(); R.paused = true;
-      $('gim-pause').textContent = 'Продолжить';
-      var fill = $('gim-bar').firstChild;
-      if (fill) { fill.style.width = getComputedStyle(fill).width; fill.style.transition = 'none'; }
-    } else {
-      R.paused = false; $('gim-pause').textContent = 'Пауза';
-      var fn = R.fn; R.due = Date.now() + R.left; R.t = setTimeout(fn, R.left);
-    }
-  }
-  function next() {
-    R.paused = false; $('gim-pause').textContent = 'Пауза';
-    if (R.mode === 'end') { welcome(); return; }
-    if (R.mode === 'welcome') { intro(0); return; }
-    if (R.mode === 'intro' || R.mode === 'ready') { clear(); count(); return; }
-    if (R.k + 1 < R.list.length) intro(R.k + 1); else { R.k = R.list.length - 1; rest(); }
-  }
-  function tempo(slow) {
-    T.slow = slow;
-    $('gim-t-norm').setAttribute('aria-pressed', slow ? 'false' : 'true');
-    $('gim-t-slow').setAttribute('aria-pressed', slow ? 'true' : 'false');
-    run.focus();
-  }
-  $('gim-start').addEventListener('click', openRun);
-  // После щелчка фокус возвращается на экран занятия: иначе пробел нажимал бы ту
-  // же кнопку ещё раз, а не ставил паузу.
-  $('gim-pause').addEventListener('click', function () { pause(); run.focus(); });
-  $('gim-next').addEventListener('click', function () { next(); run.focus(); });
-  $('gim-stop').addEventListener('click', stopRun);
-  $('gim-t-norm').addEventListener('click', function () { tempo(false); });
-  $('gim-t-slow').addEventListener('click', function () { tempo(true); });
-  document.addEventListener('keydown', function (ev) {
-    if (run.hidden) return;
-    if (ev.key === 'Escape') { ev.preventDefault(); stopRun(); }
-    else if (ev.key === 'ArrowRight') { ev.preventDefault(); next(); }
-    else if ((ev.key === ' ' || ev.key === 'Spacebar') && ev.target === run) { ev.preventDefault(); pause(); }
-  });
-
-  // ── лист домой: на экране, с правкой, потом печать / PDF / Word ──────
-  var L = { colour: false, table: true };
+  // ── материал на экране: лист домой или карточки на занятие ───────────
+  // Сначала видно, что выйдет; правка — прямо на листе; настройки меняют лист без
+  // пересборки, чтобы правки не терялись. Потом печать или PDF (лист — ещё Word).
+  var L = { kind: 'list', colour: false, table: true, tema: 'bez', all: false };
   var sheet = $('gim-sheet'), frame = $('gim-sheet-frame');
-  function sheetDoc() {
+  var PAGE_CSS = '@page{size:A4;margin:14mm}html{background:#e9e6df}' +
+    'body{margin:16px auto;width:182mm;min-height:269mm;box-sizing:border-box;background:#fff;padding:14mm;' +
+    'box-shadow:0 2px 12px rgba(0,0,0,.1);font:12pt/1.45 Arial,Helvetica,sans-serif;color:#000;' +
+    '-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '@media print{html{background:#fff}body{margin:0;width:auto;min-height:0;padding:0;box-shadow:none}}' +
+    '@media screen{html.fit body{zoom:var(--z)}}[contenteditable]:focus{outline:none}';
+  function pics(c) {
+    var bw = c.obraz_bw || c.obraz || c.litso, col = c.obraz || c.litso;
+    return { bw: bw, col: col };
+  }
+  function imgTag(c, cls) {
+    var p = pics(c);
+    return p.bw ? '<img class="' + cls + '" src="' + esc(L.colour ? p.col : p.bw) + '" data-bw="' + esc(p.bw) +
+      '" data-col="' + esc(p.col) + '" alt="">' : '';
+  }
+  function listDoc() {
     var s = cur(), list = S.sel.map(at), days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     var ex = list.map(function (c, n) {
-      var bw = c.obraz_bw || c.obraz || c.litso, col = c.obraz || c.litso;
-      var img = bw ? '<img src="' + esc(L.colour ? col : bw) + '" data-bw="' + esc(bw) + '" data-col="' + esc(col) +
-        '" alt="">' : '';
-      return '<div class="ex">' + img + '<div><b>' + (n + 1) + '. ' + esc(c.name) + '</b> — ' + esc(c.child) +
+      return '<div class="ex">' + imgTag(c, '') + '<div><b>' + (n + 1) + '. ' + esc(c.name) + '</b> — ' + esc(c.child) +
         '<br>' + esc(c.how) + '<br><i>Сколько: ' + esc(plan(c)) + '.</i>' +
         (c.props ? ' Понадобится: ' + esc(c.props) + '.' : '') + '</div></div>';
     }).join('');
@@ -611,11 +399,7 @@ JS = r"""
       return '<tr><td class="n">' + esc(c.name) + '</td>' + days.map(function () { return '<td>☐ ☐</td>'; }).join('') + '</tr>';
     }).join('');
     return '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">' +
-      '<title>Артикуляционная гимнастика на звук [' + esc(s.key) + ']</title><style>' +
-      '@page{size:A4;margin:14mm}html{background:#e9e6df}' +
-      'body{margin:16px auto;width:182mm;min-height:269mm;box-sizing:border-box;background:#fff;padding:14mm;' +
-      'box-shadow:0 2px 12px rgba(0,0,0,.1);font:12pt/1.45 Arial,Helvetica,sans-serif;color:#000}' +
-      '@media print{html{background:#fff}body{margin:0;width:auto;min-height:0;padding:0;box-shadow:none}}' +
+      '<title>Артикуляционная гимнастика на звук [' + esc(s.key) + ']</title><style>' + PAGE_CSS +
       'h1{font-size:17pt;margin:0 0 4pt}.sub{margin:0 0 10pt;color:#333}' +
       '.rule{margin:0 0 12pt;padding:8pt 10pt;border:1px solid #999;border-radius:6pt}' +
       '.ex{display:flex;gap:10pt;margin:0 0 10pt;page-break-inside:avoid}' +
@@ -623,8 +407,6 @@ JS = r"""
       'table{border-collapse:collapse;width:100%;margin-top:6pt}' +
       'th,td{border:1px solid #000;padding:4pt;font-size:10pt;text-align:center}td.n{text-align:left;width:34%}' +
       '.foot{margin-top:12pt;font-size:9pt;color:#555}body.no-table .tbl{display:none}' +
-      '@media screen{html.fit body{zoom:var(--z)}}' +
-      '[contenteditable]:focus{outline:none}' +
       '</style></head><body contenteditable="true" spellcheck="false" class="' + (L.table ? '' : 'no-table') + '">' +
       '<h1>Артикуляционная гимнастика на звук [' + esc(s.key) + ']</h1>' +
       '<p class="sub">Имя: ____________________ &nbsp; Неделя: с ______ по ______</p>' +
@@ -634,44 +416,110 @@ JS = r"""
       '<div class="tbl"><p><b>Отмечайте, когда сделали:</b> у — утро, в — вечер.</p><table>' + head + rows + '</table></div>' +
       '<p class="foot">По Фомичёвой М. Ф. (1989) и картотекам логопедов · logozvuk.com</p></body></html>';
   }
+  // Карточки: строка = одно упражнение. Слева лицо (ребёнку), справа оборот (взрослому);
+  // режут по пунктиру, складывают пополам по линии сгиба — получается двусторонняя карточка.
+  function cardsDoc() {
+    var s = cur(), list = L.all ? s.ex : S.sel.map(at);
+    var motifs = Object.keys(MOTIF).map(function (k) { return MOTIF[k]; }).join('');
+    var corner = function (pos) {
+      return '<svg class="mot ' + pos + '" viewBox="0 0 80 80" aria-hidden="true">' + motifs + '</svg>';
+    };
+    var rows = list.map(function (c) {
+      return '<div class="row"><div class="front">' + corner('tl') + corner('br') +
+        '<div class="pic">' + imgTag(c, '') + '</div><div class="nm">' + esc(c.name) + '</div></div>' +
+        '<div class="back"><div class="bn">' + esc(c.name) + '</div>' +
+        (c.child ? '<p class="ch">' + esc(cap(c.child)) + '</p>' : '') +
+        '<p>' + esc(c.how) + '</p><p><b>Сколько:</b> ' + esc(plan(c)) + '.' +
+        (c.props ? ' <b>Понадобится:</b> ' + esc(c.props) + '.' : '') + '</p>' +
+        (holds(c) ? '<p class="tip">' + HOLD_TIP + '</p>' : '') +
+        '<p class="src">Звук [' + esc(s.key) + '] · ' + esc(c.src) + ' · logozvuk.com</p></div></div>';
+    }).join('');
+    var T = '.front{--acc:#c9c2b6;--tint:#fff;--c1:#fff;--c2:#fff;--c3:#fff}' +
+      'body.t-osen .front{--acc:#e08a3c;--tint:#fff8ef;--c1:#f2b35c;--c2:#e5733b;--c3:#d9a441}' +
+      'body.t-zima .front{--acc:#5b9bd5;--tint:#f3f8fd;--c1:#fff;--c2:#fff;--c3:#fff}' +
+      'body.t-kosmos .front{--acc:#7466cf;--tint:#f6f4ff;--c1:#b9aef2;--c2:#f2c14e;--c3:#f2c14e}' +
+      'body.t-more .front{--acc:#2f8fbf;--tint:#eff8fb;--c1:#7cc6e0;--c2:#7cc6e0;--c3:#f08a5d}' +
+      'body.bw .front{--acc:#000;--tint:#fff;--c1:#fff;--c2:#fff;--c3:#fff}' +
+      '.m{display:none}body.t-osen .m-osen,body.t-zima .m-zima,body.t-kosmos .m-kosmos,body.t-more .m-more{display:inline}' +
+      '.mot .f{stroke:var(--acc);stroke-width:2;stroke-linejoin:round}.mot .a1{fill:var(--c1)}.mot .a2{fill:var(--c2)}' +
+      '.mot .a3{fill:var(--c3)}.mot .s{fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linecap:round}' +
+      'body.t-zima .mot .s{stroke-width:2.6}';
+    return '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">' +
+      '<title>Карточки артикуляционной гимнастики — звук [' + esc(s.key) + ']</title><style>' + PAGE_CSS +
+      'h1{font-size:15pt;margin:0 0 2pt}.how{margin:0 0 8pt;font-size:9.5pt;color:#444}' +
+      '.row{display:grid;grid-template-columns:1fr 1fr;height:78mm;margin:0 0 5mm;border:1px dashed #9a958d;' +
+      'break-inside:avoid;page-break-inside:avoid;box-sizing:border-box}' +
+      '.front{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'margin:3mm;border:2.2pt solid var(--acc);border-radius:5mm;background:var(--tint);overflow:hidden}' +
+      '.pic img{width:44mm;height:44mm;object-fit:contain;mix-blend-mode:multiply}.nm{margin-top:2mm;font:700 19pt/1.1 ui-rounded,' +
+      '"Nunito","Arial Rounded MT Bold",Arial,sans-serif;text-align:center;padding:0 4mm}' +
+      '.mot{position:absolute;width:19mm;height:19mm}.mot.tl{left:1.5mm;top:1.5mm}' +
+      '.mot.br{right:1.5mm;bottom:1.5mm;transform:rotate(180deg)}' +
+      '.back{border-left:1px dashed #9a958d;padding:5mm 6mm;font-size:10pt;line-height:1.38;overflow:hidden}' +
+      '.back p{margin:0 0 2mm}.bn{font:700 13pt/1.2 Arial,sans-serif;margin:0 0 1.5mm}.ch{font-style:italic}' +
+      '.tip{font-size:8.5pt;color:#444}.src{font-size:8pt;color:#777;margin-top:2mm}' + T +
+      '</style></head><body contenteditable="true" spellcheck="false" class="t-' + L.tema + (L.colour ? '' : ' bw') + '">' +
+      '<h1>Карточки артикуляционной гимнастики — звук [' + esc(s.key) + ']</h1>' +
+      '<p class="how">Вырежьте по пунктиру и сложите пополам по средней линии: лицом — ребёнку, оборотом — себе.</p>' +
+      rows + '</body></html>';
+  }
   function syncOpts() {
     $('gim-o-bw').setAttribute('aria-pressed', L.colour ? 'false' : 'true');
     $('gim-o-col').setAttribute('aria-pressed', L.colour ? 'true' : 'false');
     $('gim-o-tbl').checked = L.table;
+    root.querySelectorAll('[data-tema]').forEach(function (b) {
+      b.setAttribute('aria-pressed', b.dataset.tema === L.tema ? 'true' : 'false');
+    });
+    $('gim-o-sel').setAttribute('aria-pressed', L.all ? 'false' : 'true');
+    $('gim-o-all').setAttribute('aria-pressed', L.all ? 'true' : 'false');
+    var cards = L.kind === 'cards';
+    $('gim-opt-tbl').hidden = cards; $('gim-opt-tema').hidden = !cards; $('gim-opt-how').hidden = !cards;
+    $('gim-word').hidden = cards;  // карточки в Word не раскладываются — кнопки нет (закон 14)
+    $('gim-sheet-title').textContent = cards ? 'Карточки на занятие — так они будут выглядеть' :
+      'Лист домой — так он будет выглядеть';
+    $('gim-o-sel').textContent = 'отмеченные (' + S.sel.length + ')';
+    $('gim-o-all').textContent = 'все (' + cur().ex.length + ')';
   }
-  function openSheet() {
-    L.colour = false; L.table = true; syncOpts(); $('gim-err').textContent = '';
-    // Курсор в листе — клавиши ловит сам лист, наверх они не всплывают: Esc
-    // слушаем и там (поймано 24.11 — лист не закрывался после щелчка по нему).
+  function load() {
+    // Курсор в листе — клавиши ловит сам лист, наверх они не всплывают: Esc слушаем и там.
     frame.onload = function () {
       try {
         var d = frame.contentDocument;
         d.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeSheet(); });
         // Телефон: А4 шире экрана — на экране лист уменьшается целиком. Только экран:
-        // в печать, PDF и Word масштаб не уходит (`docClone` его снимает).
+        // в печать и PDF масштаб не уходит (`docClone` его снимает).
         var w = frame.clientWidth, bw = d.body.offsetWidth + 32;
         if (bw > w) { d.documentElement.style.setProperty('--z', (w / bw).toFixed(3)); d.documentElement.classList.add('fit'); }
       } catch (e) { /* молчим */ }
     };
-    frame.srcdoc = sheetDoc();
+    frame.srcdoc = L.kind === 'cards' ? cardsDoc() : listDoc();
+  }
+  function openSheet(kind) {
+    L.kind = kind; L.colour = kind === 'cards'; L.table = true; L.all = false;
+    syncOpts(); $('gim-err').textContent = '';
+    load();
     sheet.hidden = false; document.documentElement.classList.add('gim-lock');
     $('gim-sheet-back').focus();
   }
   function closeSheet() {
-    sheet.hidden = true; document.documentElement.classList.remove('gim-lock'); $('gim-print-btn').focus();
+    sheet.hidden = true; document.documentElement.classList.remove('gim-lock');
+    $(L.kind === 'cards' ? 'gim-cards-btn' : 'gim-list-btn').focus();
   }
-  // Настройки меняют лист БЕЗ пересборки — правки в тексте не теряются.
+  // Цвет, таблица и тема меняют лист БЕЗ пересборки — правки в тексте не теряются.
   function applyOpts() {
     var d = frame.contentDocument; syncOpts();
     if (!d || !d.body) return;
     d.body.classList.toggle('no-table', !L.table);
+    d.body.classList.toggle('bw', !L.colour);
+    ['bez', 'osen', 'zima', 'kosmos', 'more'].forEach(function (t) { d.body.classList.toggle('t-' + t, t === L.tema); });
     d.querySelectorAll('img[data-bw]').forEach(function (im) { im.src = L.colour ? im.dataset.col : im.dataset.bw; });
   }
   function goal(fmt) {
     try {
       if (window.ym && window.METRIKA_ID) {
         var p = {}; p['[' + cur().key + ']'] = fmt;
-        window.ym(window.METRIKA_ID, 'reachGoal', 'list', { 'лист получен': { 'гимнастика': p } });
+        var o = {}; o[L.kind === 'cards' ? 'гимнастика · карточки' : 'гимнастика'] = p;
+        window.ym(window.METRIKA_ID, 'reachGoal', 'list', { 'лист получен': o });
       }
     } catch (e) { /* молчим */ }
   }
@@ -684,7 +532,7 @@ JS = r"""
     var b = c.querySelector('body'); if (b) { b.removeAttribute('contenteditable'); b.removeAttribute('spellcheck'); }
     return c;
   }
-  function fileName() { return 'Гимнастика на звук ' + cur().key; }
+  function fileName() { return (L.kind === 'cards' ? 'Карточки гимнастики на звук ' : 'Гимнастика на звук ') + cur().key; }
   // Файл забираем переходом по ссылке с сервера, как у главного генератора: айфон
   // иначе открывает лист смотрелкой вместо того, чтобы сохранить.
   function take(url) {
@@ -713,10 +561,10 @@ JS = r"""
       var imgs = Array.prototype.slice.call(c.querySelectorAll('img'));
       for (var i = 0; i < imgs.length; i++) imgs[i].setAttribute('src', await asData(imgs[i].getAttribute('src')));
       var ok = await post('/api/pdf', { html: '<!DOCTYPE html>' + c.outerHTML, name: fileName() },
-        'PDF сейчас не собрать. Лист на месте — сохраните его в Word или распечатайте.');
+        'PDF сейчас не собрать. Лист на месте — распечатайте его.');
       if (ok) goal('PDF');
     } catch (e) {
-      $('gim-err').textContent = 'Не дозвонились до службы печати. Лист на месте — сохраните его в Word или распечатайте.';
+      $('gim-err').textContent = 'Не дозвонились до службы печати. Лист на месте — распечатайте его.';
     } finally { busy(btn, false); }
   });
   // Word открывает картинки по полному адресу сайта.
@@ -743,11 +591,18 @@ JS = r"""
       else { im.onload = im.onerror = function () { if (--left === 0) go(); }; }
     });
   });
-  $('gim-print-btn').addEventListener('click', openSheet);
+  $('gim-list-btn').addEventListener('click', function () { openSheet('list'); });
+  $('gim-cards-btn').addEventListener('click', function () { openSheet('cards'); });
   $('gim-sheet-back').addEventListener('click', closeSheet);
   $('gim-o-bw').addEventListener('click', function () { L.colour = false; applyOpts(); });
   $('gim-o-col').addEventListener('click', function () { L.colour = true; applyOpts(); });
   $('gim-o-tbl').addEventListener('change', function () { L.table = this.checked; applyOpts(); });
+  root.querySelectorAll('[data-tema]').forEach(function (b) {
+    b.addEventListener('click', function () { L.tema = b.dataset.tema; applyOpts(); });
+  });
+  // «Все карточки» меняет состав листа — лист собирается заново.
+  $('gim-o-sel').addEventListener('click', function () { if (L.all) { L.all = false; syncOpts(); load(); } });
+  $('gim-o-all').addEventListener('click', function () { if (!L.all) { L.all = true; syncOpts(); load(); } });
   document.addEventListener('keydown', function (ev) { if (!sheet.hidden && ev.key === 'Escape') closeSheet(); });
 
   reset(); render();
@@ -762,9 +617,11 @@ def widget_html() -> str:
     buttons = "".join(
         f'<button type="button" aria-pressed="false">{e(s["key"])}</button>'
         for s in d["sounds"])
+    temy = "".join(f'<button type="button" data-tema="{k}" aria-pressed="{"true" if k == "bez" else "false"}">'
+                   f'{e(v)}</button>' for k, v in TEMY)
     # «</» внутри <script> обрывает тег даже в строке (урок 08-25, `analytics`).
     blob = json.dumps(d, ensure_ascii=False).replace("</", "<\\/")
-    play = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>'
+    motif = json.dumps(MOTIF, ensure_ascii=False).replace("</", "<\\/")
     return (
         f"<style>{CSS}</style>\n"
         '<div class="widget-box gim" id="gim">\n'
@@ -777,7 +634,7 @@ def widget_html() -> str:
         '   <ol class="gim-how">\n'
         '    <li><b>1</b><span>Выберите звук.</span></li>\n'
         '    <li><b>2</b><span>Отметьте 2–3 упражнения — номер покажет порядок.</span></li>\n'
-        '    <li><b>3</b><span>«Начать занятие»: рот на экране показывает, что делать, и считает. Или «Лист домой».</span></li>\n'
+        '    <li><b>3</b><span>«Карточки на занятие» — показывать ребёнку. «Лист домой» — родителю.</span></li>\n'
         '   </ol>\n'
         '  </aside>\n'
         '  <section class="gim-cards" aria-label="Упражнения">\n'
@@ -789,55 +646,37 @@ def widget_html() -> str:
         ' </div>\n'
         ' <div class="gim-shelf-row">\n'
         '  <p class="gim-hint">За один раз — 2–3 упражнения, новое из них одно (Фомичёва, 1989).</p>\n'
-        '  <button type="button" class="gim-btn" id="gim-print-btn" title="Лист для родителя: сначала на экране, '
+        '  <button type="button" class="gim-btn" id="gim-list-btn" title="Лист для родителя: сначала на экране, '
         'потом печать, PDF или Word">Лист домой</button>\n'
-        f'  <button type="button" class="gim-btn gim-go" id="gim-start" title="Рот на экране показывает, что делать, '
-        f'и считает до нужного числа">{play}Начать занятие</button>\n'
+        '  <button type="button" class="gim-btn gim-go" id="gim-cards-btn" title="Карточки: лицом картинка для ребёнка, '
+        'оборотом — как делать. Сначала на экране, потом печать или PDF">Карточки на занятие</button>\n'
         ' </div>\n'
         '</div>\n'
-        '<div class="gim-run" id="gim-run" role="dialog" aria-modal="true" aria-label="Занятие" tabindex="-1" hidden>\n'
-        ' <div class="gim-frame"><div class="gim-stage">\n'
-        '  <div class="gim-rot" id="gim-rot" aria-hidden="true"><div class="lay on"></div><div class="lay"></div></div>\n'
-        '  <div class="gim-info">\n'
-        '   <p class="gim-s-step" id="gim-s-step"></p>\n'
-        '   <div class="gim-s-title"><img id="gim-s-img" alt=""><p class="gim-s-name" id="gim-s-name"></p></div>\n'
-        '   <p class="gim-s-line" id="gim-s-line"></p>\n'
-        '   <p class="gim-s-plan" id="gim-s-plan"></p>\n'
-        '   <p class="gim-s-label" id="gim-s-label"></p>\n'
-        '   <p class="gim-s-big" id="gim-s-big" aria-live="off"></p>\n'
-        '   <p class="gim-s-unit" id="gim-s-unit"></p>\n'
-        '   <div class="gim-beads" id="gim-beads" aria-hidden="true"></div>\n'
-        '   <div class="gim-bar" id="gim-bar" hidden><i></i></div>\n'
-        '  </div>\n'
-        ' </div></div>\n'
-        ' <div class="gim-shelf">\n'
-        '  <span class="gim-tlabel">Темп:</span><span class="gim-seg"><button type="button" id="gim-t-norm" '
-        'aria-pressed="true">обычный</button><button type="button" id="gim-t-slow" aria-pressed="false" '
-        'title="Каждый счёт в полтора раза дольше">медленный</button></span>\n'
-        '  <button type="button" class="gim-btn" id="gim-pause">Пауза</button>\n'
-        '  <button type="button" class="gim-btn gim-go" id="gim-next">Дальше →</button>\n'
-        '  <button type="button" class="gim-btn" id="gim-stop">Закончить</button>\n'
-        '  <p class="gim-keys">Пробел — пауза · → — дальше · Esc — закончить</p>\n'
-        ' </div>\n'
-        '</div>\n'
-        '<div class="gim-sheet" id="gim-sheet" role="dialog" aria-modal="true" aria-label="Лист домой" hidden>\n'
+        '<div class="gim-sheet" id="gim-sheet" role="dialog" aria-modal="true" aria-labelledby="gim-sheet-title" hidden>\n'
         ' <div class="gim-sheet-bar">\n'
         '  <button type="button" class="gim-btn gim-sm" id="gim-sheet-back">← К упражнениям</button>\n'
-        '  <h2>Лист домой — так он будет выглядеть</h2>\n'
+        '  <h2 id="gim-sheet-title"></h2>\n'
         '  <button type="button" class="gim-btn gim-sm" id="gim-print">Печать</button>\n'
         '  <button type="button" class="gim-btn gim-sm" id="gim-word">Скачать Word</button>\n'
         '  <button type="button" class="gim-btn gim-sm gim-go" id="gim-pdf">Скачать PDF</button>\n'
         ' </div>\n'
         ' <div class="gim-opts">\n'
-        '  <span>Картинки:</span><span class="gim-seg"><button type="button" id="gim-o-bw" aria-pressed="true">'
-        'чёрно-белые</button><button type="button" id="gim-o-col" aria-pressed="false">цветные</button></span>\n'
-        '  <label class="gim-chk"><input type="checkbox" id="gim-o-tbl" checked> таблица отметок на неделю</label>\n'
-        '  <span>Текст листа можно поправить прямо на нём — так он и сохранится.</span>\n'
+        '  <span class="gim-opt" id="gim-opt-how"><span>Карточки:</span><span class="gim-seg">'
+        '<button type="button" id="gim-o-sel" aria-pressed="true"></button>'
+        '<button type="button" id="gim-o-all" aria-pressed="false"></button></span></span>\n'
+        f'  <span class="gim-opt" id="gim-opt-tema"><span>Тема:</span><span class="gim-seg">{temy}</span></span>\n'
+        '  <span class="gim-opt"><span>Картинки:</span><span class="gim-seg"><button type="button" id="gim-o-bw" '
+        'aria-pressed="true">чёрно-белые</button><button type="button" id="gim-o-col" aria-pressed="false">цветные'
+        '</button></span></span>\n'
+        '  <label class="gim-opt gim-chk" id="gim-opt-tbl"><input type="checkbox" id="gim-o-tbl" checked> '
+        'таблица отметок на неделю</label>\n'
+        '  <span>Текст можно поправить прямо на листе — так он и сохранится.</span>\n'
         ' </div>\n'
         ' <p class="gim-err" id="gim-err" role="status"></p>\n'
-        ' <iframe id="gim-sheet-frame" title="Лист домой"></iframe>\n'
+        ' <iframe id="gim-sheet-frame" title="Материал на экране"></iframe>\n'
         '</div>\n'
         f'<script type="application/json" id="gim-data">{blob}</script>\n'
+        f'<script type="application/json" id="gim-motif">{motif}</script>\n'
         "</div>\n"
         f"<script>{JS}</script>"
     )
