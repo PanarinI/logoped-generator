@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import html
+import re
 import json
 import os
 from typing import Any, Dict, List, Optional, Tuple
@@ -184,6 +185,12 @@ PAGES: Tuple[Page, ...] = (
                        "Печать сразу, без установки.",
         "parent": None,
         "widget": "?embed=1",
+        # Заголовок и вступление — НАД виджетом, как у гимнастики и funclass. Слово
+        # автора 24.11: «Главную страницу, да, заголовок переноси над виджетом. Это
+        # 100%» — сказано после того, как ему назвали правило канона «первую страницу
+        # с трафиком не трогать»: меняется раскладка, текст и h1 остаются те же.
+        # Вступление — его проза, оно остаётся в glavnaya.html и поднимается оттуда.
+        "head_above": True,
         "draft": False,
     },
     {
@@ -629,9 +636,24 @@ def _head_above(page: Page) -> str:
     if not page.get("head_above"):
         return ""
     e = html.escape
-    lead = f'<p class="lead">{e(page["lead"])}</p>' if page.get("lead") else ""
+    lead = f'<p class="lead">{e(page["lead"])}</p>' if page.get("lead") else _split_lead(_body(page))[0]
     return (f'<header class="page-head">\n{_crumbs(page)}\n'
             f"<h1>{e(page['h1'])}</h1>\n{lead}\n</header>\n")
+
+
+_LEAD_RE = re.compile(r'<p class="lead">.*?</p>\s*', re.S)
+
+
+def _split_lead(body: str) -> Tuple[str, str]:
+    """Первый абзац-вступление тела и тело без него.
+
+    У страниц с головой над виджетом вступление стоит наверху, рядом с h1, — но
+    живёт там же, где и было, в файле страницы: один факт — один дом.
+    """
+    m = _LEAD_RE.search(body)
+    if not m:
+        return "", body
+    return m.group(0).strip(), body[:m.start()] + body[m.end():]
 
 
 def _body(page: Page) -> str:
@@ -693,7 +715,7 @@ def render(page: Page) -> bytes:
         '<main class="site">\n'
         f"{'' if page.get('head_above') else _crumbs(page)}\n"
         f"{'' if page.get('head_above') else '<h1>' + e(page['h1']) + '</h1>'}\n"
-        f"{_body(page)}\n"
+        f"{_split_lead(_body(page))[1] if page.get('head_above') and not page.get('lead') else _body(page)}\n"
         f"{_children_block(page)}\n"
         "</main>\n"
         f"{_footer(page)}\n"

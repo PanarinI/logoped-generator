@@ -195,3 +195,6 @@ body {
   .page-head { padding: var(--s3) var(--s3) var(--s2); }
   .page-head h1 { font-size: 1.6rem; }
 }
+/* Главная: над рамкой генератора теперь голова страницы — рамка чуть ниже, чтобы
+   вместе с головой оставаться в первом экране. */
+.page-head + .widget-box .widget { height: min(82vh, 1000px); }
