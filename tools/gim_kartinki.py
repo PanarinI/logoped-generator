@@ -8,6 +8,8 @@
 лошадка…), а ЛИЦО с положением губ и языка — только там, где рисунок совпал с описанием
 источника (`gymnastics.json` → description). Сложный язык генератор не держит: «Чашечка» мимо
 трижды, «Вкусное варенье» лизало сбоку при «не из стороны в сторону» — у них только образ.
+«Горка» — своя, не банковая (24.11, вечер): в банке слов горка детская, со спуском, а спинку языка
+выгибают вверх — у Фомичёвой «Киска сердится» и «снежинки с горки». Нарисована снежным бугром.
 Пробы и разбор — `pictures/probes/2026-11-24-gimnastika*` (в git не идут), промпты —
 `logoped_slovar/gimnastika_prompts.json`.
 
@@ -43,7 +45,7 @@ MAP = {
     "trubochka":          ("gim:obraz_trubochka",        "gim:litso_trubochka"),
     "blinchik":           ("bank:блинчик",               "gim:litso_blinchik"),
     "nakazat_yazyk":      (None,                         "gim:litso_nakazat_yazyk"),
-    "gorka":              ("bank:горка",                 None),
+    "gorka":              ("gim:obraz_gorka",            None),   # не банковая: там горка-спуск, вогнутая
     "teeth_lower":        ("gim:obraz_zubnaya_shchetka", None),
     "teeth_upper":        ("gim:obraz_zubnaya_shchetka", None),
     "vkusnoe_varenye":    ("bank:варенье",               None),

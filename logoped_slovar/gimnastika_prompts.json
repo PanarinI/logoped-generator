@@ -12,7 +12,9 @@
     "Отсюда проба 2: зубы — «ровные прямоугольники, кромка к кромке»; язык — «поднят вверх, к носу»; бумага названа",
     "словами (запрет хуже задания — урок конвейера); и вторая точка зрения на каждое: рот крупно и профиль.",
     "ПРОБА 3 (24.11, слово автора «продолжаем по тому, как ты видишь»): образ на каждое упражнение + лицо, где совпадает с источником. Образы из банка objects_colour (заборчик, блинчик, горка, варенье, грибок, гармошка, лошадь, качели, пароход, часы, иголка, мяч, ворота) не заказываются; заказ — только недостающие obraz_* и лица litso_*.",
-    "ИТОГ ПРОБЫ 3 (24.11, 12 рисунков ≈ 12 центов): лица приняты — трубочка и часики (точно по источнику), блинчик и «накажем язычок» (близко); отклонены — «вкусное варенье» (лижет сбоку, а источник: «сверху вниз, не из стороны в сторону»), иголочка (в наши 20 упражнений не входит), чашечка (мимо трижды). Образы приняты все шесть; ватка ⚠ читается как облачко — решение автора. Принятое лежит в pictures/gimnastika/, на страницу идёт через tools/gim_kartinki.py."
+    "ИТОГ ПРОБЫ 3 (24.11, 12 рисунков ≈ 12 центов): лица приняты — трубочка и часики (точно по источнику), блинчик и «накажем язычок» (близко); отклонены — «вкусное варенье» (лижет сбоку, а источник: «сверху вниз, не из стороны в сторону»), иголочка (в наши 20 упражнений не входит), чашечка (мимо трижды). Образы приняты все шесть; ватка ⚠ читается как облачко — решение автора. Принятое лежит в pictures/gimnastika/, на страницу идёт через tools/gim_kartinki.py.",
+    "ГОРКА (24.11, вечер, слово автора «Да, делай» на ≈2 цента): банковая «горка» — детская горка-спуск, вогнутая, а у Фомичёвой спинка языка ВЫГНУТА вверх («Киска сердится», «Сделаем горку», «ветер сдувает снежинки с горки»). Заказ — снежная горка-бугор, два варианта: с санками у подножия и без них.",
+    "ИТОГ ГОРКИ (24.11, 2 рисунка ≈ 2 цента): принят obraz_gorka_2 — снежный бугор, выгнут вверх, белый фон; лежит в pictures/gimnastika/obraz_gorka.png. Вариант с санками мимо: тёмный фон со свечением, как у первого «Заборчика»."
   ],
   "zaborchik": {
     "box": [
@@ -173,5 +175,25 @@
     "faded": false,
     "colour": true,
     "colour_hint": "white"
+  },
+  "obraz_gorka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A small snowy hill seen from the side: one smooth, round, dome-shaped hump of snow that bulges upward in a single gentle convex arch, symmetric, with both slopes rounded outward. A few snowflakes blow off the round top of the hill. A little red wooden sled stands at the foot of the hill. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "white snow with flat pale-blue areas, red sled, light blue snowflakes"
+  },
+  "obraz_gorka_2": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A small snowy hill seen from the side: one smooth, round, dome-shaped hump of snow that bulges upward in a single gentle convex arch, symmetric, with both slopes rounded outward. A few snowflakes blow off the round top of the hill. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "white snow with flat pale-blue areas, light blue snowflakes"
   }
 }
