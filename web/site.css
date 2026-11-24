@@ -176,3 +176,22 @@ body {
 .site .pair figure { margin: 0; }
 .site .pair figcaption { max-width: 230px; }
 .site .mark { color: #c2553d; }
+
+/* ── голова НАД виджетом (страницы со своим виджетом, с 24.11) ─────────── */
+.page-head {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--s4) var(--s4) var(--s3);
+}
+.page-head .crumbs { margin: 0 0 var(--s2); }
+.page-head h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 var(--s2);
+  letter-spacing: -0.01em;
+}
+.page-head .lead { margin: 0; max-width: 44rem; color: var(--ink-soft); }
+@media (max-width: 760px) {
+  .page-head { padding: var(--s3) var(--s3) var(--s2); }
+  .page-head h1 { font-size: 1.6rem; }
+}

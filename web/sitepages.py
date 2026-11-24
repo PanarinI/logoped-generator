@@ -348,6 +348,12 @@ PAGES: Tuple[Page, ...] = (
                        "и лист домой на неделю.",
         "parent": None,
         "widget": "gimnastika",
+        # Заголовок и одна строка — НАД виджетом (слово автора 24.11: «заголовок над
+        # виджетом… логичнее, чем под», как у funclass). Канон не нарушен: меню
+        # сверху нет, виджет остаётся в первом экране. Строка — черновик Клода.
+        "head_above": True,
+        "lead": "Выберите звук и отметьте 2–3 упражнения. Занимайтесь перед зеркалом — экран "
+                "покажет картинку и посчитает — или распечатайте лист домой на неделю.",
         "draft": False,
     },
     # ── ОСЬ «КОНКУРЕНТЫ» (канон ШАГ 4) ─────────────────────────────────
@@ -612,6 +618,22 @@ def _widget(page: Page) -> str:
     )
 
 
+def _head_above(page: Page) -> str:
+    """Голова страницы НАД виджетом: путь, h1 и одна строка о том, что здесь делают.
+
+    Так устроены страницы funclass, и автор попросил так же (24.11): «я не вижу
+    заголовка, и для меня это просто выбор звука». Канон Site Builders держит в
+    первом экране сам виджет и запрещает шапку-меню; заголовок с одной строкой
+    этому не мешает. h1 при этом остаётся один — в теле страницы его нет.
+    """
+    if not page.get("head_above"):
+        return ""
+    e = html.escape
+    lead = f'<p class="lead">{e(page["lead"])}</p>' if page.get("lead") else ""
+    return (f'<header class="page-head">\n{_crumbs(page)}\n'
+            f"<h1>{e(page['h1'])}</h1>\n{lead}\n</header>\n")
+
+
 def _body(page: Page) -> str:
     """Тело страницы — файл, который пишет автор. Нет файла → пусто, не ошибка."""
     path = os.path.join(PAGES_DIR, page["file"])
@@ -666,10 +688,11 @@ def render(page: Page) -> bytes:
         f"{analytics()}"
         "</head>\n"
         "<body>\n"
+        f"{_head_above(page)}"
         f"{_widget(page)}\n"
         '<main class="site">\n'
-        f"{_crumbs(page)}\n"
-        f"<h1>{e(page['h1'])}</h1>\n"
+        f"{'' if page.get('head_above') else _crumbs(page)}\n"
+        f"{'' if page.get('head_above') else '<h1>' + e(page['h1']) + '</h1>'}\n"
         f"{_body(page)}\n"
         f"{_children_block(page)}\n"
         "</main>\n"
