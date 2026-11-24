@@ -8,6 +8,11 @@
 # `amvera/master` и отправляет — сборка запускается от пуша.
 # Разбор, почему так, а не иначе — DECISIONS.md 2026-09-20.
 #
+# 24.11.2026: Amvera переехала в «Москва_1», старого `git.amvera.ru` больше нет.
+# Новый адрес — `git.msk1.amvera.ru`, вход тот же: логин `panarini` строчными и
+# пароль от кабинета Amvera. Новый git после входа рвёт HTTP/2 («Error in the
+# HTTP2 framing layer»), а по HTTP/1.1 проходит, поэтому с Amvera говорим по HTTP/1.1.
+#
 #   bash tools/vykat.sh          # выкатить и дождаться сайта
 #   bash tools/vykat.sh --dry    # примерка: всё посчитать, ничего не отправлять
 #
@@ -27,8 +32,8 @@ SITE=https://logozvuk.com
 REMOTE=amvera
 
 git remote get-url "$REMOTE" >/dev/null 2>&1 || {
-  echo "нет remote «$REMOTE». Заведите: git remote add $REMOTE https://git.amvera.ru/panarini/logozvuk"
-  echo "(логин СТРОЧНЫМИ: с PanarinI сервер отвечает «repository not found»)"
+  echo "нет remote «$REMOTE». Заведите: git remote add $REMOTE https://git.msk1.amvera.ru/panarini/logozvuk"
+  echo "(логин СТРОЧНЫМИ: с PanarinI сервер отвечает «repository not found»; пароль — от кабинета Amvera)"
   exit 1
 }
 
@@ -41,8 +46,9 @@ git fetch -q origin main
 AHEAD=$(git rev-list --count origin/main..main)
 [ "$AHEAD" -gt 0 ] && { echo "❌ на GitHub нет $AHEAD коммит(ов) из main. Сперва «git», потом выкат."; exit 1; }
 
-# 3. Свежая копия ветки Amvera.
-git fetch -q "$REMOTE"
+# 3. Свежая копия ветки Amvera. По HTTP/1.1: по HTTP/2 новый git Amvera рвёт связь (24.11).
+AMV=(git -c http.version=HTTP/1.1)
+"${AMV[@]}" fetch -q "$REMOTE"
 if git merge-base --is-ancestor main "$REMOTE/master"; then
   echo "на сайте уже всё, что есть в main ($(git rev-parse --short main)) — выкатывать нечего"; exit 0
 fi
@@ -68,7 +74,7 @@ if [ "$DRY" = "--dry" ]; then
 fi
 
 echo; echo "откат при беде: git push $REMOTE $(git rev-parse --short "$REMOTE/master"):refs/heads/master --force"
-git push "$REMOTE" "$MERGE:refs/heads/master"
+"${AMV[@]}" push "$REMOTE" "$MERGE:refs/heads/master"
 
 # 5. Проверка глазами машины: хэш экрана на сайте должен совпасть с нашим.
 #    Считается по трём файлам экрана — тем же способом, что и в web/server.py.
