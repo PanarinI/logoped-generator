@@ -1,0 +1,177 @@
+{
+  "_comment": [
+    "РИСУНКИ УПРАЖНЕНИЙ АРТИКУЛЯЦИОННОЙ ГИМНАСТИКИ — для страницы /artikulyacionnaya-gimnastika/ (web/gimnastika.py).",
+    "Дом заведён 2026-11-24: в сценариях кластера картинки — первое, чего не хватает (research/site/scenarii_klasterov_2026-11-24.md §2).",
+    "Описание позы — только из gymnastics.json (поле description, источник у каждого упражнения); лицо одно и то же",
+    "во всех рисунках, чтобы набор читался серией. Проверка — глазами по описанию источника до показа (законы 6 и 10).",
+    "Заказ (около цента за рисунок):",
+    "  python3 tools/gen_kartinki.py --slovar logoped_slovar/gimnastika_prompts.json --out pictures/probes/<дата>-gimnastika --only <имя>",
+    "Ч/б снимается с цветного (imgbw.strip_colour), не заказывается отдельно (закон 13).",
+    "ПРОБА 1 (24.11, обе мимо источника): заборчик — тёмная подложка с размытием и зубы зубцами вместо ровного",
+    "«заборчика»; чашечка — язык свисает вниз на губу с бороздкой, а по источнику поднят вверх и загнут краями и кончиком.",
+    "Отсюда проба 2: зубы — «ровные прямоугольники, кромка к кромке»; язык — «поднят вверх, к носу»; бумага названа",
+    "словами (запрет хуже задания — урок конвейера); и вторая точка зрения на каждое: рот крупно и профиль.",
+    "ПРОБА 3 (24.11, слово автора «продолжаем по тому, как ты видишь»): образ на каждое упражнение + лицо, где совпадает с источником. Образы из банка objects_colour (заборчик, блинчик, горка, варенье, грибок, гармошка, лошадь, качели, пароход, часы, иголка, мяч, ворота) не заказываются; заказ — только недостающие obraz_* и лица litso_*.",
+    "ИТОГ ПРОБЫ 3 (24.11, 12 рисунков ≈ 12 центов): лица приняты — трубочка и часики (точно по источнику), блинчик и «накажем язычок» (близко); отклонены — «вкусное варенье» (лижет сбоку, а источник: «сверху вниз, не из стороны в сторону»), иголочка (в наши 20 упражнений не входит), чашечка (мимо трижды). Образы приняты все шесть; ватка ⚠ читается как облачко — решение автора. Принятое лежит в pictures/gimnastika/, на страницу идёт через tools/gim_kartinki.py."
+  ],
+  "zaborchik": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The lips are pulled back in a broad smile and both rows of front teeth show: the upper row of neat white teeth rests exactly on the lower row of neat white teeth, their flat edges meeting in one straight horizontal line, like the boards of a little fence. Every tooth is a neat rounded rectangle with a flat edge. The tongue stays hidden behind the closed teeth. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, white teeth"
+  },
+  "zaborchik_rot": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A close-up of a smiling child's mouth only, from the tip of the nose down to the chin, drawn on plain white paper. The lips are pulled wide apart in a broad smile. Both rows of front teeth are fully visible: the upper row of neat white rounded-rectangle teeth stands exactly on the lower row, flat edges touching along one straight horizontal line, like the boards of a little fence. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, pink lips, white teeth"
+  },
+  "chashechka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The mouth is wide open. The broad pink tongue is pushed out of the mouth and lifted UP high, so that it lies over the upper lip and points toward the nose. The two side edges and the tip of the tongue are bent upward, so the tongue makes a small hollow cup, like a ladle that could hold a drop of water, and the hollow of the cup faces the viewer. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "chashechka_profil": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair, seen from the side in profile facing right, close-up from the forehead to the chin, drawn on plain white paper. The mouth is wide open. The broad pink tongue sticks out forward and is lifted upward in front of the upper lip; its tip and its side edges curl upward, so the tongue is shaped like a small cup or ladle that could hold water. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "litso_trubochka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The lips are pushed far forward and rounded into a small round opening, like a short tube, as when saying the sound 'O'. The teeth are hidden behind the lips. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "litso_blinchik": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The child smiles with the mouth slightly open. The broad, flat, relaxed tongue lies quietly on the lower lip, its wide front edge resting on the lip like a small pancake. The upper front teeth show above the tongue. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "litso_igolochka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The tongue is stuck far out of the mouth straight forward and made narrow and pointed like a needle; the lips are rounded around its base. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "litso_chasiki": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The child smiles with the mouth slightly open. The pointed tip of the tongue touches the right corner of the mouth, like a clock hand that has swung to one side. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "litso_nakazat_yazyk": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The mouth is slightly open. The broad tongue lies on the lower lip, and the upper lip presses gently down on the middle of the tongue, as if patting it. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "litso_vkusnoe_varenye": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "The face of a cheerful five-year-old child with short light-brown hair and a straight fringe, seen straight from the front, close-up from the forehead to the chin, drawn on plain white paper. The mouth is slightly open. The broad front edge of the tongue is raised and lies over the upper lip, licking it from top to bottom as if licking off sweet jam. The bottom of the drawing fades out unfinished below the chin.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light peach skin, light-brown hair, pink lips, pink tongue, white teeth"
+  },
+  "obraz_chashechka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A small tea cup with a handle, standing on a saucer, seen from the side. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "white cup with a blue rim, blue saucer"
+  },
+  "obraz_trubochka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A single striped drinking straw for juice, a bendy straw with a short bent top, standing upright and slightly tilted. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "white straw with red stripes"
+  },
+  "obraz_zubnaya_shchetka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A child's toothbrush with a long handle and a small head of bristles, with a little blob of toothpaste on the bristles, lying diagonally. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "blue handle, white bristles, white and mint-green toothpaste"
+  },
+  "obraz_kist_malyara": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A house painter's wide flat paintbrush with a wooden handle and a metal band, with fresh paint on the tips of the bristles. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "light-brown wooden handle, grey metal band, beige bristles, yellow paint"
+  },
+  "obraz_indyuk": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A turkey bird standing, seen from the side and facing right, with its tail feathers spread in a big round fan and a red wattle hanging from its beak. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "brown and bronze body, fan tail with brown and cream bands, red wattle, grey legs"
+  },
+  "obraz_vatka": {
+    "box": [
+      40,
+      40
+    ],
+    "prompt": "A small fluffy ball of cotton wool, round and soft-looking, like a little cloud. The drawing fades out unfinished at the bottom edge.",
+    "faded": false,
+    "colour": true,
+    "colour_hint": "white"
+  }
+}

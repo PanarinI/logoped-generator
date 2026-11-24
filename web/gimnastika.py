@@ -65,6 +65,15 @@ def data() -> Dict[str, Any]:
     refs = {s["id"]: s["ref"] for s in gym["sources"]}
     comps = gym["complexes"]
 
+    def pic(eid: str, kind: str) -> str:
+        # Картинки собирает `tools/gim_kartinki.py` в web/img. Нет файла — нет
+        # картинки (закон 14). Метка времени в адресе: у /img/ длинный кэш, и без
+        # неё перерисованный образ сутки показывал бы старый (закон 17).
+        path = os.path.join(HERE, "img", f"gim-{eid}-{kind}.png")
+        if not os.path.isfile(path):
+            return ""
+        return f"/img/gim-{eid}-{kind}.png?v={int(os.path.getmtime(path))}"
+
     def card(eid: str) -> Dict[str, str]:
         e = ex[eid]
         ids = e.get("sources", [])
@@ -83,6 +92,9 @@ def data() -> Dict[str, Any]:
             "props": e.get("rekvizit") or "",
             "src": " · ".join(labels),
             "src_full": "\n".join(refs.get(s, s) for s in ids),
+            "obraz": pic(eid, "obraz"),
+            "obraz_bw": pic(eid, "obraz-bw"),
+            "litso": pic(eid, "litso"),
         }
 
     sounds: List[Dict[str, Any]] = []
@@ -128,6 +140,9 @@ CSS = r"""
   display:flex;flex-direction:column;gap:6px}
 .gim-card.off{opacity:.55}
 .gim-card h3{margin:0;font-size:1.1rem;line-height:1.3}
+.gim-pics{display:flex;justify-content:center;gap:10px;margin:2px 0 4px}
+.gim-pics img{width:104px;height:104px;object-fit:contain}
+.gim-run .gim-pics img{width:170px;height:170px}
 .gim-kind{font-size:.78rem;font-weight:400;color:var(--ink-soft);border:1px solid var(--line);
   border-radius:20px;padding:0 8px;margin-left:6px;white-space:nowrap}
 .gim-card p{margin:0;font-size:.93rem;line-height:1.45}
@@ -155,7 +170,8 @@ CSS = r"""
   body>#gim-print{display:block !important;font:12pt/1.4 Arial,sans-serif;color:#000}
   #gim-print h1{font-size:16pt;margin:0 0 6pt}
   #gim-print .rule{margin:0 0 10pt}
-  #gim-print .ex{margin:0 0 8pt;page-break-inside:avoid}
+  #gim-print .ex{margin:0 0 8pt;page-break-inside:avoid;overflow:hidden}
+  #gim-print .ex .pic{float:left;width:20mm;height:20mm;object-fit:contain;margin:0 4mm 2mm 0}
   #gim-print .ex b{font-size:12.5pt}
   #gim-print table{border-collapse:collapse;width:100%;margin-top:10pt}
   #gim-print th,#gim-print td{border:1px solid #000;padding:3pt 4pt;font-size:10pt;text-align:center}
@@ -184,11 +200,20 @@ JS = r"""
     cur().week.forEach(function (c, k) { if (k < 3) S.picked[c.name] = true; });
   }
 
+  // Образ — что напоминает упражнение; лицо — как делать. Лицо есть не у всех:
+  // только там, где рисунок совпал с описанием источника (tools/gim_kartinki.py).
+  function picsHtml(c) {
+    var out = '';
+    if (c.obraz) out += '<img src="' + esc(c.obraz) + '" alt="' + esc(c.name) + '" loading="lazy">';
+    if (c.litso) out += '<img src="' + esc(c.litso) + '" alt="Как делать: ' + esc(c.name) + '" loading="lazy">';
+    return out ? '<div class="gim-pics">' + out + '</div>' : '';
+  }
+
   function cardHtml(c) {
     var on = !!S.picked[c.name];
     return '<li class="gim-card' + (on ? '' : ' off') + '">' +
       '<label class="gim-pick"><input type="checkbox" data-n="' + esc(c.name) + '"' +
-      (on ? ' checked' : '') + '> в занятие</label>' +
+      (on ? ' checked' : '') + '> в занятие</label>' + picsHtml(c) +
       '<h3>' + esc(c.name) + (c.kind ? '<span class="gim-kind">' + esc(c.kind) + '</span>' : '') + '</h3>' +
       (c.child ? '<p class="gim-child">' + esc(c.child) + '</p>' : '') +
       '<p>' + esc(c.how) + '</p>' +
@@ -233,6 +258,7 @@ JS = r"""
   function showRun() {
     var c = R.list[R.k];
     $('gim-step').textContent = 'Упражнение ' + (R.k + 1) + ' из ' + R.list.length;
+    $('gim-run-pics').innerHTML = picsHtml(c);
     $('gim-run-name').textContent = c.name;
     $('gim-run-child').textContent = c.child || '';
     $('gim-run-dose').textContent = 'Сколько: ' + c.dose;
@@ -272,7 +298,9 @@ JS = r"""
         days.map(function () { return '<td>☐ ☐</td>'; }).join('') + '</tr>';
     }).join('');
     var ex = s.week.map(function (c, k) {
-      return '<div class="ex"><b>' + (k + 1) + '. ' + esc(c.name) + '</b> — ' + esc(c.child) +
+      // На печать — ч/б образ (закон 13: ч/б снят с цветного; тонер логопеда свой).
+      var img = c.obraz_bw ? '<img src="' + esc(c.obraz_bw) + '" alt="" class="pic">' : '';
+      return '<div class="ex">' + img + '<b>' + (k + 1) + '. ' + esc(c.name) + '</b> — ' + esc(c.child) +
         '<br>' + esc(c.how) + ' <i>Сколько: ' + esc(c.dose) + '.</i>' +
         (c.props ? ' Понадобится: ' + esc(c.props) + '.' : '') + '</div>';
     }).join('');
@@ -291,7 +319,14 @@ JS = r"""
         window.ym(window.METRIKA_ID, 'reachGoal', 'list', { 'лист получен': { 'гимнастика': p } });
       }
     } catch (e) { /* молчим */ }
-    window.print();
+    // Печать — только когда загрузились картинки листа: иначе на бумаге пустые места.
+    var imgs = box.querySelectorAll('img'), left = imgs.length;
+    var go = function () { window.print(); };
+    if (!left) { go(); return; }
+    imgs.forEach(function (im) {
+      if (im.complete) { if (--left === 0) go(); }
+      else { im.onload = im.onerror = function () { if (--left === 0) go(); }; }
+    });
   });
 
   root.querySelectorAll('.gim-sounds button').forEach(function (b, k) {
@@ -332,6 +367,7 @@ def widget_html() -> str:
         '</div>\n'
         '<div class="gim-run" id="gim-run" hidden>\n'
         '  <p class="gim-small" id="gim-step"></p>\n'
+        '  <div id="gim-run-pics"></div>\n'
         '  <h3 id="gim-run-name"></h3>\n'
         '  <p class="gim-child" id="gim-run-child"></p>\n'
         '  <p id="gim-run-dose"></p>\n'
