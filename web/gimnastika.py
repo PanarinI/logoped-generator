@@ -104,6 +104,7 @@ def data() -> Dict[str, Any]:
             "obraz": pic(eid, "obraz"),
             "obraz_bw": pic(eid, "obraz-bw"),
             "litso": pic(eid, "litso"),
+            "litso_bw": pic(eid, "litso-bw"),
             "fazy": schet.get("fazy", []),
             "korotko": schet.get("korotko", ""),
         }
@@ -379,7 +380,7 @@ JS = r"""
     '@media print{html{background:#fff}body{margin:0;width:auto;min-height:0;padding:0;box-shadow:none}}' +
     '@media screen{html.fit body{zoom:var(--z)}}[contenteditable]:focus{outline:none}';
   function pics(c) {
-    var bw = c.obraz_bw || c.obraz || c.litso, col = c.obraz || c.litso;
+    var bw = c.obraz_bw || c.litso_bw || c.obraz || c.litso, col = c.obraz || c.litso;
     return { bw: bw, col: col };
   }
   function imgTag(c, cls) {

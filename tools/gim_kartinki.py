@@ -19,7 +19,8 @@
 Что получается в `web/img/` (сервер отдаёт оттуда без своих правок):
   · gim-<id>-obraz.png     — образ, цвет, 280 px по большей стороне (экран);
   · gim-<id>-obraz-bw.png  — образ, ч/б, снятый с цветного (`imgbw.strip_colour`, закон 13);
-  · gim-<id>-litso.png     — лицо, цвет, 280 px — только у тех, где оно есть.
+  · gim-<id>-litso.png     — лицо, цвет, 280 px — только у тех, где оно есть;
+  · gim-<id>-litso-bw.png  — лицо, ч/б — только у тех, где лицо единственная картинка.
 Файла нет — экран картинку не показывает (закон 14), так что строку можно убрать без правки кода.
 """
 from __future__ import annotations
@@ -88,6 +89,12 @@ def main() -> None:
         if litso:
             shrink(src_path(litso), OUT / f"gim-{ex}-litso.png")
             made += 1
+            if not obraz:  # лицо — единственная картинка: ему тоже нужен ч/б для печати (баг 25.11)
+                with tempfile.TemporaryDirectory() as tmp:
+                    bw = pathlib.Path(tmp) / "bw.png"
+                    imgbw.strip_colour(src_path(litso), bw)
+                    shrink(bw, OUT / f"gim-{ex}-litso-bw.png")
+                made += 1
     print(f"готово: {made} файлов в {OUT.relative_to(ROOT)}")
 
 
