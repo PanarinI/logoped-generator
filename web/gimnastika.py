@@ -8,7 +8,10 @@
 страницу, а не рамкой: содержимое iframe поисковик не индексирует.
 
 ЧТО ДЕЛАЕТ — то же, что весь Логозвук: собирает материал под звук и даёт его напечатать.
-Звук → восемь упражнений его комплекса (все на виду) → отмечают 2–3 → два материала:
+ОДИН ЭКРАН (слово автора 26.11: «хочется сразу видеть результат»): слева звук, восемь упражнений
+(плитки, «?» — как делать) и печать; справа КОЛЕСО из отмеченных или всех 8 — крутит ребёнок,
+кнопкой или смахнув пальцем; «На весь экран» прячет настройки — планшет отдают ребёнку.
+Звук → восемь упражнений его комплекса (все на виду) → отмечают 2–3 → колесо и два материала:
   · КАРТОЧКИ НА ЗАНЯТИЕ — одна сторона: картинка-образ и название, четыре на А4, режут по
     пунктиру. Фомичёва 1989: «картинка-образ дается ребенку…, а подробная запись — для
     родителей» — подробная запись живёт в листе домой. Оборот «как делать» был до 25.11 и снят:
@@ -159,54 +162,41 @@ CSS = r"""
   --g-round:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,sans-serif;
   background:var(--g-paper);padding:var(--s4) var(--s4) var(--s5);color:var(--g-ink)}
 .gim-in{max-width:60rem;margin:0 auto}
-.gim-desk{display:grid;grid-template-columns:13.5rem minmax(0,1fr);gap:var(--s4);align-items:start}
-.gim-label{margin:0 0 6px;font-size:.82rem;letter-spacing:.02em;color:var(--g-muted)}
-.gim-sounds{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+/* Один экран (слово автора 26.11: «хочется сразу видеть результат»): слева звук, упражнения
+   и печать — для взрослого; справа колесо из отмеченных — его крутит ребёнок. */
+.gim-desk{display:grid;grid-template-columns:minmax(0,25rem) minmax(0,1fr);gap:var(--s5);align-items:start}
+.gim-step{margin:0 0 6px;font-size:.82rem;letter-spacing:.02em;color:var(--g-muted)}
+.gim-step b{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-right:5px;
+  border-radius:50%;background:var(--g-chip);color:var(--g-ink);font-size:.72rem}
+.gim-sounds{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .gim-sounds button{min-width:0;padding:7px 0 6px;border:1px solid var(--g-edge);border-radius:999px;background:#fff;
   font:inherit;font-size:1rem;cursor:pointer;color:var(--g-ink);box-shadow:0 2px 0 var(--g-edge)}
 .gim-sounds button[aria-pressed="true"]{background:var(--g-brand);border-color:var(--g-brand);color:#fff;
   box-shadow:0 2px 0 var(--g-brand-edge)}
 .gim-note{margin:8px 0 0;font-size:.8rem;line-height:1.4;color:var(--g-muted)}
 .gim-note:empty,.gim-warn:empty,.gim-err:empty{display:none}
-.gim-how{margin:var(--s4) 0 0;padding:0;list-style:none;font-size:.84rem;line-height:1.4;color:var(--g-muted)}
-.gim-how li{display:flex;gap:8px;margin:0 0 6px}
-.gim-how b{flex:none;width:20px;height:20px;border-radius:50%;background:var(--g-chip);color:var(--g-ink);font-size:.75rem;
-  display:flex;align-items:center;justify-content:center}
-.gim-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 8px}
-.gim-head p{margin:0;font-size:.95rem}
-.gim-head b{font-weight:600}
-.gim-count-sel{font-size:.82rem;color:var(--g-muted);white-space:nowrap}
-.gim-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.gim-card{position:relative;height:13.6rem;perspective:900px;margin:0}
-.gim-card-in{position:relative;width:100%;height:100%;transition:transform .45s ease;transform-style:preserve-3d}
-.gim-card.is-flip .gim-card-in{transform:rotateY(180deg)}
-.gim-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;
-  background:var(--g-card);border:1px solid var(--g-line);box-shadow:0 2px 0 var(--g-line)}
-.gim-back{transform:rotateY(180deg)}
-.gim-back-text{position:absolute;inset:0;padding:10px 12px 36px;overflow:auto;font-size:.82rem;line-height:1.4}
-.gim-card.is-on .gim-front{border:2px solid var(--g-brand);box-shadow:0 3px 0 var(--g-brand-edge)}
-.gim-pick{display:flex;flex-direction:column;align-items:center;width:100%;height:100%;padding:12px 8px 10px;border:0;
-  background:none;font:inherit;color:inherit;cursor:pointer;border-radius:14px;text-align:center}
-.gim-pick img{width:6rem;height:6rem;object-fit:contain;margin:2px 0}
-.gim-pick .noimg{width:6rem;height:6rem}
-.gim-cname{font-family:var(--g-round);font-weight:600;font-size:.98rem;line-height:1.2}
-.gim-dose{margin-top:5px;padding:2px 8px;border-radius:8px;background:var(--g-chip);font-size:.72rem;line-height:1.3;
-  color:var(--g-muted)}
-.gim-num{position:absolute;top:-8px;left:-8px;width:28px;height:28px;border-radius:50%;background:var(--g-brand);
-  color:#fff;font-family:var(--g-round);font-weight:700;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 0 var(--g-brand-edge);z-index:3;pointer-events:none}
-.is-flip .gim-num{display:none}
-.gim-flip{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--g-edge);
-  background:#fff;font:inherit;font-size:.85rem;line-height:1;cursor:pointer;color:var(--g-muted);z-index:2}
-.gim-back .gim-flip{top:auto;bottom:6px}
-.gim-back p{margin:0 0 6px}
-.gim-bname{font-family:var(--g-round);font-weight:600;font-size:.95rem}
-.gim-child{font-style:italic}
-.gim-small{color:var(--g-muted);font-size:.76rem}
+.gim-block{margin-top:var(--s4)}
+.gim-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 8px}
+.gim-count-sel{font-size:.78rem;color:var(--g-muted);white-space:nowrap}
+.gim-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.gim-tile{position:relative;margin:0}
+.gim-pick{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;height:7.4rem;
+  padding:9px 4px 6px;border:1px solid var(--g-line);border-radius:12px;background:var(--g-card);font:inherit;color:inherit;
+  cursor:pointer;text-align:center;box-shadow:0 2px 0 var(--g-line);-webkit-tap-highlight-color:transparent}
+.gim-pick img{width:3.6rem;height:3.6rem;object-fit:contain;flex:none}
+.gim-pick .noimg{width:3.6rem;height:3.6rem;flex:none}
+.gim-cname{margin-top:4px;font-family:var(--g-round);font-weight:600;font-size:.78rem;line-height:1.15;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gim-tile.is-on .gim-pick{border:2px solid var(--g-brand);box-shadow:0 3px 0 var(--g-brand-edge);padding:8px 3px 5px}
+.gim-num{position:absolute;top:-7px;left:-7px;width:24px;height:24px;border-radius:50%;background:var(--g-brand);
+  color:#fff;font-family:var(--g-round);font-weight:700;font-size:.85rem;display:flex;align-items:center;
+  justify-content:center;box-shadow:0 2px 0 var(--g-brand-edge);z-index:3;pointer-events:none}
+.gim-flip{position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;border:1px solid var(--g-edge);
+  background:#fff;font:inherit;font-size:.8rem;line-height:1;cursor:pointer;color:var(--g-muted);z-index:2}
+.gim-flip[aria-pressed="true"]{background:var(--g-ink);border-color:var(--g-ink);color:#fff}
 .gim-warn{margin:8px 0 0;font-size:.82rem;line-height:1.4;color:#8a5a00}
-.gim-shelf-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s4);padding-top:var(--s3);
-  border-top:1px solid var(--g-line)}
-.gim-hint{margin:0 auto 0 0;font-size:.85rem;color:var(--g-muted)}
+.gim-print{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.gim-hint{margin:10px 0 0;font-size:.8rem;line-height:1.4;color:var(--g-muted)}
 .gim-btn{font:inherit;font-size:1rem;padding:11px 20px;border-radius:999px;border:1px solid var(--g-edge);background:#fff;
   cursor:pointer;color:var(--g-ink);box-shadow:0 3px 0 var(--g-edge);transition:transform .06s,box-shadow .06s}
 .gim-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--g-edge)}
@@ -219,19 +209,12 @@ CSS = r"""
 .gim-seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--g-edge);border-radius:18px;overflow:hidden;background:#fff}
 .gim-seg button{font:inherit;font-size:.86rem;padding:5px 12px;border:0;background:none;cursor:pointer;color:var(--g-ink)}
 .gim-seg button[aria-pressed="true"]{background:var(--g-brand);color:#fff}
-@media (max-width:760px){
+.gim-small{color:var(--g-muted);font-size:.8rem}
+@media (max-width:860px){
   .gim{padding:var(--s3) var(--s3) var(--s4)}
-  .gim-desk{grid-template-columns:minmax(0,1fr)}
-  .gim-sounds{grid-template-columns:repeat(7,1fr)}
-  .gim-how{display:none}
-  .gim-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .gim-card{height:12.6rem}
-  /* На телефоне картотека длинная — полочка с кнопками едет вместе с экраном. */
-  .gim-shelf-row{position:sticky;bottom:0;z-index:5;margin:var(--s3) calc(-1 * var(--s3)) 0;
-    padding:10px var(--s3) calc(10px + env(safe-area-inset-bottom));background:var(--g-paper);
-    border-top:1px solid var(--g-line);box-shadow:0 -6px 14px rgba(22,25,29,.06)}
-  .gim-hint{display:none}
-  .gim-shelf-row .gim-btn{flex:1 1 auto}
+  .gim-desk{grid-template-columns:minmax(0,1fr);gap:var(--s4)}
+  .gim-left{display:contents}
+  .gim-b-sound{order:1}.gim-b-ex{order:2}.gim-wh{order:3}.gim-b-print{order:4}
 }
 html.gim-lock,html.gim-lock body{overflow:hidden}
 /* ── материал на экране: лист домой или карточки ───────────────────── */
@@ -249,30 +232,56 @@ html.gim-lock,html.gim-lock body{overflow:hidden}
 .gim-sheet iframe{flex:1;width:100%;border:0;background:#e9e6df}
 @media (max-width:760px){.gim-sheet-bar h2{flex-basis:100%;margin:0}}
 /* ── колесо: ребёнок крутит, колесо выбирает упражнение ───────────────── */
-.gim-wheel{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:var(--g-paper);color:var(--g-ink)}
-.gim-wheel[hidden]{display:none}
-.gim-wh-main{flex:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:center;
-  padding:16px 24px;overflow:auto;max-width:70rem;width:100%;margin:0 auto;box-sizing:border-box}
-.gim-wh-stage{position:relative;width:min(72vh,100%,560px);aspect-ratio:1;margin:0 auto}
+.gim-wh{min-width:0}
+.gim-wh-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+.gim-wh-top .gim-step{margin:0}
+.gim-wh-exit{display:none}
+.gim-wh-body{display:flex;flex-direction:column;align-items:center;gap:14px}
+.gim-wh-stage{position:relative;width:min(100%,22rem,46vh);aspect-ratio:1;margin:0 auto;touch-action:pan-y;
+  -webkit-user-select:none;user-select:none}
 .gim-wh-disc{position:absolute;inset:0;transition:transform 4.2s cubic-bezier(.15,.7,.2,1)}
 .gim-wh-disc svg{width:100%;height:100%;display:block}
-.gim-wh-pin{position:absolute;left:50%;top:-6px;width:34px;height:40px;transform:translateX(-50%);z-index:2;
+.gim-wh-pin{position:absolute;left:50%;top:-6px;width:30px;height:36px;transform:translateX(-50%);z-index:2;
   filter:drop-shadow(0 2px 0 var(--g-tongue-edge))}
-.gim-wh-hub{position:absolute;left:50%;top:50%;width:27%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
-  border:0;background:var(--g-tongue);color:var(--g-ink);font:700 clamp(1rem,2.6vw,1.45rem)/1.1 var(--g-round);cursor:pointer;
+.gim-wh-hub{position:absolute;left:50%;top:50%;width:28%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  border:0;background:var(--g-tongue);color:var(--g-ink);font:700 clamp(.95rem,2.2vw,1.35rem)/1.1 var(--g-round);cursor:pointer;
   box-shadow:0 4px 0 var(--g-tongue-edge),0 0 0 6px #fff;z-index:2}
 .gim-wh-hub:active{transform:translate(-50%,calc(-50% + 3px));box-shadow:0 1px 0 var(--g-tongue-edge),0 0 0 6px #fff}
 .gim-wh-hub[disabled]{cursor:default}
-.gim-wh-res{text-align:center;min-height:16rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
-.gim-wh-res img{width:min(15rem,60vw);height:min(15rem,60vw);object-fit:contain;mix-blend-mode:multiply}
-.gim-wh-name{font:700 2rem/1.15 var(--g-round);margin:0}
-.gim-wh-child{margin:0;font-size:1.1rem}
-.gim-wh-dose{margin:0;padding:4px 12px;border-radius:10px;background:var(--g-chip);color:var(--g-muted);font-size:.95rem}
-.gim-wh-hint{margin:0;font-size:1.05rem;color:var(--g-muted);max-width:22rem}
-.gim-wh-left{font-size:.88rem;color:var(--g-muted);margin:6px 0 0}
-@media (max-width:760px){.gim-wh-main{grid-template-columns:minmax(0,1fr);padding:12px 16px;gap:12px}
-  .gim-wh-stage{width:min(86vw,46vh)}.gim-wh-res{min-height:0}.gim-wh-res img{width:8rem;height:8rem}
-  .gim-wh-name{font-size:1.5rem}}
+.gim-wh-out{width:100%;max-width:28rem}
+.gim-wh-res{min-height:7rem;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:center;
+  padding:12px 14px;border-radius:14px;background:var(--g-card);border:1px solid var(--g-line)}
+.gim-wh-res>img{grid-row:span 4;width:6rem;height:6rem;object-fit:contain;mix-blend-mode:multiply}
+.gim-wh-res p{margin:0}
+.gim-wh-res.is-empty{display:flex;justify-content:center;text-align:center}
+.gim-wh-name{font:700 1.35rem/1.15 var(--g-round)}
+.gim-wh-child{font-size:.98rem}
+.gim-wh-dose{justify-self:start;padding:3px 10px;border-radius:9px;background:var(--g-chip);color:var(--g-muted);font-size:.88rem}
+.gim-wh-hint{font-size:.98rem;color:var(--g-muted)}
+.gim-wh-left{font-size:.8rem;color:var(--g-muted)}
+.gim-wh-info{grid-column:1 / -1;font-size:.86rem;line-height:1.45}
+.gim-wh-info p{margin:4px 0 0}
+.gim-wh-acts{display:flex;justify-content:center;gap:8px;margin-top:10px}
+.gim-wh-acts:not(:has(button:not([hidden]))){display:none}
+/* Ребёнку — на весь экран: настройки прячутся, колесо крупно, рядом — что выпало. */
+.gim.is-kid .gim-wh{position:fixed;inset:0;z-index:1000;background:var(--g-paper);display:flex;flex-direction:column;
+  padding:12px 20px calc(12px + env(safe-area-inset-bottom));overflow:auto}
+.gim.is-kid .gim-wh-exit{display:inline-block}
+.gim.is-kid #gim-wh-full{display:none}
+.gim.is-kid .gim-wh-body{flex:1;flex-direction:row;justify-content:center;gap:4vw}
+.gim.is-kid .gim-wh-stage{touch-action:none;flex:none;width:min(calc(100vh - 110px),52vw)}
+.gim.is-kid .gim-wh-out{width:auto;flex:0 1 24rem;min-width:0}
+.gim.is-kid .gim-wh-res{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}
+.gim.is-kid .gim-wh-res>img{grid-row:auto;width:12rem;height:12rem}
+.gim.is-kid .gim-wh-name{font-size:1.9rem}
+.gim.is-kid .gim-wh-hub{font-size:clamp(1.3rem,3.4vw,2.1rem)}
+.gim.is-kid .gim-wh-dose{justify-self:center}
+@media (max-width:860px) and (orientation:portrait){
+  .gim.is-kid .gim-wh-body{flex-direction:column}
+  .gim.is-kid .gim-wh-stage{width:min(88vw,52vh)}
+  .gim.is-kid .gim-wh-out{flex:none;width:100%}
+  .gim.is-kid .gim-wh-res>img{width:7rem;height:7rem}
+}
 @media (prefers-reduced-motion:reduce){.gim-wh-disc{transition-duration:.6s}}
 """
 
@@ -309,7 +318,7 @@ JS = r"""
   var $ = function (id) { return document.getElementById(id); };
   // Фомичёва 1989: «Не следует предлагать детям более двух-трех упражнений».
   var MAX = 3;
-  var S = { i: 0, sel: [], flip: {} };
+  var S = { i: 0, sel: [], info: -1 };
   var esc = function (t) {
     return String(t || '').replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -319,7 +328,7 @@ JS = r"""
   var at = function (j) { return cur().ex[j]; };
   function warn(t) { $('gim-warn').textContent = t || ''; }
   function reset() {
-    S.sel = []; S.flip = {}; warn('');
+    S.sel = []; warn('');
     for (var j = 0; j < cur().ex.length && S.sel.length < MAX; j++) S.sel.push(j);
   }
   function plan(c) {
@@ -332,33 +341,18 @@ JS = r"""
   // Фомичёва: удерживание «под счет взрослого от 1 до 5 с постепенным увеличением его до 10».
   var HOLD_TIP = 'Трудно держать до 10 — начните с 5 и постепенно доводите до 10 (Фомичёва).';
 
-  // ── стол: картотека ──────────────────────────────────────────────────
-  function cardHtml(c, j) {
-    var n = S.sel.indexOf(j), on = n >= 0, fl = !!S.flip[j];
-    var img = c.obraz || c.litso;
-    return '<li class="gim-card' + (on ? ' is-on' : '') + (fl ? ' is-flip' : '') + '">' +
+  // ── стол: звук и упражнения слева, колесо справа ─────────────────────
+  // Отметка упражнения сразу меняет колесо: что выбрали — то и видно (слово автора 26.11).
+  function tileHtml(c, j) {
+    var n = S.sel.indexOf(j), on = n >= 0, img = c.obraz || c.litso, inf = S.info === j;
+    return '<li class="gim-tile' + (on ? ' is-on' : '') + '">' +
       (on ? '<span class="gim-num" aria-hidden="true">' + (n + 1) + '</span>' : '') +
-      '<div class="gim-card-in">' +
-      '<div class="gim-face gim-front"' + (fl ? ' aria-hidden="true"' : '') + '>' +
-      '<button type="button" class="gim-pick" data-j="' + j + '" aria-pressed="' + on + '"' + (fl ? ' tabindex="-1"' : '') +
-      ' title="' + (on ? 'Убрать из занятия' : 'Взять в занятие') + '">' +
+      '<button type="button" class="gim-pick" data-j="' + j + '" aria-pressed="' + on + '" title="' +
+      (on ? 'Убрать с колеса' : 'Поставить на колесо') + '">' +
       (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span class="noimg"></span>') +
-      '<span class="gim-cname">' + esc(c.name) + '</span>' +
-      '<span class="gim-dose">' + esc(plan(c)) + (c.props ? ' · нужна ' + esc(c.props) : '') + '</span>' +
-      '</button>' +
-      '<button type="button" class="gim-flip" data-f="' + j + '" title="Как делать и сколько раз" aria-label="Как делать: ' +
-      esc(c.name) + '"' + (fl ? ' tabindex="-1"' : '') + '>?</button></div>' +
-      '<div class="gim-face gim-back"' + (fl ? '' : ' aria-hidden="true"') + '><div class="gim-back-text">' +
-      '<p class="gim-bname">' + esc(c.name) + '</p>' +
-      (c.child ? '<p class="gim-child">' + esc(c.child) + '</p>' : '') +
-      '<p>' + esc(c.how) + '</p>' +
-      '<p><b>Сколько:</b> ' + esc(plan(c)) + (c.props ? '. <b>Понадобится:</b> ' + esc(c.props) : '') + '</p>' +
-      (holds(c) ? '<p class="gim-small">' + HOLD_TIP + '</p>' : '') +
-      (c.why ? '<p class="gim-small">Зачем: ' + esc(c.why) + '</p>' : '') +
-      '<p class="gim-small" title="' + esc(c.src_full) + '">Источник: ' + esc(c.src) + '</p></div>' +
-      '<button type="button" class="gim-flip" data-f="' + j + '" title="Назад к картинке" aria-label="Назад к картинке"' +
-      (fl ? '' : ' tabindex="-1"') + '>↩</button></div>' +
-      '</div></li>';
+      '<span class="gim-cname">' + esc(c.name) + '</span></button>' +
+      '<button type="button" class="gim-flip" data-f="' + j + '" aria-pressed="' + inf + '" title="Как делать и сколько раз" ' +
+      'aria-label="Как делать: ' + esc(c.name) + '">?</button></li>';
   }
   function render() {
     var s = cur();
@@ -367,19 +361,18 @@ JS = r"""
     });
     $('gim-note').textContent = s.note || '';
     $('gim-for').textContent = '[' + s.key + ']';
-    $('gim-nsel').textContent = 'отмечено ' + S.sel.length + ' из ' + s.ex.length;
-    $('gim-grid').innerHTML = s.ex.map(cardHtml).join('');
+    $('gim-nsel').textContent = S.sel.length + ' из ' + s.ex.length;
+    $('gim-grid').innerHTML = s.ex.map(tileHtml).join('');
   }
 
   root.querySelectorAll('.gim-sounds button').forEach(function (b, k) {
-    b.addEventListener('click', function () { S.i = k; reset(); render(); });
+    b.addEventListener('click', function () { S.i = k; S.info = -1; reset(); render(); wReset(); });
   });
   $('gim-grid').addEventListener('click', function (ev) {
     var f = ev.target.closest('[data-f]');
     if (f) {
-      var jf = +f.dataset.f; S.flip[jf] = !S.flip[jf]; render();
-      var back = $('gim-grid').children[jf].querySelector(S.flip[jf] ? '.gim-back .gim-flip' : '.gim-flip');
-      if (back) back.focus();
+      var jf = +f.dataset.f; S.info = S.info === jf ? -1 : jf; render(); wRes();
+      var again = $('gim-grid').querySelector('[data-f="' + jf + '"]'); if (again) again.focus();
       return;
     }
     var b = ev.target.closest('.gim-pick');
@@ -391,12 +384,12 @@ JS = r"""
     } else {
       if (S.sel.length >= MAX) {
         warn('Не больше трёх за раз: у Фомичёвой «не более двух-трёх упражнений». ' +
-             'Сначала уберите одно — щелчком по нему.');
+             'Сначала уберите одно — щелчком по нему. Все восемь сразу — переключатель над колесом.');
         return;
       }
       S.sel.push(j);
     }
-    warn(''); render();
+    warn(''); render(); if (!W.all) wReset();
     var again = $('gim-grid').querySelector('.gim-pick[data-j="' + j + '"]');
     if (again) again.focus();
   });
@@ -680,11 +673,11 @@ JS = r"""
   document.addEventListener('keydown', function (ev) { if (!sheet.hidden && ev.key === 'Escape') closeSheet(); });
 
   // ── колесо ───────────────────────────────────────────────────────────
-  // Ребёнок крутит — колесо выбирает, какое упражнение делать сейчас (как случайные карты
-  // Wordwall; «дать ребёнку самому выбрать» — из методичек). Сделали — сектор гаснет,
-  // следующий раз колесо его не выберет. Звук — только щелчки колеса, как у настоящего.
-  var W = { all: false, list: [], done: {}, rot: 0, busy: false, cur: -1 };
-  var wheel = $('gim-wheel'), disc = $('gim-wh-disc');
+  // Ребёнок крутит — кнопкой или смахнув пальцем, — колесо выбирает, какое упражнение делать
+  // сейчас (как случайные карты Wordwall; «дать ребёнку самому выбрать» — из методичек).
+  // Сделали — сектор гаснет, следующий раз колесо его не выберет. Звук — только щелчки колеса.
+  var W = { all: false, list: [], done: {}, rot: 0, busy: false, cur: -1, run: 0 };
+  var disc = $('gim-wh-disc');
   var PAL = ['#f6d9a8', '#cfe6d6', '#f8cfc6', '#d7e3f4', '#efe0b0', '#e3d6f0', '#cde8ea', '#f5dcc0'];
   function wList() { return W.all ? cur().ex.slice() : S.sel.map(at); }
   function wDraw() {
@@ -703,21 +696,33 @@ JS = r"""
     disc.innerHTML = '<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="99.5" fill="#fff"/>' + out + '</svg>';
   }
   function wLeft() { return W.list.filter(function (c, i) { return !W.done[i]; }).length; }
+  // Что показано под колесом: подробности упражнения по «?», выпавшее упражнение или подсказка.
   function wRes() {
-    var box = $('gim-wh-res'), c = W.list[W.cur], left = wLeft();
-    $('gim-wh-done').hidden = !(W.cur >= 0 && !W.done[W.cur]);
-    $('gim-wh-again').hidden = left > 0;
+    var box = $('gim-wh-res'), left = wLeft();
+    $('gim-wh-done').hidden = !(S.info < 0 && W.cur >= 0 && !W.done[W.cur]);
+    $('gim-wh-again').hidden = !(S.info < 0 && left === 0);
     $('gim-wh-hub').disabled = W.busy || left === 0;
-    if (W.cur < 0) {
-      box.innerHTML = left ? '<p class="gim-wh-hint">Нажми «Крути!» — колесо выберет упражнение.</p>' :
-        '<p class="gim-wh-name">Все упражнения сделаны!</p><p class="gim-wh-hint">Молодец.</p>';
+    var c = S.info >= 0 ? at(S.info) : W.cur >= 0 ? W.list[W.cur] : null;
+    box.classList.toggle('is-empty', !c);
+    if (W.busy) { box.classList.add('is-empty'); box.innerHTML = '<p class="gim-wh-hint">Крутится…</p>'; return; }
+    if (!c) {
+      box.innerHTML = left ? '<p class="gim-wh-hint">Нажми «Крути!» или смахни колесо пальцем — оно выберет упражнение.</p>' :
+        '<div><p class="gim-wh-name">Все упражнения сделаны!</p><p class="gim-wh-hint">Молодец.</p></div>';
       return;
     }
     var img = c.obraz || c.litso;
-    box.innerHTML = (img ? '<img src="' + esc(img) + '" alt="">' : '') + '<p class="gim-wh-name">' + esc(c.name) + '</p>' +
+    var html = (img ? '<img src="' + esc(img) + '" alt="">' : '') + '<p class="gim-wh-name">' + esc(c.name) + '</p>' +
       (c.child ? '<p class="gim-wh-child">' + esc(cap(c.child)) + '</p>' : '') +
-      '<p class="gim-wh-dose">' + esc(plan(c)) + (c.props ? ' · нужна ' + esc(c.props) : '') + '</p>' +
-      '<p class="gim-wh-left">' + (W.done[W.cur] ? 'Сделали. ' : '') + 'Осталось: ' + left + ' из ' + W.list.length + '</p>';
+      '<p class="gim-wh-dose">' + esc(plan(c)) + (c.props ? ' · нужна ' + esc(c.props) : '') + '</p>';
+    if (S.info >= 0) {
+      html += '<div class="gim-wh-info"><p>' + esc(c.how) + '</p>' +
+        (holds(c) ? '<p class="gim-small">' + HOLD_TIP + '</p>' : '') +
+        (c.why ? '<p class="gim-small">Зачем: ' + esc(c.why) + '</p>' : '') +
+        '<p class="gim-small" title="' + esc(c.src_full) + '">Источник: ' + esc(c.src) + '</p></div>';
+    } else {
+      html += '<p class="gim-wh-left">' + (W.done[W.cur] ? 'Сделали. ' : '') + 'Осталось: ' + left + ' из ' + W.list.length + '</p>';
+    }
+    box.innerHTML = html;
   }
   function wSync() {
     $('gim-wh-sel').setAttribute('aria-pressed', W.all ? 'false' : 'true');
@@ -726,15 +731,16 @@ JS = r"""
     $('gim-wh-all').textContent = 'все (' + cur().ex.length + ')';
   }
   function wReset() {
+    W.run++; W.busy = false;
     W.list = wList(); W.done = {}; W.cur = -1; W.rot = 0;
     disc.style.transition = 'none'; disc.style.transform = 'rotate(0deg)'; void disc.offsetWidth; disc.style.transition = '';
     wSync(); wDraw(); wRes();
   }
   // Щелчок колеса — короткий тон; AudioContext закрывается сразу после остановки.
-  function wTicks(ac) {
+  function wTicks(ac, run) {
     var a = 360 / W.list.length, last = null;
     (function frame() {
-      if (!W.busy) return;
+      if (!W.busy || run !== W.run) return;
       var m = getComputedStyle(disc).transform, deg = 0;
       if (m && m !== 'none') { var v = m.split('(')[1].split(','); deg = Math.atan2(+v[1], +v[0]) * 180 / Math.PI; }
       var k = Math.floor(((deg % 360) + 360) % 360 / a);
@@ -755,39 +761,57 @@ JS = r"""
     var i = free[Math.floor(Math.random() * free.length)], a = 360 / W.list.length;
     var jitter = (Math.random() - 0.5) * a * 0.6, target = -((i + 0.5) * a) + jitter;
     var delta = ((target - W.rot) % 360 + 360) % 360;
-    W.rot += 360 * 5 + delta; W.busy = true; W.cur = -1; wRes();
-    $('gim-wh-res').innerHTML = '<p class="gim-wh-hint">Крутится…</p>';
+    W.rot += 360 * 5 + delta; W.busy = true; W.cur = -1; S.info = -1; render(); wRes();
+    var run = W.run;
     var ac = null; try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
     disc.style.transform = 'rotate(' + W.rot + 'deg)';
-    wTicks(ac);
+    wTicks(ac, run);
     var end = function () {
       disc.removeEventListener('transitionend', end); clearTimeout(tm);
-      if (!W.busy) return;
-      W.busy = false; W.cur = i; wRes();
       if (ac) { try { ac.close(); } catch (e) { /* молчим */ } }
+      if (!W.busy || run !== W.run) return;
+      W.busy = false; W.cur = i; wRes();
       try { if (window.ym && window.METRIKA_ID) window.ym(window.METRIKA_ID, 'reachGoal', 'koleso', { 'звук': cur().key }); }
       catch (e) { /* молчим */ }
     };
     var tm = setTimeout(end, 4600);
     disc.addEventListener('transitionend', end);
   }
-  function openWheel() {
-    W.all = false; wReset();
-    wheel.hidden = false; document.documentElement.classList.add('gim-lock'); $('gim-wh-hub').focus();
+  // Смахнуть пальцем (или мышью): колесо крутится, как настоящее. Короткий тап по колесу — нет.
+  (function () {
+    var st = $('gim-wh-stage'), p0 = null;
+    st.addEventListener('pointerdown', function (ev) {
+      if (ev.target.closest('#gim-wh-hub')) return;
+      p0 = { x: ev.clientX, y: ev.clientY };
+    });
+    st.addEventListener('pointerup', function (ev) {
+      if (!p0) return;
+      var d = Math.hypot(ev.clientX - p0.x, ev.clientY - p0.y); p0 = null;
+      if (d > 30) wSpin();
+    });
+    st.addEventListener('pointercancel', function () { p0 = null; });
+  })();
+  // Ребёнку — на весь экран: настройки прячутся, остаётся колесо и то, что выпало.
+  function kid(on) {
+    root.classList.toggle('is-kid', on); document.documentElement.classList.toggle('gim-lock', on);
+    $(on ? 'gim-wh-exit' : 'gim-wh-full').focus();
   }
-  function closeWheel() {
-    W.busy = false; wheel.hidden = true; document.documentElement.classList.remove('gim-lock'); $('gim-wheel-btn').focus();
-  }
-  $('gim-wheel-btn').addEventListener('click', openWheel);
-  $('gim-wh-back').addEventListener('click', closeWheel);
+  $('gim-wh-full').addEventListener('click', function () { kid(true); });
+  $('gim-wh-exit').addEventListener('click', function () { kid(false); });
   $('gim-wh-hub').addEventListener('click', wSpin);
-  $('gim-wh-done').addEventListener('click', function () { if (W.cur >= 0) { W.done[W.cur] = true; if (!wLeft()) W.cur = -1; wDraw(); wRes(); $(wLeft() ? 'gim-wh-hub' : 'gim-wh-again').focus(); } });
+  $('gim-wh-done').addEventListener('click', function () {
+    if (W.cur < 0) return;
+    W.done[W.cur] = true; if (!wLeft()) W.cur = -1; wDraw(); wRes();
+    $(wLeft() ? 'gim-wh-hub' : 'gim-wh-again').focus();
+  });
   $('gim-wh-again').addEventListener('click', function () { wReset(); $('gim-wh-hub').focus(); });
-  $('gim-wh-sel').addEventListener('click', function () { if (W.all && !W.busy) { W.all = false; wReset(); } });
-  $('gim-wh-all').addEventListener('click', function () { if (!W.all && !W.busy) { W.all = true; wReset(); } });
-  document.addEventListener('keydown', function (ev) { if (!wheel.hidden && ev.key === 'Escape') closeWheel(); });
+  $('gim-wh-sel').addEventListener('click', function () { if (W.all) { W.all = false; wReset(); } });
+  $('gim-wh-all').addEventListener('click', function () { if (!W.all) { W.all = true; wReset(); } });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && root.classList.contains('is-kid') && sheet.hidden) kid(false);
+  });
 
-  reset(); render();
+  reset(); render(); wReset();
 })();
 """
 
@@ -809,32 +833,52 @@ def widget_html() -> str:
         '<div class="widget-box gim" id="gim">\n'
         '<div class="gim-in">\n'
         ' <div class="gim-desk">\n'
-        '  <aside class="gim-side">\n'
-        '   <p class="gim-label">Звук</p>\n'
-        f'   <div class="gim-sounds" role="group" aria-label="Звук">{buttons}</div>\n'
-        '   <p class="gim-note" id="gim-note"></p>\n'
-        '   <ol class="gim-how">\n'
-        '    <li><b>1</b><span>Выберите звук.</span></li>\n'
-        '    <li><b>2</b><span>Отметьте 2–3 упражнения — номер покажет порядок.</span></li>\n'
-        '    <li><b>3</b><span>«Карточки на занятие» и «Колесо» — для ребёнка. «Лист домой» — родителю, '
-        'можно со сказкой.</span></li>\n'
-        '   </ol>\n'
-        '  </aside>\n'
-        '  <section class="gim-cards" aria-label="Упражнения">\n'
-        '   <div class="gim-head"><p>Упражнения для звука <b id="gim-for"></b> — отметьте 2–3</p>'
+        '  <div class="gim-left">\n'
+        '   <div class="gim-b-sound">\n'
+        '    <p class="gim-step"><b>1</b>Звук</p>\n'
+        f'    <div class="gim-sounds" role="group" aria-label="Звук">{buttons}</div>\n'
+        '    <p class="gim-note" id="gim-note"></p>\n'
+        '   </div>\n'
+        '   <section class="gim-block gim-b-ex" aria-label="Упражнения">\n'
+        '    <div class="gim-head"><p class="gim-step"><b>2</b>Упражнения <span id="gim-for"></span> — отметьте 2–3</p>'
         '<span class="gim-count-sel" id="gim-nsel"></span></div>\n'
-        '   <ul class="gim-grid" id="gim-grid"></ul>\n'
-        '   <p class="gim-warn" id="gim-warn" role="status"></p>\n'
+        '    <ul class="gim-grid" id="gim-grid"></ul>\n'
+        '    <p class="gim-warn" id="gim-warn" role="status"></p>\n'
+        '   </section>\n'
+        '   <div class="gim-block gim-b-print">\n'
+        '    <p class="gim-step"><b>3</b>Напечатать</p>\n'
+        '    <div class="gim-print">\n'
+        '     <button type="button" class="gim-btn" id="gim-cards-btn" title="Карточки с картинками — показывать '
+        'ребёнку, четыре на листе. Сначала на экране, потом печать или PDF">Карточки</button>\n'
+        '     <button type="button" class="gim-btn" id="gim-list-btn" title="Лист для родителя, можно со сказкой: '
+        'сначала на экране, потом печать, PDF или Word">Лист домой</button>\n'
+        '    </div>\n'
+        '    <p class="gim-hint">За один раз — 2–3 упражнения, новое из них одно (Фомичёва, 1989).</p>\n'
+        '   </div>\n'
+        '  </div>\n'
+        '  <section class="gim-wh" aria-label="Колесо">\n'
+        '   <div class="gim-wh-top">\n'
+        '    <button type="button" class="gim-btn gim-sm gim-wh-exit" id="gim-wh-exit">← Выйти</button>\n'
+        '    <p class="gim-step">Колесо — крутит ребёнок</p>\n'
+        '    <span class="gim-seg"><button type="button" id="gim-wh-sel" aria-pressed="true"></button>'
+        '<button type="button" id="gim-wh-all" aria-pressed="false"></button></span>\n'
+        '    <button type="button" class="gim-btn gim-sm" id="gim-wh-full" title="Настройки спрячутся, колесо — '
+        'крупно. Удобно отдать планшет ребёнку">На весь экран</button>\n'
+        '   </div>\n'
+        '   <div class="gim-wh-body">\n'
+        '    <div class="gim-wh-stage" id="gim-wh-stage">\n'
+        '     <svg class="gim-wh-pin" viewBox="0 0 34 40" aria-hidden="true"><path d="M3 3H31L17 37Z" fill="#e8806e" '
+        'stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>\n'
+        '     <div class="gim-wh-disc" id="gim-wh-disc"></div>\n'
+        '     <button type="button" class="gim-wh-hub" id="gim-wh-hub">Крути!</button>\n'
+        '    </div>\n'
+        '    <div class="gim-wh-out">\n'
+        '     <div class="gim-wh-res" id="gim-wh-res" role="status"></div>\n'
+        '     <p class="gim-wh-acts"><button type="button" class="gim-btn gim-go" id="gim-wh-done" hidden>Сделали ✓</button>'
+        '<button type="button" class="gim-btn" id="gim-wh-again" hidden>Крутить заново</button></p>\n'
+        '    </div>\n'
+        '   </div>\n'
         '  </section>\n'
-        ' </div>\n'
-        ' <div class="gim-shelf-row">\n'
-        '  <p class="gim-hint">За один раз — 2–3 упражнения, новое из них одно (Фомичёва, 1989).</p>\n'
-        '  <button type="button" class="gim-btn" id="gim-list-btn" title="Лист для родителя: сначала на экране, '
-        'потом печать, PDF или Word">Лист домой</button>\n'
-        '  <button type="button" class="gim-btn gim-go" id="gim-cards-btn" title="Карточки с картинками — показывать '
-        'ребёнку, четыре на листе. Сначала на экране, потом печать или PDF">Карточки на занятие</button>\n'
-        '  <button type="button" class="gim-btn" id="gim-wheel-btn" title="Колесо на экране: ребёнок крутит — '
-        'колесо выбирает упражнение">Колесо</button>\n'
         ' </div>\n'
         '</div>\n'
         '<div class="gim-sheet" id="gim-sheet" role="dialog" aria-modal="true" aria-labelledby="gim-sheet-title" hidden>\n'
@@ -859,27 +903,6 @@ def widget_html() -> str:
         ' </div>\n'
         ' <p class="gim-err" id="gim-err" role="status"></p>\n'
         ' <iframe id="gim-sheet-frame" title="Материал на экране"></iframe>\n'
-        '</div>\n'
-        '<div class="gim-wheel" id="gim-wheel" role="dialog" aria-modal="true" aria-labelledby="gim-wh-title" hidden>\n'
-        ' <div class="gim-sheet-bar">\n'
-        '  <button type="button" class="gim-btn gim-sm" id="gim-wh-back">← К упражнениям</button>\n'
-        '  <h2 id="gim-wh-title">Колесо — крутит ребёнок</h2>\n'
-        '  <span class="gim-opt"><span class="gim-seg"><button type="button" id="gim-wh-sel" aria-pressed="true"></button>'
-        '<button type="button" id="gim-wh-all" aria-pressed="false"></button></span></span>\n'
-        ' </div>\n'
-        ' <div class="gim-wh-main">\n'
-        '  <div class="gim-wh-stage">\n'
-        '   <svg class="gim-wh-pin" viewBox="0 0 34 40" aria-hidden="true"><path d="M3 3H31L17 37Z" fill="#e8806e" '
-        'stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>\n'
-        '   <div class="gim-wh-disc" id="gim-wh-disc"></div>\n'
-        '   <button type="button" class="gim-wh-hub" id="gim-wh-hub">Крути!</button>\n'
-        '  </div>\n'
-        '  <div>\n'
-        '   <div class="gim-wh-res" id="gim-wh-res" role="status"></div>\n'
-        '   <p style="text-align:center;margin:12px 0 0"><button type="button" class="gim-btn gim-go" id="gim-wh-done" hidden>'
-        'Сделали ✓</button> <button type="button" class="gim-btn" id="gim-wh-again" hidden>Крутить заново</button></p>\n'
-        '  </div>\n'
-        ' </div>\n'
         '</div>\n'
         f'<script type="application/json" id="gim-data">{blob}</script>\n'
         f'<script type="application/json" id="gim-motif">{motif}</script>\n'
