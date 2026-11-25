@@ -9,10 +9,10 @@
 
 ЧТО ДЕЛАЕТ — то же, что весь Логозвук: собирает материал под звук и даёт его напечатать.
 Звук → восемь упражнений его комплекса (все на виду) → отмечают 2–3 → два материала:
-  · КАРТОЧКИ НА ЗАНЯТИЕ — лицом картинка-образ и название (ребёнку), оборотом «как делать»
-    и «сколько» (взрослому). Фомичёва 1989: «картинка-образ дается ребенку…, а подробная
-    запись — для родителей». Так же устроены карточки, которые логопеды покупают (Мерсибо).
-    Режут по пунктиру, складывают пополам. ТЕМЫ меняют вид лицевой стороны — одни и те же
+  · КАРТОЧКИ НА ЗАНЯТИЕ — одна сторона: картинка-образ и название, четыре на А4, режут по
+    пунктиру. Фомичёва 1989: «картинка-образ дается ребенку…, а подробная запись — для
+    родителей» — подробная запись живёт в листе домой. Оборот «как делать» был до 25.11 и снят:
+    автор — логопед на занятии его не читает. ТЕМЫ меняют вид карточки — одни и те же
     упражнения в новом наряде: за такое переодевание платят (`ГОЛОСА.md`, logosha_pro: семь
     тематических картотек одной механики). Мотивы темы рисует код (линия + заливка), в ч/б
     остаётся линия.
@@ -312,7 +312,7 @@ JS = r"""
       '<span class="gim-cname">' + esc(c.name) + '</span>' +
       '<span class="gim-dose">' + esc(plan(c)) + (c.props ? ' · нужна ' + esc(c.props) : '') + '</span>' +
       '</button>' +
-      '<button type="button" class="gim-flip" data-f="' + j + '" title="Как делать — оборот карточки" aria-label="Как делать: ' +
+      '<button type="button" class="gim-flip" data-f="' + j + '" title="Как делать и сколько раз" aria-label="Как делать: ' +
       esc(c.name) + '"' + (fl ? ' tabindex="-1"' : '') + '>?</button></div>' +
       '<div class="gim-face gim-back"' + (fl ? '' : ' aria-hidden="true"') + '><div class="gim-back-text">' +
       '<p class="gim-bname">' + esc(c.name) + '</p>' +
@@ -416,24 +416,21 @@ JS = r"""
       '<div class="tbl"><p><b>Отмечайте, когда сделали:</b> у — утро, в — вечер.</p><table>' + head + rows + '</table></div>' +
       '<p class="foot">По Фомичёвой М. Ф. (1989) и картотекам логопедов · logozvuk.com</p></body></html>';
   }
-  // Карточки: строка = одно упражнение. Слева лицо (ребёнку), справа оборот (взрослому);
-  // режут по пунктиру, складывают пополам по линии сгиба — получается двусторонняя карточка.
+  // Карточки: одна сторона — картинка-образ и название, четыре на листе А4, режут по пунктиру.
+  // Оборота нет (слово автора 25.11: логопед на занятии оборот не читает, родителю «как
+  // делать» даёт лист домой). Карточку показывают ребёнку, ребёнок может тянуть её сам.
   function cardsDoc() {
     var s = cur(), list = L.all ? s.ex : S.sel.map(at);
     var motifs = Object.keys(MOTIF).map(function (k) { return MOTIF[k]; }).join('');
     var corner = function (pos) {
       return '<svg class="mot ' + pos + '" viewBox="0 0 80 80" aria-hidden="true">' + motifs + '</svg>';
     };
-    var rows = list.map(function (c) {
-      return '<div class="row"><div class="front">' + corner('tl') + corner('br') +
-        '<div class="pic">' + imgTag(c, '') + '</div><div class="nm">' + esc(c.name) + '</div></div>' +
-        '<div class="back"><div class="bn">' + esc(c.name) + '</div>' +
-        (c.child ? '<p class="ch">' + esc(cap(c.child)) + '</p>' : '') +
-        '<p>' + esc(c.how) + '</p><p><b>Сколько:</b> ' + esc(plan(c)) + '.' +
-        (c.props ? ' <b>Понадобится:</b> ' + esc(c.props) + '.' : '') + '</p>' +
-        (holds(c) ? '<p class="tip">' + HOLD_TIP + '</p>' : '') +
-        '<p class="src">Звук [' + esc(s.key) + '] · ' + esc(c.src) + ' · logozvuk.com</p></div></div>';
-    }).join('');
+    var card = function (c) {
+      return '<div class="cell"><div class="front">' + corner('tl') + corner('br') +
+        '<div class="pic">' + imgTag(c, '') + '</div><div class="nm' + (c.name.length > 12 ? ' long' : '') + '">' + esc(c.name) + '</div></div></div>';
+    };
+    var pages = [];
+    for (var i = 0; i < list.length; i += 4) pages.push('<div class="pg">' + list.slice(i, i + 4).map(card).join('') + '</div>');
     var T = '.front{--acc:#c9c2b6;--tint:#fff;--c1:#fff;--c2:#fff;--c3:#fff}' +
       'body.t-osen .front{--acc:#e08a3c;--tint:#fff8ef;--c1:#f2b35c;--c2:#e5733b;--c3:#d9a441}' +
       'body.t-zima .front{--acc:#5b9bd5;--tint:#f3f8fd;--c1:#fff;--c2:#fff;--c3:#fff}' +
@@ -444,24 +441,25 @@ JS = r"""
       '.mot .f{stroke:var(--acc);stroke-width:2;stroke-linejoin:round}.mot .a1{fill:var(--c1)}.mot .a2{fill:var(--c2)}' +
       '.mot .a3{fill:var(--c3)}.mot .s{fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linecap:round}' +
       'body.t-zima .mot .s{stroke-width:2.6}';
+    // Экран: лист той же ширины, что в печати (182 мм поля), иначе две карточки не встают в ряд.
     return '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">' +
       '<title>Карточки артикуляционной гимнастики — звук [' + esc(s.key) + ']</title><style>' + PAGE_CSS +
-      'h1{font-size:15pt;margin:0 0 2pt}.how{margin:0 0 8pt;font-size:9.5pt;color:#444}' +
-      '.row{display:grid;grid-template-columns:1fr 1fr;height:78mm;margin:0 0 5mm;border:1px dashed #9a958d;' +
-      'break-inside:avoid;page-break-inside:avoid;box-sizing:border-box}' +
-      '.front{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-      'margin:3mm;border:2.2pt solid var(--acc);border-radius:5mm;background:var(--tint);overflow:hidden}' +
-      '.pic img{width:44mm;height:44mm;object-fit:contain;mix-blend-mode:multiply}.nm{margin-top:2mm;font:700 19pt/1.1 ui-rounded,' +
-      '"Nunito","Arial Rounded MT Bold",Arial,sans-serif;text-align:center;padding:0 4mm}' +
-      '.mot{position:absolute;width:19mm;height:19mm}.mot.tl{left:1.5mm;top:1.5mm}' +
-      '.mot.br{right:1.5mm;bottom:1.5mm;transform:rotate(180deg)}' +
-      '.back{border-left:1px dashed #9a958d;padding:5mm 6mm;font-size:10pt;line-height:1.38;overflow:hidden}' +
-      '.back p{margin:0 0 2mm}.bn{font:700 13pt/1.2 Arial,sans-serif;margin:0 0 1.5mm}.ch{font-style:italic}' +
-      '.tip{font-size:8.5pt;color:#444}.src{font-size:8pt;color:#777;margin-top:2mm}' + T +
+      '@media screen{body{width:210mm}}' +
+      'h1{font-size:15pt;margin:0 0 2pt}.how{margin:0 0 5mm;font-size:9.5pt;color:#444}' +
+      '.pg{display:grid;grid-template-columns:89mm 89mm;grid-auto-rows:121mm;gap:4mm}' +
+      '.pg+.pg{break-before:page;page-break-before:always}@media screen{.pg+.pg{margin-top:4mm}}' +
+      '.cell{border:1px dashed #9a958d;box-sizing:border-box;padding:3mm;display:flex;break-inside:avoid}' +
+      '.front{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'border:2.4pt solid var(--acc);border-radius:6mm;background:var(--tint);overflow:hidden;padding:9mm 6mm 17mm}' +
+      '.pic img{width:60mm;height:60mm;object-fit:contain;mix-blend-mode:multiply;filter:brightness(1.06)}.nm{margin-top:4mm;' +
+      'font:700 24pt/1.1 ui-rounded,"Nunito","Arial Rounded MT Bold",Arial,sans-serif;text-align:center}.nm.long{font-size:19pt}' +
+      '.mot{position:absolute;width:20mm;height:20mm}.mot.tl{left:2mm;top:2mm}' +
+      '.mot.br{right:2mm;bottom:2mm;transform:rotate(180deg)}' + T +
       '</style></head><body contenteditable="true" spellcheck="false" class="t-' + L.tema + (L.colour ? '' : ' bw') + '">' +
       '<h1>Карточки артикуляционной гимнастики — звук [' + esc(s.key) + ']</h1>' +
-      '<p class="how">Вырежьте по пунктиру и сложите пополам по средней линии: лицом — ребёнку, оборотом — себе.</p>' +
-      rows + '</body></html>';
+      '<p class="how">Вырежьте по пунктиру. Карточку показывают ребёнку — или он тянет её сам. Как делать и сколько раз — ' +
+      'в «Листе домой» и на logozvuk.com.</p>' +
+      pages.join('') + '</body></html>';
   }
   function syncOpts() {
     $('gim-o-bw').setAttribute('aria-pressed', L.colour ? 'false' : 'true');
@@ -648,8 +646,8 @@ def widget_html() -> str:
         '  <p class="gim-hint">За один раз — 2–3 упражнения, новое из них одно (Фомичёва, 1989).</p>\n'
         '  <button type="button" class="gim-btn" id="gim-list-btn" title="Лист для родителя: сначала на экране, '
         'потом печать, PDF или Word">Лист домой</button>\n'
-        '  <button type="button" class="gim-btn gim-go" id="gim-cards-btn" title="Карточки: лицом картинка для ребёнка, '
-        'оборотом — как делать. Сначала на экране, потом печать или PDF">Карточки на занятие</button>\n'
+        '  <button type="button" class="gim-btn gim-go" id="gim-cards-btn" title="Карточки с картинками — показывать '
+        'ребёнку, четыре на листе. Сначала на экране, потом печать или PDF">Карточки на занятие</button>\n'
         ' </div>\n'
         '</div>\n'
         '<div class="gim-sheet" id="gim-sheet" role="dialog" aria-modal="true" aria-labelledby="gim-sheet-title" hidden>\n'
